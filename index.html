@@ -897,29 +897,46 @@ async function checkPriceNotif(){
     const snap=await getDoc(doc(db,'settings','lastPriceUpdate'));
     if(!snap.exists())return;
     const data=snap.data();
-    const lastUpdate=data.timestamp?.toDate?.();
-    if(!lastUpdate)return;
-    // تحقق إذا المستخدم شاف هذا الإشعار
-    const seenKey='seen_notif_'+lastUpdate.getTime();
-    if(localStorage.getItem(seenKey))return;
-    const d=lastUpdate;
-    const dateStr=d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
-    const hr=d.getHours(),mn=String(d.getMinutes()).padStart(2,'0');
-    const ampm=hr<12?'AM':'PM';const h12=hr%12||12;
-    const timeStr=h12+':'+mn+' '+ampm;
-    const carName=data.carModel?(' — '+data.carModel):'';
-    document.getElementById('notif-msg').textContent='🔔 تم تحديث سعر'+carName+' بتاريخ '+dateStr+' الساعة '+timeStr;
+    const updates=data.updates||[];
+    if(!updates.length)return;
+    // آخر وقت دخل فيه المستخدم
+    const lastSeenKey='last_seen_'+currentUser.uid;
+    const lastSeen=parseInt(localStorage.getItem(lastSeenKey)||'0');
+    // السيارات المعدّلة بعد آخر دخول
+    const newUpdates=updates.filter(u=>u.time>lastSeen);
+    if(!newUpdates.length){
+      // حفظ وقت الدخول الحالي
+      localStorage.setItem(lastSeenKey,Date.now().toString());
+      return;
+    }
+    const carNames=newUpdates.map(u=>u.carModel).filter(Boolean);
+    let msg='';
+    if(carNames.length===0){
+      msg='🔔 تم تحديث قائمة الأسعار';
+    } else if(carNames.length===1){
+      msg='🔔 تم تحديث سعر: '+carNames[0];
+    } else {
+      msg='🔔 تم تحديث أسعار '+carNames.length+' سيارات: '+carNames.join(' — ');
+    }
+    document.getElementById('notif-msg').textContent=msg;
     document.getElementById('notif-bar').style.display='flex';
-    window._notifKey=seenKey;
+    window._notifLastSeen=lastSeenKey;
   }catch(e){}
 }
 window.dismissNotif=()=>{
   document.getElementById('notif-bar').style.display='none';
-  if(window._notifKey)localStorage.setItem(window._notifKey,'1');
+  if(window._notifLastSeen)localStorage.setItem(window._notifLastSeen,Date.now().toString());
 };
 async function recordPriceUpdate(carModel=''){
   try{
-    await setDoc(doc(db,'settings','lastPriceUpdate'),{timestamp:serverTimestamp(),carModel});
+    const snap=await getDoc(doc(db,'settings','lastPriceUpdate'));
+    const existing=snap.exists()?snap.data().updates||[]:[]; 
+    const now=new Date();
+    const entry={carModel,time:now.getTime()};
+    // أضف السيارة إذا لم تكن موجودة، أو حدّث وقتها
+    const filtered=existing.filter(x=>x.carModel!==carModel);
+    filtered.push(entry);
+    await setDoc(doc(db,'settings','lastPriceUpdate'),{updates:filtered,lastTimestamp:serverTimestamp()});
   }catch(e){}
 }
 
