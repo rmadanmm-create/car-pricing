@@ -866,10 +866,10 @@ window.calcFinance=()=>{
   const totalProfit=totalPay-amount-lastAmt+lastAmt-(price-downAmt-lastAmt)+amount-amount;
   const totalInterest=(monthly*months)-amount;
 
-  const fmt2=n=>Math.round(n).toLocaleString('en-US')+' ر.س';
+  const fmt2=n=>Math.round(n).toLocaleString('en-US');
   document.getElementById('r-price').textContent=fmt2(price);
-  document.getElementById('r-down').textContent=fmt2(downAmt)+(downPct>0?' ('+downPct+'%)':'');
-  document.getElementById('r-last').textContent=fmt2(lastAmt)+(lastPct>0?' ('+lastPct+'%)':'');
+  document.getElementById('r-down').textContent=fmt2(downAmt);
+  document.getElementById('r-last').textContent=fmt2(lastAmt);
   document.getElementById('r-months').textContent=months+' شهر';
   document.getElementById('r-monthly').textContent=fmt2(monthly);
   document.getElementById('r-total').textContent=fmt2(downAmt+lastAmt+monthly*months);
