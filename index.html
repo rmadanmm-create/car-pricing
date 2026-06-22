@@ -111,6 +111,9 @@ tr:hover td{background:#f9fafb}
   .clock-time{font-size:18px}
 }
 .loading{text-align:center;padding:2rem;color:var(--muted)}
+.notif-bar{position:fixed;top:0;left:0;right:0;z-index:999;background:#f59e0b;color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.15);animation:slideDown .3s ease}
+@keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+.notif-bar .notif-close{background:rgba(255,255,255,.25);border:none;color:#fff;padding:3px 10px;border-radius:6px;cursor:pointer;font-size:12px}
 tr.drag-over td{border-top:3px solid var(--blue)!important;background:#e8f0fb!important}
 tr[data-car-id]{cursor:grab}
 tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
@@ -118,6 +121,10 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
 </head>
 <body>
 
+<div id="notif-bar" class="notif-bar" style="display:none">
+  <span id="notif-msg">🔔 تم تحديث الأسعار</span>
+  <button class="notif-close" onclick="dismissNotif()">تم ✓</button>
+</div>
 <div id="auth-screen">
   <div class="auth-card">
     <div class="auth-logo">🚗</div>
@@ -410,6 +417,7 @@ async function loadData(){
     document.getElementById('banks-tab-btn').style.display='';
   }
   await loadBankRates();
+  if(currentRole!=='admin')checkPriceNotif();
   onSnapshot(collection(db,'cars'),snap=>{
     cars=snap.docs.map(d=>({id:d.id,...d.data()}));
     cars.sort((a,b)=>(a.order||0)-(b.order||0));
@@ -607,6 +615,7 @@ window.saveCar=async()=>{
   const d2={brand,model,year,buy,plateFee:plate,date,notes,colors:selColors,colorAvail:{...selColorAvail},colorPrices:{...selColorPrices},updatedAt:serverTimestamp()};
   if(editCarId)await updateDoc(doc(db,'cars',editCarId),d2);
   else await setDoc(doc(db,'cars','car_'+Date.now()),{...d2,createdAt:serverTimestamp()});
+  await recordPriceUpdate();
   closeCarModal();
 };
 
@@ -880,6 +889,35 @@ window.calcFinance=()=>{
   if(res)res.style.display='block';
   if(empty)empty.style.display='none';
 };
+
+
+// === نظام الإشعارات ===
+async function checkPriceNotif(){
+  try{
+    const snap=await getDoc(doc(db,'settings','lastPriceUpdate'));
+    if(!snap.exists())return;
+    const data=snap.data();
+    const lastUpdate=data.timestamp?.toDate?.();
+    if(!lastUpdate)return;
+    // تحقق إذا المستخدم شاف هذا الإشعار
+    const seenKey='seen_notif_'+lastUpdate.getTime();
+    if(localStorage.getItem(seenKey))return;
+    const dateStr=lastUpdate.toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+    const timeStr=lastUpdate.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('notif-msg').textContent='🔔 تم تحديث قائمة الأسعار بتاريخ '+dateStr+' الساعة '+timeStr;
+    document.getElementById('notif-bar').style.display='flex';
+    window._notifKey=seenKey;
+  }catch(e){}
+}
+window.dismissNotif=()=>{
+  document.getElementById('notif-bar').style.display='none';
+  if(window._notifKey)localStorage.setItem(window._notifKey,'1');
+};
+async function recordPriceUpdate(){
+  try{
+    await setDoc(doc(db,'settings','lastPriceUpdate'),{timestamp:serverTimestamp()});
+  }catch(e){}
+}
 
 // === السحب والإفلات ===
 let dragCarId=null;
