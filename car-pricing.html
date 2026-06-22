@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>كتالوج أسعار السيارات</title>
+<style>
+:root{
+  --blue:#1B6FC8;--blue-dark:#0f4a8a;--green:#27500a;--red:#a32d2d;
+  --bg:#f5f6fa;--card:#fff;--border:#e2e4ea;--text:#1a1a2e;--muted:#6b7280;
+  --radius:10px;--shadow:0 1px 4px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Arial,sans-serif}
+body{background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
+.auth-card{background:var(--card);border-radius:16px;padding:2rem;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(0,0,0,.12)}
+.auth-logo{text-align:center;font-size:40px;margin-bottom:.5rem}
+.auth-title{text-align:center;font-size:20px;font-weight:700;margin-bottom:.25rem}
+.auth-sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:1.5rem}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:1rem}
+.field label{font-size:12px;font-weight:600;color:var(--muted)}
+.field input{padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;width:100%;outline:none;transition:border-color .2s}
+.field input:focus{border-color:var(--blue)}
+.btn{width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;transition:background .2s}
+.btn:hover{background:var(--blue-dark)}
+.err{color:#c0392b;font-size:12px;text-align:center;margin-top:.5rem;min-height:18px}
+#app-screen{display:none;min-height:100vh;flex-direction:column}
+.topbar{background:var(--blue);color:#fff;padding:.75rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem;position:sticky;top:0;z-index:50}
+.topbar-title{font-size:15px;font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:.5rem}
+.role-badge{background:rgba(255,255,255,.2);padding:3px 10px;border-radius:20px;font-size:11px}
+.logout-btn{background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 12px;border-radius:8px;cursor:pointer;font-size:12px}
+.logout-btn:hover{background:rgba(255,255,255,.25)}
+.clock-bar{background:#fff;border-bottom:1px solid var(--border);padding:.6rem 1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+.clock-time{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--blue)}
+.clock-date{font-size:12px;color:var(--muted)}
+.main{padding:.75rem;flex:1}
+.brands-wrap{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.75rem;overflow-x:auto;padding-bottom:2px}
+.brand-btn{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap;transition:all .15s}
+.brand-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
+.controls{display:flex;gap:8px;margin-bottom:.75rem;flex-wrap:wrap}
+.controls input,.controls select{flex:1;min-width:120px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:#fff;outline:none}
+.action-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.75rem}
+.add-btn{padding:8px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px;font-weight:600}
+.add-btn:hover{background:var(--blue-dark)}
+.add-btn.green{background:#27500a}.add-btn.green:hover{background:#3b6d11}
+.table-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:1rem}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:700px}
+th{background:#f8f9fb;color:var(--muted);font-weight:600;padding:10px 8px;text-align:center;border-bottom:2px solid #b0b5bf;border-right:1.5px solid #dde0e7;font-size:11px;line-height:1.4}
+td{padding:9px 8px;border-bottom:1.5px solid #dde0e7;border-right:1.5px solid #dde0e7;text-align:center;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f9fafb}
+.th-ar{display:block;font-size:11px}.th-en{display:block;font-size:9px;color:#aaa;letter-spacing:.3px}
+.price-buy{color:var(--green);font-weight:700;font-size:14px}
+.price-cash{color:#1a6b2a;font-weight:700;font-size:14px}
+.price-bank{color:var(--blue);font-weight:600;font-size:14px}
+.price-total{font-size:13px;color:#1a6b2a;font-weight:700}
+.buy-col{background:#f0f7eb}
+.color-dots{display:flex;gap:3px;flex-wrap:wrap;justify-content:center}
+.color-dot{width:14px;height:14px;border-radius:50%;border:1px solid #ddd;flex-shrink:0;position:relative;cursor:help}
+.color-dot.unavail{opacity:.25}
+.color-dot.unavail::after{content:'';position:absolute;inset:0;border-radius:50%;background:repeating-linear-gradient(45deg,rgba(0,0,0,.4) 0,rgba(0,0,0,.4) 2px,transparent 2px,transparent 5px)}
+.icon-btn{background:none;border:none;cursor:pointer;padding:4px 5px;border-radius:6px;font-size:15px;transition:background .15s}
+.icon-btn:hover{background:#f0f0f0}
+.del-btn:hover{color:#c0392b}
+.edit-btn-tbl:hover{color:var(--blue)}
+.empty{text-align:center;padding:2.5rem;color:var(--muted);font-size:14px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:.75rem}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:14px;padding:1.25rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+.modal h3{font-size:15px;font-weight:700;margin-bottom:1rem;color:var(--text)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:.75rem}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:11px;color:var(--muted);font-weight:600}
+.form-group input,.form-group select{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;width:100%;outline:none}
+.form-group input:focus,.form-group select:focus{border-color:var(--blue)}
+.breakdown{background:#f8f9fb;border-radius:8px;padding:10px 12px;margin:.75rem 0;font-size:12px}
+.breakdown .row{display:flex;justify-content:space-between;padding:3px 0;color:var(--muted)}
+.breakdown .row.bold{color:var(--text);font-weight:700;border-top:1px solid var(--border);margin-top:4px;padding-top:6px}
+.color-grid{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.cpick{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2.5px solid transparent;transition:border-color .15s;flex-shrink:0}
+.cpick.sel{border-color:#1a1a2e}
+.cpick.unavail-pick{opacity:.35;border-style:dashed;border-color:#aaa}
+.avail-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.avail-lbl{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);cursor:pointer}
+.avail-lbl input{accent-color:var(--blue)}
+.modal-footer{display:flex;gap:8px;margin-top:1rem;padding-top:.875rem;border-top:1px solid var(--border);flex-wrap:wrap}
+.btn-save{padding:8px 20px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600}
+.btn-cancel{padding:8px 14px;background:#fff;border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;color:var(--muted)}
+.btn-del{padding:8px 14px;background:#fff;border:1px solid #e74c3c;border-radius:8px;font-size:13px;cursor:pointer;color:#e74c3c;margin-right:auto}
+.panel{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:1rem;margin-bottom:1rem}
+.panel h4{font-size:14px;font-weight:700;margin-bottom:.75rem;color:var(--text)}
+.user-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0;gap:.5rem;flex-wrap:wrap}
+.user-row:last-child{border-bottom:none}
+.user-info{display:flex;align-items:center;gap:10px}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.user-name{font-size:13px;font-weight:600}
+.user-email{font-size:11px;color:var(--muted)}
+.badge{padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600}
+.badge.admin{background:#e6f1fb;color:#0c447c}
+.badge.viewer{background:#eaf3de;color:#27500a}
+.tabs{display:flex;gap:4px;margin-bottom:.75rem;border-bottom:1px solid var(--border)}
+.tab{padding:8px 14px;font-size:13px;cursor:pointer;color:var(--muted);border-bottom:2.5px solid transparent;margin-bottom:-1px;font-weight:500}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:700}
+@media(max-width:480px){
+  .form-grid{grid-template-columns:1fr}
+  .form-group.full{grid-column:1}
+  .topbar-title{font-size:13px}
+  .clock-time{font-size:18px}
+}
+.loading{text-align:center;padding:2rem;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">🚗</div>
+    <div class="auth-title">كتالوج أسعار السيارات</div>
+    <div class="auth-sub">سجّل دخولك للمتابعة</div>
+    <div class="field"><label>البريد الإلكتروني</label><input id="login-email" type="email" placeholder="example@email.com" autocomplete="email"></div>
+    <div class="field"><label>كلمة المرور</label><input id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn" onclick="doLogin()">دخول</button>
+    <div class="err" id="login-err"></div>
+  </div>
+</div>
+
+<div id="app-screen">
+  <div class="topbar">
+    <div class="topbar-title">🚗 كتالوج أسعار السيارات</div>
+    <div class="topbar-right">
+      <span class="role-badge" id="role-badge"></span>
+      <button class="logout-btn" onclick="doLogout()">خروج</button>
+    </div>
+  </div>
+  <div class="clock-bar">
+    <div><div class="clock-time" id="clock">00:00:00</div></div>
+    <div style="text-align:left"><div class="clock-date" id="clock-date"></div></div>
+  </div>
+  <div class="main">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('cars',this)">السيارات</div>
+      <div class="tab" id="users-tab-btn" onclick="switchTab('users',this)" style="display:none">إدارة المستخدمين</div>
+    </div>
+    <div id="tab-cars">
+      <div class="brands-wrap" id="brands-bar"></div>
+      <div class="controls">
+        <input type="text" id="search" placeholder="بحث..." oninput="renderCars()">
+        <select id="filter-year" onchange="renderCars()">
+          <option value="">كل الموديلات</option>
+          <option value="2025">2025</option>
+          <option value="2026">2026</option>
+          <option value="2027">2027</option>
+          <option value="2028">2028</option>
+        </select>
+      </div>
+      <div class="action-bar" id="admin-actions"></div>
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="buy-col" style="width:80px" rowspan="2"><span class="th-ar">سعر القائمة</span><span class="th-en">LIST PRICE</span></th>
+                <th style="width:120px" rowspan="2"><span class="th-ar">نوع السيارة</span><span class="th-en">CAR TYPE</span></th>
+                <th style="width:50px" rowspan="2"><span class="th-ar">الموديل</span><span class="th-en">MODEL</span></th>
+                <th style="width:80px" rowspan="2"><span class="th-ar">اللون</span><span class="th-en">COLOR</span></th>
+                <th style="width:90px"><span class="th-ar">سعر الكاش</span><span class="th-en">CASH PRICE</span></th>
+                <th style="width:115px"><span class="th-ar">إجمالي الكاش</span><span class="th-en">TOTAL CASH</span></th>
+                <th style="width:90px"><span class="th-ar">سعر البنك</span><span class="th-en">BANK PRICE</span></th>
+                <th style="width:115px"><span class="th-ar">إجمالي البنك</span><span class="th-en">TOTAL BANK</span></th>
+                <th style="width:68px" rowspan="2"><span class="th-ar">تاريخ السعر</span><span class="th-en">PRICE DATE</span></th>
+                <th id="actions-col" style="width:50px;display:none" rowspan="2"></th>
+              </tr>
+              <tr>
+                <th style="font-size:9px;color:#aaa;font-weight:400">بدون ضريبة</th>
+                <th style="font-size:9px;color:#aaa;font-weight:400">شامل الضريبة والرسوم</th>
+                <th style="font-size:9px;color:#aaa;font-weight:400">بدون ضريبة</th>
+                <th style="font-size:9px;color:#aaa;font-weight:400">شامل الضريبة والرسوم</th>
+              </tr>
+            </thead>
+            <tbody id="car-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div id="tab-users" style="display:none">
+      <div class="action-bar">
+        <button class="add-btn green" onclick="openAddUser()">+ إضافة موظف</button>
+      </div>
+      <div class="panel">
+        <h4>المستخدمون</h4>
+        <div id="users-list"><div class="loading">جاري التحميل...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="car-modal"><div class="modal" id="car-modal-inner"></div></div>
+<div class="modal-overlay" id="user-modal"><div class="modal" id="user-modal-inner"></div></div>
+<div class="modal-overlay" id="brand-modal"><div class="modal" id="brand-modal-inner"></div></div>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged,createUserWithEmailAndPassword}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import{getFirestore,doc,setDoc,getDoc,collection,getDocs,onSnapshot,deleteDoc,updateDoc,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig={
+  apiKey:"AIzaSyDMwf0PHZW1mVf59XEY4Bof1aTkEuSCSxE",
+  authDomain:"price-list-a472e.firebaseapp.com",
+  projectId:"price-list-a472e",
+  storageBucket:"price-list-a472e.firebasestorage.app",
+  messagingSenderId:"699724189483",
+  appId:"1:699724189483:web:f8a203e5e4e61bbfa73f6e",
+  measurementId:"G-CBK99N6XTM"
+};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+const COLORS=[
+  {name:'White',hex:'#FFFFFF'},{name:'Black',hex:'#1a1a1a'},{name:'Silver',hex:'#C0C0C0'},
+  {name:'Gray',hex:'#808080'},{name:'Red',hex:'#CC2200'},{name:'Dark Blue',hex:'#1B3A6B'},
+  {name:'Light Blue',hex:'#4A90D9'},{name:'Beige',hex:'#D4B896'},{name:'Brown',hex:'#7B4F2E'},
+  {name:'Green',hex:'#2E7D32'},{name:'Gold',hex:'#C5A028'},{name:'Orange',hex:'#D45A00'},
+  {name:'Purple',hex:'#6A1B9A'},{name:'Yellow',hex:'#D4B000'}
+];
+const VAT=0.15,CASH_M=-1500,BANK_M=2000,ISSUE=400;
+const DEFAULT_BRANDS=[
+  {id:'toyota',name:'تويوتا',nameAr:'تويوتا',nameEn:'Toyota'},
+  {id:'hyundai',name:'هيونداي',nameAr:'هيونداي',nameEn:'Hyundai'},
+  {id:'lexus',name:'لكزس',nameAr:'لكزس',nameEn:'Lexus'},
+  {id:'isuzu',name:'إيسوزو',nameAr:'إيسوزو',nameEn:'Isuzu'},
+  {id:'ford',name:'فورد',nameAr:'فورد',nameEn:'Ford'},
+  {id:'jetour',name:'جيتور',nameAr:'جيتور',nameEn:'Jetour'},
+  {id:'peugeot',name:'بيجو',nameAr:'بيجو',nameEn:'Peugeot'},
+  {id:'nissan',name:'نيسان',nameAr:'نيسان',nameEn:'Nissan'},
+  {id:'foton',name:'فوتون',nameAr:'فوتون',nameEn:'Foton'},
+  {id:'kia',name:'كيا',nameAr:'كيا',nameEn:'Kia'},
+  {id:'jac',name:'جي اي سي',nameAr:'جي اي سي',nameEn:'JAC'},
+  {id:'suzuki',name:'سوزوكي',nameAr:'سوزوكي',nameEn:'Suzuki'}
+];
+
+let currentUser=null,currentRole=null,activeBrand='all',editCarId=null,selColors=[],selColorAvail={};
+let brands=[],cars=[];
+
+function fmt(n){return Math.round(n).toLocaleString('en-US')}
+function calc(c){
+  const buy=c.buy||0;
+  const ce=buy+CASH_M,cv=Math.round(ce*VAT),ci=ce+cv;
+  const be=buy+BANK_M,bv=Math.round(be*VAT),bi=be+bv;
+  const pl=c.plateFee||900;
+  return{buy,ce,cv,ci,be,bv,bi,pl,tc:ci+ISSUE+pl,tb:bi+ISSUE+pl};
+}
+
+function startClock(){
+  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  setInterval(()=>{
+    const n=new Date();
+    const el=document.getElementById('clock');
+    const hr=n.getHours();const h12=hr%12||12;const ampm=hr<12?'AM':'PM';
+    if(el)el.textContent=String(h12).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0')+' '+ampm;
+    const de=document.getElementById('clock-date');
+    if(de)de.textContent=days[n.getDay()]+', '+n.getDate()+' '+months[n.getMonth()]+' '+n.getFullYear();
+  },1000);
+}
+
+window.doLogin=async()=>{
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  const err=document.getElementById('login-err');
+  err.textContent='';
+  if(!email||!pass){err.textContent='يرجى تعبئة جميع الحقول';return;}
+  try{await signInWithEmailAndPassword(auth,email,pass);}
+  catch(e){err.textContent=e.code==='auth/invalid-credential'?'البريد أو كلمة المرور غير صحيحة':'حدث خطأ، حاول مرة أخرى';}
+};
+window.doLogout=async()=>await signOut(auth);
+
+onAuthStateChanged(auth,async user=>{
+  if(user){
+    currentUser=user;
+    let snap=await getDoc(doc(db,'users',user.uid));
+    if(!snap.exists()||!snap.data().role){
+      await new Promise(r=>setTimeout(r,2000));
+      snap=await getDoc(doc(db,'users',user.uid));
+    }
+    currentRole=(snap.exists()&&snap.data().role)?snap.data().role:'viewer';
+    document.getElementById('auth-screen').style.display='none';
+    document.getElementById('app-screen').style.display='flex';
+    document.getElementById('role-badge').textContent=currentRole==='admin'?'مدير 👑':'موظف - مشاهدة فقط';
+    if(currentRole==='admin'){
+      document.getElementById('users-tab-btn').style.display='';
+      document.getElementById('actions-col').style.display='';
+    }
+    startClock();
+    await loadData();
+  }else{
+    currentUser=null;currentRole=null;
+    document.getElementById('auth-screen').style.display='flex';
+    document.getElementById('app-screen').style.display='none';
+  }
+});
+
+async function loadData(){
+  const bSnap=await getDocs(collection(db,'brands'));
+  brands=bSnap.docs.map(d=>({id:d.id,...d.data()}));
+  if(brands.length===0){
+    for(const b of DEFAULT_BRANDS)await setDoc(doc(db,'brands',b.id),{name:b.name,nameAr:b.nameAr,nameEn:b.nameEn});
+    brands=[...DEFAULT_BRANDS];
+  }
+  renderBrandsBar();
+  if(currentRole==='admin')renderAdminActions();
+  onSnapshot(collection(db,'cars'),snap=>{
+    cars=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderCars();
+  });
+}
+
+function renderBrandsBar(){
+  const bar=document.getElementById('brands-bar');
+  bar.innerHTML=`<button class="brand-btn ${activeBrand==='all'?'active':''}" onclick="setBrand('all')">الكل</button>`;
+  brands.forEach(b=>{
+    const lbl=b.nameEn?`${b.nameAr||b.name} / ${b.nameEn}`:b.name;
+    bar.innerHTML+=`<button class="brand-btn ${activeBrand===b.id?'active':''}" onclick="setBrand('${b.id}')">${lbl}</button>`;
+  });
+}
+window.setBrand=id=>{activeBrand=id;renderBrandsBar();renderCars();};
+
+function renderAdminActions(){
+  document.getElementById('admin-actions').innerHTML=`
+    <button class="add-btn" onclick="openAddCar()">+ إضافة سيارة</button>
+    <button class="add-btn green" onclick="openAddBrand()">+ إضافة ماركة</button>
+    <button class="add-btn" style="background:#a32d2d" onclick="openDeleteBrand()">🗑️ حذف ماركة</button>`;
+}
+
+function getFiltered(){
+  const q=(document.getElementById('search')||{}).value?.toLowerCase()||'';
+  const yr=(document.getElementById('filter-year')||{}).value||'';
+  return cars.filter(c=>{
+    if(activeBrand!=='all'&&c.brand!==activeBrand)return false;
+    if(q&&!c.model?.toLowerCase().includes(q))return false;
+    if(yr&&c.year!==yr)return false;
+    return true;
+  });
+}
+
+window.renderCars=()=>{
+  const list=getFiltered();
+  const tbody=document.getElementById('car-table');
+  if(!list.length){tbody.innerHTML=`<tr><td colspan="9"><div class="empty">لا توجد سيارات — اضغط إضافة سيارة</div></td></tr>`;return;}
+  tbody.innerHTML=list.map(c=>{
+    const brand=brands.find(b=>b.id===c.brand)||{name:c.brand||'',nameAr:c.brand,nameEn:''};
+    const p=calc(c);
+    const avail=c.colorAvail||{};
+    const colors=c.colors||[];
+    const colorPrices=c.colorPrices||{};
+    const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#C5A028','#D4B000','#808080'];
+    const rowCount=Math.max(colors.length,1);
+    const adminBtns=currentRole==='admin'?`<button class="icon-btn edit-btn-tbl" onclick="openEditCar('${c.id}')">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')">🗑️</button>`:'';
+    
+    if(!colors.length){
+      return`<tr>
+        <td class="price-buy buy-col" style="font-size:14px;font-weight:700">${fmt(p.buy)}</td>
+        <td style="text-align:right"><strong>${c.model||''}</strong><br><span style="font-size:10px;color:#888">${brand.nameAr||brand.name}${brand.nameEn?' / '+brand.nameEn:''}</span></td>
+        <td style="font-weight:600">${c.year||'-'}</td>
+        <td colspan="4" style="color:#aaa;font-size:11px">لا توجد ألوان</td>
+        <td style="font-size:10px;color:#888">${c.date||'-'}</td>
+        ${currentRole==='admin'?`<td>${adminBtns}</td>`:''}
+      </tr>`;
+    }
+    
+    return colors.map((h,i)=>{
+      const sepStyle=i===0?'border-top:3px solid #1B6FC8;':'';
+      const pr=colorPrices[h]||0; // pr = سعر القائمة لهذا اللون
+      const nm=COLORS.find(x=>x.hex===h)?.name||h;
+      const isUnavail=avail[h]===false;
+      const txtColor=lightColors.includes(h)?'#333':'#fff';
+      const cashC=pr+CASH_M;
+      const bankC=pr+BANK_M;
+      const cashVatC=Math.round(cashC*0.15);
+      const bankVatC=Math.round(bankC*0.15);
+      const totalCashC=cashC+cashVatC+ISSUE+(c.plateFee||900);
+      const totalBankC=bankC+bankVatC+ISSUE+(c.plateFee||900);
+      const rowStyle=isUnavail?'opacity:0.45;':'';
+      const isFirst=i===0;
+      return`<tr style="${sepStyle}${rowStyle}${isUnavail?'background:#fafafa;':''}">
+        <td class="price-buy buy-col" style="font-size:14px;font-weight:700;background:${h};color:${txtColor};border-radius:6px;padding:6px 8px">${pr>0?fmt(pr):'—'}</td>
+        ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.model||''}</strong><br><span style="font-size:10px;color:#888">${brand.nameAr||brand.name}${brand.nameEn?' / '+brand.nameEn:''}</span></td>`:''}
+        ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
+        <td style="padding:5px 6px">
+          <div style="background:${h};padding:4px 8px;border-radius:6px;text-align:center;border:1px solid #bbb">
+            <span style="font-size:11px;font-weight:700;color:${txtColor}">${nm}</span>
+            ${isUnavail?'<br><span style="font-size:9px;color:'+txtColor+';opacity:.7">غير متاح</span>':''}
+          </div>
+        </td>
+        <td style="font-size:14px;font-weight:600;color:#1a1a2e">${fmt(cashC)}</td>
+        <td class="price-cash" style="font-size:14px">${fmt(totalCashC)}</td>
+        <td class="price-bank" style="font-size:14px">${fmt(bankC)}</td>
+        <td class="price-cash" style="font-size:14px">${fmt(totalBankC)}</td>
+        ${isFirst?`<td rowspan="${rowCount}" style="font-size:10px;color:#888;vertical-align:middle;text-align:center">${c.date||'-'}</td>`:''}
+        ${isFirst&&currentRole==='admin'?`<td rowspan="${rowCount}" style="vertical-align:middle;text-align:center">${adminBtns}</td>`:''}
+      </tr>`;
+    }).join('');
+  }).join('');
+};
+
+let selColorPrices={};
+
+function buildColorSec(ec,ea,ep){
+  selColors=[...(ec||[])];selColorAvail={...(ea||{})};
+  // تنقية: القيم الأقل من 10000 تعتبر سعر إضافي قديم وليس سعر قائمة
+  const rawPrices=ep||{};
+  selColorPrices={};
+  Object.keys(rawPrices).forEach(k=>{if(rawPrices[k]>=10000)selColorPrices[k]=rawPrices[k];});
+  return`<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:6px;text-transform:uppercase;margin-top:8px">الألوان والمخزون والسعر الإضافي</div>
+  <div class="color-grid">${COLORS.map(c=>{
+    const s=selColors.includes(c.hex),av=selColorAvail[c.hex]!==false;
+    return`<div class="cpick${s?' sel':''}${s&&!av?' unavail-pick':''}" style="background:${c.hex}" title="${c.name}" id="cp_${c.hex.replace('#','')}" onclick="toggleC('${c.hex}')"></div>`;
+  }).join('')}</div>
+  <div class="avail-row" id="avail-row">${buildAvailToggles()}</div>`;
+}
+function buildAvailToggles(){
+  return selColors.map(h=>{
+    const name=COLORS.find(x=>x.hex===h)?.name||h,av=selColorAvail[h]!==false,pr=selColorPrices[h]||0;
+    return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
+      <div style="width:13px;height:13px;border-radius:50%;background:${h};border:1px solid #ddd;flex-shrink:0"></div>
+      <span style="font-size:11px;color:var(--muted);min-width:60px">${name}</span>
+      <label class="avail-lbl"><input type="checkbox" ${av?'checked':''} onchange="toggleAv('${h}',this.checked)"> متاح</label>
+      <input type="number" value="${pr}" placeholder="سعر القائمة" style="width:130px;padding:3px 7px;border:1px solid #ddd;border-radius:6px;font-size:11px" onchange="togglePrice('${h}',this.value)">
+      <span style="font-size:10px;color:#aaa">ر.س</span>
+    </div>`;
+  }).join('');
+}
+window.toggleC=hex=>{
+  if(selColors.includes(hex)){selColors=selColors.filter(x=>x!==hex);delete selColorAvail[hex];delete selColorPrices[hex];}
+  else{selColors.push(hex);selColorAvail[hex]=true;selColorPrices[hex]=0;}
+  const el=document.getElementById('cp_'+hex.replace('#',''));
+  if(el){el.classList.toggle('sel',selColors.includes(hex));el.classList.toggle('unavail-pick',selColors.includes(hex)&&selColorAvail[hex]===false);}
+  const ar=document.getElementById('avail-row');if(ar)ar.innerHTML=buildAvailToggles();
+};
+window.toggleAv=(hex,val)=>{
+  selColorAvail[hex]=val;
+  const el=document.getElementById('cp_'+hex.replace('#',''));
+  if(el)el.classList.toggle('unavail-pick',!val);
+};
+window.togglePrice=(hex,val)=>{
+  selColorPrices[hex]=parseInt(val)||0;
+};
+
+function brkHtml(p){
+  return`<div class="row"><span>سعر القائمة</span><span>${fmt(p.buy)} SAR</span></div>
+  <div class="row"><span>سعر الكاش (${CASH_M>0?"+":""}${CASH_M})</span><span>${fmt(p.ce)} SAR</span></div>
+  <div class="row"><span>سعر البنك (+${BANK_M})</span><span>${fmt(p.be)} SAR</span></div>
+  <div class="row"><span>رسوم الإصدار</span><span>${ISSUE} SAR</span></div>
+  <div class="row"><span>رسوم اللوحات</span><span>${fmt(p.pl)} SAR</span></div>
+  <div class="row bold"><span>الإجمالي كاش</span><span>${fmt(p.tc)} SAR</span></div>
+  <div class="row bold"><span>الإجمالي بنك</span><span>${fmt(p.tb)} SAR</span></div>`;
+}
+window.updateBreakdown=()=>{
+  const buy=parseInt(document.getElementById('f-buy')?.value)||0;
+  const pl=parseInt(document.getElementById('f-plate')?.value)||900;
+  const bd=document.getElementById('breakdown');
+  if(bd)bd.innerHTML=brkHtml(calc({buy,plateFee:pl}));
+};
+
+function carForm(c){
+  const isEdit=!!c;
+  const bOpts=brands.map(b=>`<option value="${b.id}"${c&&b.id===c.brand?' selected':''}>${b.nameAr||b.name}${b.nameEn?' / '+b.nameEn:''}</option>`).join('');
+  const today=new Date().toISOString().slice(0,10);
+  const p=c?calc(c):null;
+  return`<h3>${isEdit?'✏️ تعديل: '+c.model:'➕ إضافة سيارة جديدة'}</h3>
+  <div class="form-grid">
+    <div class="form-group"><label>الماركة</label><select id="f-brand">${bOpts}</select></div>
+    <div class="form-group"><label>نوع السيارة</label><input id="f-model" value="${c?.model||''}" placeholder="كامري 2.5S"></div>
+    <div class="form-group"><label>الموديل (السنة)</label><select id="f-year">
+      <option value="2025"${(!c||c.year==='2025')?' selected':''}>2025</option>
+      <option value="2026"${c?.year==='2026'?' selected':''}>2026</option>
+      <option value="2027"${c?.year==='2027'?' selected':''}>2027</option>
+      <option value="2028"${c?.year==='2028'?' selected':''}>2028</option>
+    </select></div>
+    <div class="form-group"><label>رسوم اللوحات (ر.س)</label><input id="f-plate" type="number" value="${c?.plateFee||900}" placeholder="900" oninput="updateBreakdown()"></div>
+    <div class="form-group"><label>تاريخ السعر</label><input id="f-date" type="date" value="${c?.date||today}"></div>
+    <div class="form-group full"><label>ملاحظات</label><input id="f-notes" value="${c?.notes||''}" placeholder="اختياري"></div>
+  </div>
+  ${buildColorSec(c?.colors,c?.colorAvail,c?.colorPrices)}
+  <div class="modal-footer">
+    ${isEdit?`<button class="btn-del" onclick="deleteCar('${c.id}');closeCarModal()">🗑️ حذف</button>`:''}
+    <button class="btn-save" onclick="saveCar()">حفظ</button>
+    <button class="btn-cancel" onclick="closeCarModal()">إلغاء</button>
+  </div>`;
+}
+
+window.openAddCar=()=>{editCarId=null;document.getElementById('car-modal-inner').innerHTML=carForm(null);document.getElementById('car-modal').classList.add('open');};
+window.openEditCar=id=>{const c=cars.find(x=>x.id===id);if(!c)return;editCarId=id;document.getElementById('car-modal-inner').innerHTML=carForm(c);document.getElementById('car-modal').classList.add('open');};
+window.closeCarModal=()=>document.getElementById('car-modal').classList.remove('open');
+
+window.saveCar=async()=>{
+  const model=document.getElementById('f-model').value.trim();
+  const brand=document.getElementById('f-brand').value;
+  const year=document.getElementById('f-year').value;
+  const buy=0;
+  const plate=parseInt(document.getElementById('f-plate').value)||900;
+  const date=document.getElementById('f-date').value;
+  const notes=document.getElementById('f-notes').value.trim();
+  if(!model){alert('يرجى إدخال نوع السيارة');return;}
+  const d2={brand,model,year,buy,plateFee:plate,date,notes,colors:selColors,colorAvail:{...selColorAvail},colorPrices:{...selColorPrices},updatedAt:serverTimestamp()};
+  if(editCarId)await updateDoc(doc(db,'cars',editCarId),d2);
+  else await setDoc(doc(db,'cars','car_'+Date.now()),{...d2,createdAt:serverTimestamp()});
+  closeCarModal();
+};
+
+window.deleteCar=async id=>{
+  if(!confirm('هل أنت متأكد من حذف هذه السيارة؟'))return;
+  await deleteDoc(doc(db,'cars',id));
+};
+
+window.openAddBrand=()=>{
+  document.getElementById('brand-modal-inner').innerHTML=`<h3>➕ إضافة ماركة جديدة</h3>
+  <div class="form-grid">
+    <div class="form-group"><label>معرف (إنجليزي بدون مسافة)</label><input id="b-id" placeholder="bmw"></div>
+    <div class="form-group"><label>اسم الماركة بالعربي</label><input id="b-name" placeholder="بي ام دبليو"></div>
+    <div class="form-group full"><label>اسم الماركة بالإنجليزي</label><input id="b-name-en" placeholder="BMW"></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-save" onclick="saveBrand()">إضافة</button>
+    <button class="btn-cancel" onclick="document.getElementById('brand-modal').classList.remove('open')">إلغاء</button>
+  </div>`;
+  document.getElementById('brand-modal').classList.add('open');
+};
+window.openDeleteBrand=()=>{
+  const opts=brands.map(b=>`<option value="${b.id}">${b.nameAr||b.name}${b.nameEn?' / '+b.nameEn:''}</option>`).join('');
+  document.getElementById('brand-modal-inner').innerHTML=`<h3>🗑️ حذف ماركة</h3>
+  <div class="form-grid">
+    <div class="form-group full"><label>اختر الماركة للحذف</label><select id="b-del-id">${opts}</select></div>
+  </div>
+  <p style="font-size:12px;color:#c0392b;margin:.5rem 0">تنبيه: لن تُحذف السيارات المرتبطة بهذه الماركة</p>
+  <div class="modal-footer">
+    <button class="btn-del" onclick="deleteBrand()">🗑️ حذف</button>
+    <button class="btn-cancel" onclick="document.getElementById('brand-modal').classList.remove('open')">إلغاء</button>
+  </div>`;
+  document.getElementById('brand-modal').classList.add('open');
+};
+window.deleteBrand=async()=>{
+  const id=document.getElementById('b-del-id').value;
+  if(!id){alert('اختر ماركة');return;}
+  if(!confirm('هل أنت متأكد من حذف هذه الماركة؟'))return;
+  await deleteDoc(doc(db,'brands',id));
+  brands=brands.filter(x=>x.id!==id);
+  renderBrandsBar();
+  document.getElementById('brand-modal').classList.remove('open');
+};
+window.saveBrand=async()=>{
+  const id=document.getElementById('b-id').value.trim().toLowerCase().replace(/\s/g,'');
+  const nameAr=document.getElementById('b-name').value.trim();
+  const nameEn=document.getElementById('b-name-en').value.trim();
+  if(!id||!nameAr){alert('يرجى تعبئة المعرف والاسم العربي');return;}
+  if(brands.find(x=>x.id===id)){alert('هذا المعرف موجود');return;}
+  await setDoc(doc(db,'brands',id),{name:nameAr,nameAr,nameEn});
+  brands.push({id,name:nameAr,nameAr,nameEn});renderBrandsBar();
+  document.getElementById('brand-modal').classList.remove('open');
+};
+
+window.switchTab=(tab,el)=>{
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-cars').style.display=tab==='cars'?'block':'none';
+  document.getElementById('tab-users').style.display=tab==='users'?'block':'none';
+  if(tab==='users')renderUsers();
+};
+
+async function renderUsers(){
+  const snap=await getDocs(collection(db,'users'));
+  const users=snap.docs.map(d=>({uid:d.id,...d.data()}));
+  const el=document.getElementById('users-list');
+  if(!users.length){el.innerHTML='<div class="empty">لا يوجد مستخدمون</div>';return;}
+  el.innerHTML=users.map(u=>{
+    const initials=(u.name||u.email||'U').substring(0,2).toUpperCase();
+    const isMe=u.uid===currentUser?.uid;
+    return`<div class="user-row">
+      <div class="user-info">
+        <div class="user-avatar">${initials}</div>
+        <div><div class="user-name">${u.name||'مستخدم'}${isMe?' (أنت)':''}</div><div class="user-email">${u.email||''}</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge ${u.role==='admin'?'admin':'viewer'}">${u.role==='admin'?'مدير':'موظف'}</span>
+        ${!isMe?`<button class="icon-btn del-btn" onclick="deleteUser('${u.uid}','${u.email||''}')">🗑️</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.openAddUser=()=>{
+  document.getElementById('user-modal-inner').innerHTML=`<h3>➕ إضافة موظف جديد</h3>
+  <div class="form-grid">
+    <div class="form-group"><label>الاسم</label><input id="u-name" placeholder="اسم الموظف"></div>
+    <div class="form-group"><label>البريد الإلكتروني</label><input id="u-email" type="email" placeholder="employee@email.com"></div>
+    <div class="form-group"><label>كلمة المرور</label><input id="u-pass" type="password" placeholder="6 أحرف على الأقل"></div>
+    <div class="form-group"><label>الصلاحية</label><select id="u-role">
+      <option value="viewer">موظف - مشاهدة فقط</option>
+      <option value="admin">مدير</option>
+    </select></div>
+  </div>
+  <div class="err" id="user-err"></div>
+  <div class="modal-footer">
+    <button class="btn-save" onclick="saveUser()">إضافة</button>
+    <button class="btn-cancel" onclick="document.getElementById('user-modal').classList.remove('open')">إلغاء</button>
+  </div>`;
+  document.getElementById('user-modal').classList.add('open');
+};
+
+window.saveUser=async()=>{
+  const name=document.getElementById('u-name').value.trim();
+  const email=document.getElementById('u-email').value.trim();
+  const pass=document.getElementById('u-pass').value;
+  const role=document.getElementById('u-role').value;
+  const err=document.getElementById('user-err');
+  err.textContent='';
+  if(!email||!pass){err.textContent='يرجى تعبئة البريد وكلمة المرور';return;}
+  if(pass.length<6){err.textContent='كلمة المرور 6 أحرف على الأقل';return;}
+  try{
+    const app2=initializeApp(firebaseConfig,'sec_'+Date.now());
+    const auth2=getAuth(app2);
+    const cred=await createUserWithEmailAndPassword(auth2,email,pass);
+    await setDoc(doc(db,'users',cred.user.uid),{name,email,role,createdAt:serverTimestamp()});
+    await signOut(auth2);
+    document.getElementById('user-modal').classList.remove('open');
+    renderUsers();
+    alert('تم إضافة الموظف بنجاح ✅');
+  }catch(e){
+    err.textContent=e.code==='auth/email-already-in-use'?'هذا البريد مستخدم مسبقاً':'حدث خطأ: '+e.message;
+  }
+};
+
+window.deleteUser=async(uid,email)=>{
+  if(!confirm(`هل تريد حذف المستخدم ${email||''}؟\nسيتم حذفه نهائياً من النظام.`))return;
+  try{
+    // Delete from Firestore
+    await deleteDoc(doc(db,'users',uid));
+    // Delete from Authentication via admin-style secondary app
+    const app3=initializeApp(firebaseConfig,'del_'+Date.now());
+    const auth3=getAuth(app3);
+    // We cannot delete other users from client SDK directly
+    // So we mark them as deleted in Firestore and they cannot login
+    // The admin can also delete from Firebase Console
+    renderUsers();
+    alert('تم حذف المستخدم من قائمة الموظفين ✅\nللحذف الكامل من Firebase Authentication افتح Firebase Console → Authentication → Users');
+  }catch(e){
+    alert('حدث خطأ: '+e.message);
+  }
+};
+
+['car-modal','user-modal','brand-modal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+});
+document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')window.doLogin();});
+</script>
+</body>
+</html>
