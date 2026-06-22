@@ -902,9 +902,12 @@ async function checkPriceNotif(){
     // تحقق إذا المستخدم شاف هذا الإشعار
     const seenKey='seen_notif_'+lastUpdate.getTime();
     if(localStorage.getItem(seenKey))return;
-    const dateStr=lastUpdate.toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
-    const timeStr=lastUpdate.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
-    const carName=data.carModel?(' — '+data.carModel):''
+    const d=lastUpdate;
+    const dateStr=d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
+    const hr=d.getHours(),mn=String(d.getMinutes()).padStart(2,'0');
+    const ampm=hr<12?'AM':'PM';const h12=hr%12||12;
+    const timeStr=h12+':'+mn+' '+ampm;
+    const carName=data.carModel?(' — '+data.carModel):'';
     document.getElementById('notif-msg').textContent='🔔 تم تحديث سعر'+carName+' بتاريخ '+dateStr+' الساعة '+timeStr;
     document.getElementById('notif-bar').style.display='flex';
     window._notifKey=seenKey;
