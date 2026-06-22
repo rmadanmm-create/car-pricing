@@ -111,6 +111,9 @@ tr:hover td{background:#f9fafb}
   .clock-time{font-size:18px}
 }
 .loading{text-align:center;padding:2rem;color:var(--muted)}
+tr.drag-over td{border-top:3px solid var(--blue)!important;background:#e8f0fb!important}
+tr[data-car-id]{cursor:grab}
+tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
 </style>
 </head>
 <body>
@@ -315,6 +318,7 @@ async function loadData(){
   if(currentRole==='admin')renderAdminActions();
   onSnapshot(collection(db,'cars'),snap=>{
     cars=snap.docs.map(d=>({id:d.id,...d.data()}));
+    cars.sort((a,b)=>(a.order||0)-(b.order||0));
     renderCars();
   });
 }
@@ -386,7 +390,7 @@ window.renderCars=()=>{
       const totalBankC=bankC+bankVatC+ISSUE+(c.plateFee||900);
       const rowStyle=isUnavail?'opacity:0.45;':'';
       const isFirst=i===0;
-      return`<tr style="${sepStyle}${rowStyle}${isUnavail?'background:#fafafa;':''}">
+      return`<tr ${i===0?'data-car-id="'+c.id+'"':''} style="${sepStyle}${rowStyle}${isUnavail?'background:#fafafa;':''}">
         <td class="price-buy buy-col" style="font-size:14px;font-weight:700;background:${h};color:${txtColor};border-radius:6px;padding:6px 8px">${pr>0?fmt(pr):'—'}</td>
         ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.model||''}</strong><br><span style="font-size:10px;color:#888">${brand.nameAr||brand.name}${brand.nameEn?' / '+brand.nameEn:''}</span></td>`:''}
         ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
@@ -656,6 +660,51 @@ window.deleteUser=async(uid,email)=>{
   document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 });
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')window.doLogin();});
+
+// === السحب والإفلات ===
+let dragCarId=null;
+function enableDragDrop(){
+  if(currentRole!=='admin')return;
+  const tbody=document.getElementById('car-table');
+  tbody.addEventListener('dragstart',e=>{
+    const tr=e.target.closest('tr[data-car-id]');
+    if(!tr)return;
+    dragCarId=tr.dataset.carId;
+    tr.style.opacity='0.5';
+  });
+  tbody.addEventListener('dragend',e=>{
+    const tr=e.target.closest('tr[data-car-id]');
+    if(tr)tr.style.opacity='';
+    tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over'));
+  });
+  tbody.addEventListener('dragover',e=>{
+    e.preventDefault();
+    const tr=e.target.closest('tr[data-car-id]');
+    tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over'));
+    if(tr&&tr.dataset.carId!==dragCarId)tr.classList.add('drag-over');
+  });
+  tbody.addEventListener('drop',async e=>{
+    e.preventDefault();
+    const tr=e.target.closest('tr[data-car-id]');
+    tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over'));
+    if(!tr||!dragCarId||tr.dataset.carId===dragCarId)return;
+    const targetId=tr.dataset.carId;
+    const fromIdx=cars.findIndex(c=>c.id===dragCarId);
+    const toIdx=cars.findIndex(c=>c.id===targetId);
+    if(fromIdx<0||toIdx<0)return;
+    const reordered=[...cars];
+    const [moved]=reordered.splice(fromIdx,1);
+    reordered.splice(toIdx,0,moved);
+    const batch=reordered.map((c,i)=>updateDoc(doc(db,'cars',c.id),{order:i}));
+    await Promise.all(batch);
+  });
+  const observer=new MutationObserver(()=>{
+    tbody.querySelectorAll('tr[data-car-id]').forEach(tr=>{tr.draggable=true;});
+  });
+  observer.observe(tbody,{childList:true,subtree:true});
+  tbody.querySelectorAll('tr[data-car-id]').forEach(tr=>{tr.draggable=true;});
+}
+setTimeout(enableDragDrop,2000);
 </script>
 </body>
 </html>
