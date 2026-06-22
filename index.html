@@ -615,7 +615,7 @@ window.saveCar=async()=>{
   const d2={brand,model,year,buy,plateFee:plate,date,notes,colors:selColors,colorAvail:{...selColorAvail},colorPrices:{...selColorPrices},updatedAt:serverTimestamp()};
   if(editCarId)await updateDoc(doc(db,'cars',editCarId),d2);
   else await setDoc(doc(db,'cars','car_'+Date.now()),{...d2,createdAt:serverTimestamp()});
-  await recordPriceUpdate();
+  await recordPriceUpdate(model);
   closeCarModal();
 };
 
@@ -904,7 +904,8 @@ async function checkPriceNotif(){
     if(localStorage.getItem(seenKey))return;
     const dateStr=lastUpdate.toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
     const timeStr=lastUpdate.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
-    document.getElementById('notif-msg').textContent='🔔 تم تحديث قائمة الأسعار بتاريخ '+dateStr+' الساعة '+timeStr;
+    const carName=data.carModel?(' — '+data.carModel):''
+    document.getElementById('notif-msg').textContent='🔔 تم تحديث سعر'+carName+' بتاريخ '+dateStr+' الساعة '+timeStr;
     document.getElementById('notif-bar').style.display='flex';
     window._notifKey=seenKey;
   }catch(e){}
@@ -913,9 +914,9 @@ window.dismissNotif=()=>{
   document.getElementById('notif-bar').style.display='none';
   if(window._notifKey)localStorage.setItem(window._notifKey,'1');
 };
-async function recordPriceUpdate(){
+async function recordPriceUpdate(carModel=''){
   try{
-    await setDoc(doc(db,'settings','lastPriceUpdate'),{timestamp:serverTimestamp()});
+    await setDoc(doc(db,'settings','lastPriceUpdate'),{timestamp:serverTimestamp(),carModel});
   }catch(e){}
 }
 
