@@ -146,6 +146,8 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
     <div class="tabs">
       <div class="tab active" onclick="switchTab('cars',this)">السيارات</div>
       <div class="tab" id="users-tab-btn" onclick="switchTab('users',this)" style="display:none">إدارة المستخدمين</div>
+      <div class="tab" id="calc-tab-btn" onclick="switchTab('calc',this)">🧮 حاسبة التمويل</div>
+      <div class="tab" id="banks-tab-btn" onclick="switchTab('banks',this)" style="display:none">⚙️ نسب البنوك</div>
     </div>
     <div id="tab-cars">
       <div class="brands-wrap" id="brands-bar"></div>
@@ -195,6 +197,82 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
       <div class="panel">
         <h4>المستخدمون</h4>
         <div id="users-list"><div class="loading">جاري التحميل...</div></div>
+      </div>
+    </div>
+
+    <!-- تاب حاسبة التمويل -->
+    <div id="tab-calc" style="display:none">
+      <div class="panel">
+        <h4>🧮 حاسبة التمويل البنكي</h4>
+        <div class="form-grid" style="margin-bottom:1rem">
+          <div class="form-group">
+            <label>سعر السيارة (ر.س)</label>
+            <input id="calc-price" type="number" placeholder="0" oninput="calcFinance()">
+          </div>
+          <div class="form-group">
+            <label>الدفعة الأولى (ر.س)</label>
+            <input id="calc-down" type="number" placeholder="0" value="0" oninput="calcFinance()">
+          </div>
+          <div class="form-group">
+            <label>مدة التمويل</label>
+            <select id="calc-months" onchange="calcFinance()">
+              <option value="12">12 شهر</option>
+              <option value="24">24 شهر</option>
+              <option value="36">36 شهر</option>
+              <option value="48" selected>48 شهر</option>
+              <option value="60">60 شهر</option>
+              <option value="72">72 شهر</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>اختر جهة التمويل</label>
+            <select id="calc-bank" onchange="calcFinance()">
+              <option value="">-- اختر --</option>
+            </select>
+          </div>
+        </div>
+        <div id="calc-result" style="display:none">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1rem">
+            <div style="background:#e8f4fd;border-radius:10px;padding:12px;text-align:center">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:4px">مبلغ التمويل</div>
+              <div id="r-amount" style="font-size:18px;font-weight:700;color:var(--blue)"></div>
+            </div>
+            <div style="background:#eaf3de;border-radius:10px;padding:12px;text-align:center">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:4px">القسط الشهري</div>
+              <div id="r-monthly" style="font-size:18px;font-weight:700;color:#27500a"></div>
+            </div>
+            <div style="background:#fff3e0;border-radius:10px;padding:12px;text-align:center">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:4px">إجمالي التمويل</div>
+              <div id="r-total" style="font-size:18px;font-weight:700;color:#e65100"></div>
+            </div>
+            <div style="background:#fce4e4;border-radius:10px;padding:12px;text-align:center">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:4px">إجمالي الفوائد</div>
+              <div id="r-profit" style="font-size:18px;font-weight:700;color:#a32d2d"></div>
+            </div>
+          </div>
+          <div style="background:#f8f9fb;border-radius:8px;padding:10px 14px;font-size:12px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="color:var(--muted)">جهة التمويل</span><span id="r-bank" style="font-weight:600"></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="color:var(--muted)">نسبة الربح السنوية</span><span id="r-rate" style="font-weight:600;color:var(--blue)"></span>
+            </div>
+            <div style="display:flex;justify-content:space-between">
+              <span style="color:var(--muted)">مدة التمويل</span><span id="r-months" style="font-weight:600"></span>
+            </div>
+          </div>
+        </div>
+        <div id="calc-empty" style="text-align:center;padding:1.5rem;color:var(--muted);font-size:13px">أدخل سعر السيارة واختر جهة التمويل</div>
+      </div>
+    </div>
+
+    <!-- تاب إعداد نسب البنوك (للمدير فقط) -->
+    <div id="tab-banks" style="display:none">
+      <div class="panel">
+        <h4>⚙️ نسب جهات التمويل</h4>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:1rem">حدّث النسب شهرياً — تنطبق على جميع الحسابات فوراً</p>
+        <div id="banks-list"></div>
+        <button class="add-btn" style="margin-top:.75rem" onclick="saveBankRates()">💾 حفظ النسب</button>
       </div>
     </div>
   </div>
@@ -315,7 +393,11 @@ async function loadData(){
     brands=[...DEFAULT_BRANDS];
   }
   renderBrandsBar();
-  if(currentRole==='admin')renderAdminActions();
+  if(currentRole==='admin'){
+    renderAdminActions();
+    document.getElementById('banks-tab-btn').style.display='';
+  }
+  await loadBankRates();
   onSnapshot(collection(db,'cars'),snap=>{
     cars=snap.docs.map(d=>({id:d.id,...d.data()}));
     cars.sort((a,b)=>(a.order||0)-(b.order||0));
@@ -572,6 +654,8 @@ window.switchTab=(tab,el)=>{
   el.classList.add('active');
   document.getElementById('tab-cars').style.display=tab==='cars'?'block':'none';
   document.getElementById('tab-users').style.display=tab==='users'?'block':'none';
+  document.getElementById('tab-calc').style.display=tab==='calc'?'block':'none';
+  document.getElementById('tab-banks').style.display=tab==='banks'?'block':'none';
   if(tab==='users')renderUsers();
 };
 
@@ -660,6 +744,105 @@ window.deleteUser=async(uid,email)=>{
   document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 });
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')window.doLogin();});
+
+
+// === البنوك وجهات التمويل ===
+const DEFAULT_BANKS=[
+  {id:'rajhi',name:'بنك الراجحي',rate:0},
+  {id:'ahli',name:'البنك الأهلي',rate:0},
+  {id:'riyadh',name:'بنك الرياض',rate:0},
+  {id:'fransi',name:'البنك الفرنسي',rate:0},
+  {id:'arabi',name:'البنك العربي',rate:0},
+  {id:'inma',name:'بنك الإنماء',rate:0},
+  {id:'jazira',name:'بنك الجزيرة',rate:0},
+  {id:'bilad',name:'بنك البلاد',rate:0},
+  {id:'aljamil',name:'عبد اللطيف جميل',rate:0},
+  {id:'raya',name:'راية للتمويل',rate:0},
+  {id:'awwal',name:'تمويل الأولى',rate:0},
+];
+let bankRates=[];
+
+async function loadBankRates(){
+  try{
+    const snap=await getDocs(collection(db,'bankRates'));
+    if(snap.empty){
+      bankRates=[...DEFAULT_BANKS];
+    } else {
+      bankRates=snap.docs.map(d=>({id:d.id,...d.data()}));
+      // أضف أي بنك ناقص
+      DEFAULT_BANKS.forEach(b=>{if(!bankRates.find(x=>x.id===b.id))bankRates.push(b);});
+    }
+  }catch(e){bankRates=[...DEFAULT_BANKS];}
+  renderBankSelect();
+  renderBanksList();
+}
+
+function renderBankSelect(){
+  const sel=document.getElementById('calc-bank');
+  if(!sel)return;
+  sel.innerHTML='<option value="">-- اختر جهة التمويل --</option>';
+  bankRates.forEach(b=>{
+    sel.innerHTML+=`<option value="${b.id}">${b.name} ${b.rate>0?'('+b.rate+'%)':'(لم تحدد)'}</option>`;
+  });
+}
+
+function renderBanksList(){
+  const el=document.getElementById('banks-list');
+  if(!el)return;
+  el.innerHTML=bankRates.map(b=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+      <span style="font-size:13px;font-weight:600;min-width:180px">${b.name}</span>
+      <input type="number" id="rate_${b.id}" value="${b.rate||''}" placeholder="مثال: 2.75" step="0.01" min="0" max="30"
+        style="width:120px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px">
+      <span style="font-size:12px;color:var(--muted)">% سنوياً</span>
+    </div>`).join('');
+}
+
+window.saveBankRates=async()=>{
+  for(const b of bankRates){
+    const inp=document.getElementById('rate_'+b.id);
+    if(!inp)continue;
+    const rate=parseFloat(inp.value)||0;
+    b.rate=rate;
+    await setDoc(doc(db,'bankRates',b.id),{name:b.name,rate});
+  }
+  renderBankSelect();
+  alert('✅ تم حفظ النسب بنجاح');
+};
+
+window.calcFinance=()=>{
+  const price=parseFloat(document.getElementById('calc-price')?.value)||0;
+  const down=parseFloat(document.getElementById('calc-down')?.value)||0;
+  const months=parseInt(document.getElementById('calc-months')?.value)||48;
+  const bankId=document.getElementById('calc-bank')?.value;
+  const bank=bankRates.find(b=>b.id===bankId);
+  const res=document.getElementById('calc-result');
+  const empty=document.getElementById('calc-empty');
+  if(!price||!bank||!bank.rate){
+    if(res)res.style.display='none';
+    if(empty)empty.style.display='block';
+    return;
+  }
+  const amount=price-down;
+  const monthlyRate=bank.rate/100/12;
+  let monthly;
+  if(monthlyRate===0){
+    monthly=amount/months;
+  } else {
+    monthly=amount*(monthlyRate*Math.pow(1+monthlyRate,months))/(Math.pow(1+monthlyRate,months)-1);
+  }
+  const totalPay=monthly*months;
+  const totalProfit=totalPay-amount;
+  document.getElementById('r-amount').textContent=Math.round(amount).toLocaleString('en-US')+' ر.س';
+  document.getElementById('r-monthly').textContent=Math.round(monthly).toLocaleString('en-US')+' ر.س';
+  document.getElementById('r-total').textContent=Math.round(totalPay).toLocaleString('en-US')+' ر.س';
+  document.getElementById('r-profit').textContent=Math.round(totalProfit).toLocaleString('en-US')+' ر.س';
+  document.getElementById('r-bank').textContent=bank.name;
+  document.getElementById('r-rate').textContent=bank.rate+'%';
+  document.getElementById('r-months').textContent=months+' شهر';
+  if(res)res.style.display='block';
+  if(empty)empty.style.display='none';
+};
 
 // === السحب والإفلات ===
 let dragCarId=null;
