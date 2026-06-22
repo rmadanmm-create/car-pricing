@@ -926,7 +926,7 @@ window.dismissNotif=()=>{
 async function recordPriceUpdate(carModel=''){
   try{
     const snap=await getDoc(doc(db,'settings','lastPriceUpdate'));
-    const existing=snap.exists()?snap.data().updates||[];
+    const existing=snap.exists()?(snap.data().updates||[]):[];
     const now=Date.now();
     const filtered=existing.filter(x=>x.carModel!==carModel);
     filtered.push({carModel,time:now});
