@@ -895,33 +895,29 @@ window.calcFinance=()=>{
 async function checkPriceNotif(){
   try{
     const snap=await getDoc(doc(db,'settings','lastPriceUpdate'));
-    if(!snap.exists())return;
+    if(!snap.exists()){console.log('no lastPriceUpdate doc');return;}
     const data=snap.data();
     const updates=data.updates||[];
+    console.log('updates from firebase:',updates);
     if(!updates.length)return;
-    // آخر وقت دخل فيه المستخدم
     const lastSeenKey='last_seen_'+currentUser.uid;
     const lastSeen=parseInt(localStorage.getItem(lastSeenKey)||'0');
-    // السيارات المعدّلة بعد آخر دخول
-    const newUpdates=updates.filter(u=>u.time>lastSeen);
+    console.log('lastSeen:',lastSeen,'updates times:',updates.map(u=>u.time));
+    const newUpdates=updates.filter(u=>(u.time||0)>lastSeen);
+    console.log('newUpdates:',newUpdates);
     if(!newUpdates.length){
-      // حفظ وقت الدخول الحالي
       localStorage.setItem(lastSeenKey,Date.now().toString());
       return;
     }
     const carNames=newUpdates.map(u=>u.carModel).filter(Boolean);
     let msg='';
-    if(carNames.length===0){
-      msg='🔔 تم تحديث قائمة الأسعار';
-    } else if(carNames.length===1){
-      msg='🔔 تم تحديث سعر: '+carNames[0];
-    } else {
-      msg='🔔 تم تحديث أسعار '+carNames.length+' سيارات: '+carNames.join(' — ');
-    }
+    if(carNames.length===0){msg='🔔 تم تحديث قائمة الأسعار';}
+    else if(carNames.length===1){msg='🔔 تم تحديث سعر: '+carNames[0];}
+    else{msg='🔔 تم تحديث أسعار '+carNames.length+' سيارات: '+carNames.join(' — ');}
     document.getElementById('notif-msg').textContent=msg;
     document.getElementById('notif-bar').style.display='flex';
     window._notifLastSeen=lastSeenKey;
-  }catch(e){}
+  }catch(e){console.error('checkPriceNotif error',e);}
 }
 window.dismissNotif=()=>{
   document.getElementById('notif-bar').style.display='none';
@@ -930,14 +926,12 @@ window.dismissNotif=()=>{
 async function recordPriceUpdate(carModel=''){
   try{
     const snap=await getDoc(doc(db,'settings','lastPriceUpdate'));
-    const existing=snap.exists()?snap.data().updates||[]:[]; 
-    const now=new Date();
-    const entry={carModel,time:now.getTime()};
-    // أضف السيارة إذا لم تكن موجودة، أو حدّث وقتها
+    const existing=snap.exists()?snap.data().updates||[];
+    const now=Date.now();
     const filtered=existing.filter(x=>x.carModel!==carModel);
-    filtered.push(entry);
-    await setDoc(doc(db,'settings','lastPriceUpdate'),{updates:filtered,lastTimestamp:serverTimestamp()});
-  }catch(e){}
+    filtered.push({carModel,time:now});
+    await setDoc(doc(db,'settings','lastPriceUpdate'),{updates:filtered,lastTime:now});
+  }catch(e){console.error('recordPriceUpdate error',e);}
 }
 
 // === السحب والإفلات ===
