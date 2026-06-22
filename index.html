@@ -422,6 +422,7 @@ async function loadData(){
     cars=snap.docs.map(d=>({id:d.id,...d.data()}));
     cars.sort((a,b)=>(a.order||0)-(b.order||0));
     renderCars();
+    setTimeout(enableDragDrop,300);
   });
 }
 
@@ -977,7 +978,7 @@ function enableDragDrop(){
   observer.observe(tbody,{childList:true,subtree:true});
   tbody.querySelectorAll('tr[data-car-id]').forEach(tr=>{tr.draggable=true;});
 }
-setTimeout(enableDragDrop,2000);
+// enableDragDrop يُستدعى بعد renderCars
 </script>
 </body>
 </html>
