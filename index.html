@@ -982,32 +982,27 @@ window.calcFinance=()=>{
 
 
 // === نظام الإشعارات ===
-async function checkPriceNotif(){
-  try{
-    const snap=await getDoc(doc(db,'settings','lastPriceUpdate'));
-    if(!snap.exists()){console.log('no lastPriceUpdate doc');return;}
-    const data=snap.data();
-    const updates=data.updates||[];
-    console.log('updates from firebase:',updates);
-    if(!updates.length)return;
-    const lastSeenKey='last_seen_'+currentUser.uid;
-    const lastSeen=parseInt(localStorage.getItem(lastSeenKey)||'0');
-    console.log('lastSeen:',lastSeen,'updates times:',updates.map(u=>u.time));
-    const newUpdates=updates.filter(u=>(u.time||0)>lastSeen);
-    console.log('newUpdates:',newUpdates);
-    if(!newUpdates.length){
-      localStorage.setItem(lastSeenKey,Date.now().toString());
-      return;
-    }
-    const carNames=newUpdates.map(u=>u.carModel).filter(Boolean);
-    let msg='';
-    if(carNames.length===0){msg='🔔 تم تحديث قائمة الأسعار';}
-    else if(carNames.length===1){msg='🔔 تم تحديث سعر: '+carNames[0];}
-    else{msg='🔔 تم تحديث أسعار '+carNames.length+' سيارات: '+carNames.join(' — ');}
-    document.getElementById('notif-msg').textContent=msg;
-    document.getElementById('notif-bar').style.display='flex';
-    window._notifLastSeen=lastSeenKey;
-  }catch(e){console.error('checkPriceNotif error',e);}
+function checkPriceNotif(){
+  const lastSeenKey='last_seen_'+currentUser.uid;
+  onSnapshot(doc(db,'settings','lastPriceUpdate'),snap=>{
+    try{
+      if(!snap.exists())return;
+      const data=snap.data();
+      const updates=data.updates||[];
+      if(!updates.length)return;
+      const lastSeen=parseInt(localStorage.getItem(lastSeenKey)||'0');
+      const newUpdates=updates.filter(u=>(u.time||0)>lastSeen);
+      if(!newUpdates.length)return;
+      const carNames=newUpdates.map(u=>u.carModel).filter(Boolean);
+      let msg='';
+      if(carNames.length===0){msg='🔔 تم تحديث قائمة الأسعار';}
+      else if(carNames.length===1){msg='🔔 تم تحديث سعر: '+carNames[0];}
+      else{msg='🔔 تم تحديث أسعار '+carNames.length+' سيارات: '+carNames.join(' — ');}
+      document.getElementById('notif-msg').textContent=msg;
+      document.getElementById('notif-bar').style.display='flex';
+      window._notifLastSeen=lastSeenKey;
+    }catch(e){}
+  });
 }
 window.dismissNotif=()=>{
   document.getElementById('notif-bar').style.display='none';
