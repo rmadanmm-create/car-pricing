@@ -639,7 +639,7 @@ window.saveCar=async()=>{
   if(!model){alert('يرجى إدخال نوع السيارة');return;}
   const d2={brand,model,year,buy,plateFee:plate,date,notes,colors:selColors,colorAvail:{...selColorAvail},colorPrices:{...selColorPrices},updatedAt:serverTimestamp()};
   if(editCarId)await updateDoc(doc(db,'cars',editCarId),d2);
-  else await setDoc(doc(db,'cars','car_'+Date.now()),{...d2,createdAt:serverTimestamp()});
+  else await setDoc(doc(db,'cars','car_'+Date.now()),{...d2,order:cars.length,createdAt:serverTimestamp()});
   await recordPriceUpdate(model);
   closeCarModal();
 };
