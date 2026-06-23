@@ -267,6 +267,18 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
                 <option value="72">72 شهر</option>
               </select>
             </div>
+            <div class="form-group" style="margin-bottom:10px">
+              <label>نسبة الربح % (سنوي)</label>
+              <input id="calc-profit-rate" type="number" placeholder="مثال: 6" step="0.01" min="0" oninput="calcFinance()">
+            </div>
+            <div class="form-group" style="margin-bottom:10px">
+              <label>نسبة التأمين % (سنوي)</label>
+              <input id="calc-ins-rate" type="number" placeholder="مثال: 2.7" step="0.01" min="0" oninput="calcFinance()">
+            </div>
+            <div class="form-group" style="margin-bottom:10px">
+              <label>الرسوم الإدارية % (اختياري)</label>
+              <input id="calc-admin-rate" type="number" placeholder="مثال: 1" step="0.01" min="0" oninput="calcFinance()">
+            </div>
           </div>
 
           <!-- النتائج -->
@@ -284,23 +296,38 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
               <span style="font-size:12px;color:var(--muted)">الدفعة الأخيرة</span>
               <span id="r-last" style="font-size:14px;font-weight:700;color:#6A1B9A"></span>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #e8eaef">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #e8eaef">
+              <span style="font-size:12px;color:var(--muted)">مبلغ التمويل</span>
+              <span id="r-amount" style="font-size:13px;font-weight:700;color:var(--text)"></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #e8eaef">
               <span style="font-size:12px;color:var(--muted)">المدة</span>
-              <span id="r-months" style="font-size:14px;font-weight:700;color:var(--text)"></span>
+              <span id="r-months" style="font-size:13px;font-weight:700;color:var(--text)"></span>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #e8eaef">
-              <span style="font-size:12px;color:var(--muted)">القسط الشهري</span>
-              <span id="r-monthly" style="font-size:16px;font-weight:700;color:#27500a"></span>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #e8eaef">
+              <span style="font-size:12px;color:var(--muted)">الرسوم الإدارية</span>
+              <span id="r-admin" style="font-size:13px;font-weight:700;color:#e65100"></span>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;margin-top:4px;background:#1B6FC8;border-radius:8px;padding:10px 12px">
-              <span style="font-size:13px;color:#fff;font-weight:600">الإجمالي</span>
-              <span id="r-total" style="font-size:16px;font-weight:700;color:#fff"></span>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #e8eaef">
+              <span style="font-size:12px;color:var(--muted)">القسط بدون تأمين</span>
+              <span id="r-monthly-no-ins" style="font-size:13px;font-weight:600;color:#27500a"></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #e8eaef">
+              <span style="font-size:12px;color:var(--muted)">التأمين الشهري</span>
+              <span id="r-ins-monthly" style="font-size:13px;font-weight:600;color:#6A1B9A"></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 10px;background:#27500a;border-radius:8px;margin-top:4px">
+              <span style="font-size:13px;color:#fff;font-weight:600">القسط شامل التأمين</span>
+              <span id="r-monthly" style="font-size:15px;font-weight:700;color:#fff"></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 10px;background:#1B6FC8;border-radius:8px;margin-top:6px">
+              <span style="font-size:13px;color:#fff;font-weight:600">الإجمالي الكلي</span>
+              <span id="r-total" style="font-size:15px;font-weight:700;color:#fff"></span>
             </div>
           </div>
           <div id="calc-empty" style="display:flex;align-items:center;justify-content:center;background:#f8f9fb;border-radius:12px;padding:14px;color:var(--muted);font-size:13px;text-align:center">أدخل البيانات واختر جهة التمويل</div>
         </div>
         <!-- حقول مخفية للتوافق -->
-        <span id="r-amount" style="display:none"></span>
         <span id="r-profit" style="display:none"></span>
         <span id="r-rate" style="display:none"></span>
         <span id="calc-down-amt" style="display:none"></span>
@@ -928,54 +955,54 @@ window.calcFinance=()=>{
   const months=parseInt(document.getElementById('calc-months')?.value)||48;
   const bankId=document.getElementById('calc-bank')?.value;
   const bank=bankRates.find(b=>b.id===bankId);
+  const profitRate=parseFloat(document.getElementById('calc-profit-rate')?.value)||0;
+  const insRate=parseFloat(document.getElementById('calc-ins-rate')?.value)||0;
+  const adminRate=parseFloat(document.getElementById('calc-admin-rate')?.value)||0;
   const res=document.getElementById('calc-result');
   const empty=document.getElementById('calc-empty');
 
+  if(!price||!bank){
+    if(res)res.style.display='none';
+    if(empty){empty.style.display='flex';empty.textContent='أدخل البيانات واختر جهة التمويل';}
+    return;
+  }
+
   const downAmt=Math.round(price*downPct/100);
   const lastAmt=Math.round(price*lastPct/100);
-
-  // تحديث المبالغ بجانب النسب
-  const downAmtEl=document.getElementById('calc-down-amt');
-  const lastAmtEl=document.getElementById('calc-last-amt');
-  if(downAmtEl)downAmtEl.textContent=downAmt.toLocaleString('en-US');
-  if(lastAmtEl)lastAmtEl.textContent=lastAmt.toLocaleString('en-US');
-
-  if(!price||!bank||!bank.rate){
-    if(res)res.style.display='none';
-    if(empty)empty.style.display='block';
-    return;
-  }
-
-  // مبلغ التمويل = السعر - الدفعة الأولى - الدفعة الأخيرة
   const amount=price-downAmt-lastAmt;
+
   if(amount<=0){
     if(res)res.style.display='none';
-    if(empty){empty.style.display='block';empty.textContent='مجموع الدفعات يساوي أو يتجاوز سعر السيارة';}
+    if(empty){empty.style.display='flex';empty.textContent='مجموع الدفعات يساوي أو يتجاوز سعر السيارة';}
     return;
   }
 
-  const monthlyRate=bank.rate/100/12;
-  let monthly;
-  if(monthlyRate===0){
-    monthly=amount/months;
-  } else {
-    monthly=amount*(monthlyRate*Math.pow(1+monthlyRate,months))/(Math.pow(1+monthlyRate,months)-1);
-  }
-  const totalPay=monthly*months+lastAmt;
-  const totalProfit=totalPay-amount-lastAmt+lastAmt-(price-downAmt-lastAmt)+amount-amount;
-  const totalInterest=(monthly*months)-amount;
+  // حساب القسط بطريقة Flat Rate (نسبة الربح السنوية × المبلغ × عدد السنوات / عدد الأشهر)
+  const years=months/12;
+  const totalProfit=amount*(profitRate/100)*years;
+  const totalIns=amount*(insRate/100)*years;
+  const adminAmt=Math.round(amount*(adminRate/100));
+
+  const monthlyNoIns=Math.round((amount+totalProfit)/months);
+  const monthlyIns=Math.round(totalIns/months);
+  const monthly=monthlyNoIns+monthlyIns;
+
+  const total=downAmt+lastAmt+monthly*months+adminAmt;
 
   const fmt2=n=>Math.round(n).toLocaleString('en-US');
+  document.getElementById('r-bank').textContent=bank.name;
   document.getElementById('r-price').textContent=fmt2(price);
   document.getElementById('r-down').textContent=fmt2(downAmt);
   document.getElementById('r-last').textContent=fmt2(lastAmt);
-  document.getElementById('r-months').textContent=months+' شهر';
-  document.getElementById('r-monthly').textContent=fmt2(monthly);
-  document.getElementById('r-total').textContent=fmt2(downAmt+lastAmt+monthly*months);
-  document.getElementById('r-bank').textContent=bank.name;
   document.getElementById('r-amount').textContent=fmt2(amount);
-  document.getElementById('r-profit').textContent=fmt2(totalInterest);
-  document.getElementById('r-rate').textContent=bank.rate+'%';
+  document.getElementById('r-months').textContent=months+' شهر';
+  document.getElementById('r-admin').textContent=adminAmt>0?fmt2(adminAmt):'—';
+  document.getElementById('r-monthly-no-ins').textContent=fmt2(monthlyNoIns);
+  document.getElementById('r-ins-monthly').textContent=monthlyIns>0?fmt2(monthlyIns):'—';
+  document.getElementById('r-monthly').textContent=fmt2(monthly);
+  document.getElementById('r-total').textContent=fmt2(total);
+  document.getElementById('r-profit').textContent=fmt2(totalProfit);
+  document.getElementById('r-rate').textContent=profitRate+'%';
   if(res)res.style.display='block';
   if(empty)empty.style.display='none';
 };
