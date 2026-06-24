@@ -112,21 +112,13 @@ tr:hover td{background:#f9fafb}
 }
 .loading{text-align:center;padding:2rem;color:var(--muted)}
 @media print{
-  body.no-print-allowed *{display:none!important}
-  body{background:#fff!important}
-  .topbar,.clock-bar,.tabs,.brands-wrap,.controls,.action-bar,.mobile-cards,
-  .notif-bar,#tab-users,#tab-calc,#tab-banks,
-  .icon-btn,.edit-btn-tbl,.del-btn,#actions-col,
-  button{display:none!important}
-  .main{padding:0!important}
-  .table-card{box-shadow:none!important;border:1px solid #ddd}
-  table{font-size:11px!important}
-  th,td{padding:6px 5px!important}
-  .print-header{display:block!important}
+  body > *{display:none!important}
+  #print-area{display:block!important;position:fixed;top:0;left:0;width:100%;z-index:9999}
 }
-.print-header{display:none;text-align:center;padding:10px 0 16px;border-bottom:2px solid #1B6FC8;margin-bottom:12px}
-.print-header h2{font-size:18px;color:#1B6FC8;margin-bottom:4px}
-.print-header p{font-size:11px;color:#888}
+#print-area{display:none}
+.print-header{text-align:center;padding:10px 0 14px;border-bottom:2px solid #1B6FC8;margin-bottom:12px}
+.print-header h2{font-size:16px;color:#1B6FC8;margin-bottom:4px}
+.print-header p{font-size:10px;color:#888}
 /* بطاقات الجوال */
 .mobile-cards{display:none}
 .car-card{background:#fff;border-radius:12px;box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden;border:1px solid var(--border)}
@@ -156,11 +148,10 @@ tr.drag-over td{border-top:3px solid var(--blue)!important;background:#e8f0fb!im
 tr[data-car-id]{cursor:grab}
 tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 
+<div id="print-area"></div>
 <div id="notif-bar" class="notif-bar" style="display:none">
   <span id="notif-msg">🔔 تم تحديث الأسعار</span>
   <button class="notif-close" onclick="dismissNotif()">تم ✓</button>
@@ -198,10 +189,6 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
       <div class="tab" id="banks-tab-btn" onclick="switchTab('banks',this)" style="display:none">⚙️ نسب البنوك</div>
     </div>
     <div id="tab-cars">
-      <div class="print-header">
-        <h2>🚗 كتالوج أسعار السيارات — Al Hussaini Motors</h2>
-        <p id="print-date"></p>
-      </div>
       <div class="brands-wrap" id="brands-bar"></div>
       <div class="controls">
         <input type="text" id="search" placeholder="بحث..." oninput="renderCars()">
@@ -538,7 +525,7 @@ function renderAdminActions(){
     <button class="add-btn" onclick="openAddCar()">+ إضافة سيارة</button>
     <button class="add-btn green" onclick="openAddBrand()">+ إضافة ماركة</button>
     <button class="add-btn" style="background:#a32d2d" onclick="openDeleteBrand()">🗑️ حذف ماركة</button>
-    <button class="add-btn" style="background:#6A1B9A" onclick="printPDF()">🖨️ طباعة</button><button class="add-btn" style="background:#2E7D32" onclick="exportPDF()">📄 حفظ PDF</button>`;
+    <button class="add-btn" style="background:#6A1B9A" onclick="printPDF()">🖨️ طباعة / PDF</button>`;
 }
 
 function getFiltered(){
@@ -882,30 +869,26 @@ document.addEventListener('keydown',e=>{
 
 
 // === طباعة PDF ===
-window.exportPDF=()=>{
-  if(currentRole!=='admin'){alert('⛔ متاح للمدير فقط');return;}
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
-  // عنوان
-  doc.setFontSize(14);
-  doc.setTextColor(27,111,200);
-  doc.text('Al Hussaini Motors - katalog Asaar Al-Sayaraat', doc.internal.pageSize.width/2, 15, {align:'center'});
-  doc.setFontSize(9);
-  doc.setTextColor(100);
+window.printPDF=()=>{
+  if(currentRole!=='admin'){alert('⛔ الطباعة متاحة للمدير فقط');return;}
   const now=new Date();
-  doc.text('Tarikh: '+now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear(), doc.internal.pageSize.width/2, 21, {align:'center'});
-  // بيانات الجدول
+  const dateStr=now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear();
   const list=getFiltered();
-  const rows=[];
+  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#C5A028','#D4B000','#808080'];
+
+  let rows='';
   list.forEach(c=>{
-    const brand=brands.find(b=>b.id===c.brand)||{nameAr:c.brand||''};
+    const brand=brands.find(b=>b.id===c.brand)||{nameAr:c.brand||'',nameEn:''};
     const colors=c.colors||[];
     const colorPrices=c.colorPrices||{};
     const avail=c.colorAvail||{};
+    const rowCount=Math.max(colors.length,1);
     if(!colors.length){
-      rows.push([c.model||'',brand.nameAr||'',c.year||'','—','—','—','—','—',c.date||'']);
+      rows+=`<tr>
+        <td rowspan="1" style="text-align:right;font-weight:700">${c.model||''}<br><small style="color:#888;font-weight:400">${brand.nameAr||''}</small></td>
+        <td>${c.year||''}</td><td colspan="6" style="color:#aaa">لا توجد ألوان</td><td>${c.date||''}</td></tr>`;
     } else {
-      colors.forEach(h=>{
+      colors.forEach((h,i)=>{
         const nm=COLORS.find(x=>x.hex===h)?.name||h;
         const pr=colorPrices[h]||0;
         const cashC=pr+CASH_M;
@@ -915,42 +898,60 @@ window.exportPDF=()=>{
         const totalCash=cashC+cashVat+ISSUE+(c.plateFee||900);
         const totalBank=bankC+bankVat+ISSUE+(c.plateFee||900);
         const isUnavail=avail[h]===false;
-        rows.push([
-          c.model||'',
-          brand.nameAr||'',
-          c.year||'',
-          nm+(isUnavail?' (غير متاح)':''),
-          pr>0?Math.round(pr).toLocaleString('en-US'):'—',
-          pr>0?Math.round(cashC).toLocaleString('en-US'):'—',
-          pr>0?Math.round(totalCash).toLocaleString('en-US'):'—',
-          pr>0?Math.round(bankC).toLocaleString('en-US'):'—',
-          pr>0?Math.round(totalBank).toLocaleString('en-US'):'—',
-          c.date||''
-        ]);
+        const txtColor=lightColors.includes(h)?'#333':'#fff';
+        rows+=`<tr style="${i===0?'border-top:2px solid #1B6FC8':''}${isUnavail?';opacity:0.4':''}">
+          ${i===0?`<td rowspan="${rowCount}" style="text-align:right;font-weight:700;vertical-align:middle">${c.model||''}<br><small style="color:#888;font-weight:400">${brand.nameAr||''}</small></td><td rowspan="${rowCount}" style="vertical-align:middle;text-align:center">${c.year||''}</td>`:''}
+          <td><span style="background:${h};color:${txtColor};padding:2px 8px;border-radius:4px;font-size:10px">${nm}</span></td>
+          <td style="font-weight:700;color:#27500a">${pr>0?Math.round(pr).toLocaleString('en-US'):'—'}</td>
+          <td style="color:#1a6b2a">${pr>0?Math.round(cashC).toLocaleString('en-US'):'—'}</td>
+          <td style="font-weight:600;color:#1a6b2a">${pr>0?Math.round(totalCash).toLocaleString('en-US'):'—'}</td>
+          <td style="color:#1B6FC8">${pr>0?Math.round(bankC).toLocaleString('en-US'):'—'}</td>
+          <td style="color:#1B6FC8">${pr>0?Math.round(totalBank).toLocaleString('en-US'):'—'}</td>
+          ${i===0?`<td rowspan="${rowCount}" style="vertical-align:middle;text-align:center;font-size:10px;color:#888">${c.date||''}</td>`:''}
+        </tr>`;
       });
     }
   });
-  doc.autoTable({
-    head:[['النوع','الماركة','الموديل','اللون','سعر القائمة','سعر الكاش','إجمالي الكاش','سعر البنك','إجمالي البنك','التاريخ']],
-    body:rows,
-    startY:26,
-    styles:{fontSize:8,halign:'center'},
-    headStyles:{fillColor:[27,111,200],textColor:255,fontStyle:'bold'},
-    alternateRowStyles:{fillColor:[245,246,250]},
-  });
-  doc.save('katalog-asaar-'+now.getDate()+'_'+(now.getMonth()+1)+'_'+now.getFullYear()+'.pdf');
+
+  const html=`<div style="font-family:'Segoe UI',Tahoma,Arial,sans-serif;direction:rtl;padding:20px">
+    <div style="text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #1B6FC8">
+      <h2 style="color:#1B6FC8;margin:0 0 4px;font-size:18px">🚗 كتالوج أسعار السيارات — Al Hussaini Motors</h2>
+      <p style="color:#888;margin:0;font-size:11px">تاريخ الطباعة: ${dateStr}</p>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead>
+        <tr style="background:#1B6FC8;color:#fff">
+          <th style="padding:7px 6px;text-align:right">نوع السيارة</th>
+          <th style="padding:7px 6px">الموديل</th>
+          <th style="padding:7px 6px">اللون</th>
+          <th style="padding:7px 6px">سعر القائمة</th>
+          <th style="padding:7px 6px">سعر الكاش</th>
+          <th style="padding:7px 6px">إجمالي الكاش</th>
+          <th style="padding:7px 6px">سعر البنك</th>
+          <th style="padding:7px 6px">إجمالي البنك</th>
+          <th style="padding:7px 6px">التاريخ</th>
+        </tr>
+        <tr style="background:#e8edf5;font-size:9px;color:#666">
+          <th colspan="3"></th>
+          <th></th>
+          <th style="padding:3px">بدون ضريبة</th>
+          <th style="padding:3px">شامل الضريبة</th>
+          <th style="padding:3px">بدون ضريبة</th>
+          <th style="padding:3px">شامل الضريبة</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+
+  const printArea=document.getElementById('print-area');
+  printArea.innerHTML=html;
+  window.print();
+  setTimeout(()=>{printArea.innerHTML='';},1000);
 };
 
-window.printPDF=()=>{
-  // تحديث تاريخ الطباعة
-  const now=new Date();
-  const dateStr=now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear();
-  const hr=now.getHours(),mn=String(now.getMinutes()).padStart(2,'0');
-  const ampm=hr<12?'AM':'PM';const h12=hr%12||12;
-  const el=document.getElementById('print-date');
-  if(el)el.textContent='تاريخ الطباعة: '+dateStr+' الساعة '+h12+':'+mn+' '+ampm;
-  window.print();
-};
+
 
 // === بطاقات الجوال ===
 function renderMobileCards(){
