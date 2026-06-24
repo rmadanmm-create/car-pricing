@@ -919,17 +919,17 @@ window.toggleCard=id=>{
 
 // === البنوك وجهات التمويل ===
 const DEFAULT_BANKS=[
-  {id:'rajhi',name:'بنك الراجحي',rate:0},
-  {id:'ahli',name:'البنك الأهلي',rate:0},
-  {id:'riyadh',name:'بنك الرياض',rate:0},
-  {id:'fransi',name:'البنك الفرنسي',rate:0},
-  {id:'arabi',name:'البنك العربي',rate:0},
-  {id:'inma',name:'بنك الإنماء',rate:0},
-  {id:'jazira',name:'بنك الجزيرة',rate:0},
-  {id:'bilad',name:'بنك البلاد',rate:0},
-  {id:'aljamil',name:'عبد اللطيف جميل',rate:0},
-  {id:'raya',name:'راية للتمويل',rate:0},
-  {id:'awwal',name:'تمويل الأولى',rate:0},
+  {id:'rajhi',name:'بنك الراجحي',rate:0,insRate:0},
+  {id:'ahli',name:'البنك الأهلي',rate:0,insRate:0},
+  {id:'riyadh',name:'بنك الرياض',rate:0,insRate:0},
+  {id:'fransi',name:'البنك الفرنسي',rate:0,insRate:0},
+  {id:'arabi',name:'البنك العربي',rate:0,insRate:0},
+  {id:'inma',name:'بنك الإنماء',rate:0,insRate:0},
+  {id:'jazira',name:'بنك الجزيرة',rate:0,insRate:0},
+  {id:'bilad',name:'بنك البلاد',rate:0,insRate:0},
+  {id:'aljamil',name:'عبد اللطيف جميل',rate:0,insRate:0},
+  {id:'raya',name:'راية للتمويل',rate:0,insRate:0},
+  {id:'awwal',name:'تمويل الأولى',rate:0,insRate:0},
 ];
 let bankRates=[];
 
@@ -941,7 +941,7 @@ async function loadBankRates(){
     } else {
       bankRates=snap.docs.map(d=>({id:d.id,...d.data()}));
       // أضف أي بنك ناقص
-      DEFAULT_BANKS.forEach(b=>{if(!bankRates.find(x=>x.id===b.id))bankRates.push(b);});
+      DEFAULT_BANKS.forEach(b=>{if(!bankRates.find(x=>x.id===b.id))bankRates.push({...b});});
     }
   }catch(e){bankRates=[...DEFAULT_BANKS];}
   renderBankSelect();
@@ -961,36 +961,63 @@ function renderBanksList(){
   const el=document.getElementById('banks-list');
   if(!el)return;
   el.innerHTML=bankRates.map(b=>`
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
-      <span style="font-size:13px;font-weight:600;min-width:180px">${b.name}</span>
-      <input type="number" id="rate_${b.id}" value="${b.rate||''}" placeholder="مثال: 2.75" step="0.01" min="0" max="30"
-        style="width:120px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px">
-      <span style="font-size:12px;color:var(--muted)">% سنوياً</span>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;border-bottom:1px solid #f0f0f0;padding-bottom:8px">
+      <span style="font-size:13px;font-weight:600;min-width:160px">${b.name}</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="number" id="rate_${b.id}" value="${b.rate||''}" placeholder="ربح%" step="0.01" min="0" max="30"
+          style="width:90px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px">
+        <span style="font-size:11px;color:var(--muted)">% ربح</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="number" id="ins_${b.id}" value="${b.insRate||''}" placeholder="تأمين%" step="0.01" min="0" max="20"
+          style="width:90px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px">
+        <span style="font-size:11px;color:var(--muted)">% تأمين</span>
+      </div>
     </div>`).join('');
 }
 
 window.saveBankRates=async()=>{
   for(const b of bankRates){
     const inp=document.getElementById('rate_'+b.id);
+    const insInp=document.getElementById('ins_'+b.id);
     if(!inp)continue;
     const rate=parseFloat(inp.value)||0;
-    b.rate=rate;
-    await setDoc(doc(db,'bankRates',b.id),{name:b.name,rate});
+    const insRate=parseFloat(insInp?.value)||0;
+    b.rate=rate;b.insRate=insRate;
+    await setDoc(doc(db,'bankRates',b.id),{name:b.name,rate,insRate});
   }
   renderBankSelect();
   alert('✅ تم حفظ النسب بنجاح');
 };
 
-window.calcFinance=()=>{
+
+window.onBankChange=()=>{
+  // إعادة ضبط النسب عند تغيير البنك
+  const profitEl=document.getElementById('calc-profit-rate');
+  const insEl=document.getElementById('calc-ins-rate');
+  const bankId=document.getElementById('calc-bank')?.value;
+  const bank=bankRates.find(b=>b.id===bankId);
+  if(profitEl)profitEl.value=bank?.rate||'';
+  if(insEl)insEl.value=bank?.insRate||'';
+  calcFinance();
+};
+window.calcFinance=(autoFill)=>{
   const price=parseFloat(document.getElementById('calc-price')?.value)||0;
   const downPct=Math.min(50,Math.max(0,parseFloat(document.getElementById('calc-down-pct')?.value)||0));
   const lastPct=Math.min(50,Math.max(0,parseFloat(document.getElementById('calc-last-pct')?.value)||0));
   const months=parseInt(document.getElementById('calc-months')?.value)||48;
   const bankId=document.getElementById('calc-bank')?.value;
   const bank=bankRates.find(b=>b.id===bankId);
+  // ملء النسب تلقائياً من البنك
+  if(bank){
+    const profitEl=document.getElementById('calc-profit-rate');
+    const insEl=document.getElementById('calc-ins-rate');
+    if(profitEl&&!profitEl.value)profitEl.value=bank.rate||'';
+    if(insEl&&!insEl.value)insEl.value=bank.insRate||'';
+  }
   const profitRate=parseFloat(document.getElementById('calc-profit-rate')?.value)||0;
   const insRate=parseFloat(document.getElementById('calc-ins-rate')?.value)||0;
-  const adminRate=parseFloat(document.getElementById('calc-admin-rate')?.value)||0;
+  const adminRate=Math.min(5,parseFloat(document.getElementById('calc-admin-rate')?.value)||0);
   const res=document.getElementById('calc-result');
   const empty=document.getElementById('calc-empty');
 
