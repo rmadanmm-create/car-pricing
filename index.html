@@ -194,6 +194,7 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
       <div class="tab active" onclick="switchTab('cars',this)">السيارات</div>
       <div class="tab" id="users-tab-btn" onclick="switchTab('users',this)" style="display:none">إدارة المستخدمين</div>
       <div class="tab" id="calc-tab-btn" onclick="switchTab('calc',this)">🧮 حاسبة التمويل</div>
+      <div class="tab" id="clients-tab-btn" onclick="switchTab('clients',this)">👥 العملاء</div>
       <div class="tab" id="banks-tab-btn" onclick="switchTab('banks',this)" style="display:none">⚙️ نسب البنوك</div>
     </div>
     <div id="tab-cars">
@@ -357,6 +358,29 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
       </div>
     </div>
 
+    <!-- تاب العملاء -->
+    <div id="tab-clients" style="display:none">
+      <div style="display:flex;gap:8px;margin-bottom:.75rem;flex-wrap:wrap;align-items:center">
+        <input type="text" id="client-search" placeholder="بحث بالاسم أو الجوال..." oninput="renderClients()"
+          style="flex:1;min-width:180px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;outline:none">
+        <select id="client-filter-status" onchange="renderClients()"
+          style="padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:#fff;outline:none">
+          <option value="">كل الحالات</option>
+          <option value="new">🔵 جديد</option>
+          <option value="interested">🟡 مهتم</option>
+          <option value="offer">🟠 عرض سعر</option>
+          <option value="followup">🟣 متابعة</option>
+          <option value="sold">🟢 تم البيع</option>
+          <option value="lost">🔴 لم يشتر</option>
+        </select>
+        <button class="add-btn" onclick="openAddClient()">+ إضافة عميل</button>
+      </div>
+      <!-- إحصائيات -->
+      <div id="client-stats" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.75rem"></div>
+      <!-- قائمة العملاء -->
+      <div id="clients-list"></div>
+    </div>
+
     <!-- تاب إعداد نسب البنوك (للمدير فقط) -->
     <div id="tab-banks" style="display:none">
       <div class="panel">
@@ -490,6 +514,7 @@ async function loadData(){
   }
   await loadBankRates();
   if(currentRole!=='admin')checkPriceNotif();
+  await loadClients();
   onSnapshot(collection(db,'cars'),snap=>{
     cars=snap.docs.map(d=>({id:d.id,...d.data()}));
     cars.sort((a,b)=>(a.order||0)-(b.order||0));
@@ -752,7 +777,9 @@ window.switchTab=(tab,el)=>{
   document.getElementById('tab-users').style.display=tab==='users'?'block':'none';
   document.getElementById('tab-calc').style.display=tab==='calc'?'block':'none';
   document.getElementById('tab-banks').style.display=tab==='banks'?'block':'none';
+  document.getElementById('tab-clients').style.display=tab==='clients'?'block':'none';
   if(tab==='users')renderUsers();
+  if(tab==='clients')renderClients();
 };
 
 async function renderUsers(){
@@ -1137,6 +1164,212 @@ window.calcFinance=(autoFill)=>{
   document.getElementById('r-rate').textContent=profitRate+'%';
   if(res)res.style.display='block';
   if(empty)empty.style.display='none';
+};
+
+
+
+// === نظام العملاء ===
+const CLIENT_STATUSES={
+  new:{label:'جديد',emoji:'🔵',color:'#1B6FC8'},
+  interested:{label:'مهتم',emoji:'🟡',color:'#D4B000'},
+  offer:{label:'عرض سعر',emoji:'🟠',color:'#D45A00'},
+  followup:{label:'متابعة',emoji:'🟣',color:'#6A1B9A'},
+  sold:{label:'تم البيع',emoji:'🟢',color:'#27500a'},
+  lost:{label:'لم يشتر',emoji:'🔴',color:'#a32d2d'},
+};
+let clientsList=[];
+
+async function loadClients(){
+  const q=collection(db,'clients');
+  onSnapshot(q,snap=>{
+    const all=snap.docs.map(d=>({id:d.id,...d.data()}));
+    // المدير يشوف الكل، الموظف يشوف عملاءه فقط
+    clientsList=currentRole==='admin'?all:all.filter(c=>c.agentId===currentUser.uid);
+    renderClients();
+  });
+}
+
+window.renderClients=()=>{
+  const search=(document.getElementById('client-search')?.value||'').toLowerCase();
+  const statusFilter=document.getElementById('client-filter-status')?.value||'';
+  let list=clientsList;
+  if(search)list=list.filter(c=>(c.name||'').toLowerCase().includes(search)||(c.phone||'').includes(search));
+  if(statusFilter)list=list.filter(c=>c.status===statusFilter);
+
+  // إحصائيات
+  const statsEl=document.getElementById('client-stats');
+  if(statsEl){
+    const counts={};
+    Object.keys(CLIENT_STATUSES).forEach(k=>{counts[k]=clientsList.filter(c=>c.status===k).length;});
+    statsEl.innerHTML=Object.entries(CLIENT_STATUSES).map(([k,v])=>
+      `<div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;display:flex;align-items:center;gap:6px">
+        <span>${v.emoji}</span><span style="color:var(--muted)">${v.label}</span>
+        <span style="font-weight:700;color:${v.color}">${counts[k]||0}</span>
+      </div>`).join('');
+  }
+
+  const el=document.getElementById('clients-list');
+  if(!el)return;
+  if(!list.length){el.innerHTML='<div class="empty">لا يوجد عملاء — اضغط إضافة عميل</div>';return;}
+
+  el.innerHTML=list.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).map(c=>{
+    const st=CLIENT_STATUSES[c.status]||CLIENT_STATUSES.new;
+    const date=c.createdAt?.toDate?.();
+    const dateStr=date?date.getDate()+'/'+(date.getMonth()+1)+'/'+date.getFullYear():'—';
+    return`<div style="background:#fff;border-radius:10px;border:1px solid var(--border);padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow)">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-size:14px;font-weight:700">${c.name||'—'}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">📱 ${c.phone||'—'} &nbsp;|&nbsp; 📅 ${dateStr}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;background:${st.color}22;color:${st.color}">${st.emoji} ${st.label}</span>
+          <button class="icon-btn edit-btn-tbl" onclick="openEditClient('${c.id}')">✏️</button>
+          <button class="icon-btn del-btn" onclick="deleteClient('${c.id}')">🗑️</button>
+        </div>
+      </div>
+      ${c.carModel||c.color?`<div style="font-size:12px;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px solid #f0f0f0">
+        🚗 ${c.brandName||''} ${c.carModel||''} ${c.year?'('+c.year+')':''} ${c.color?'— '+c.color:''}
+      </div>`:''}
+      ${c.notes?`<div style="font-size:12px;color:#555;margin-top:6px;padding:6px 8px;background:#f8f9fb;border-radius:6px">📝 ${c.notes}</div>`:''}
+    </div>`;
+  }).join('');
+};
+
+window.openAddClient=()=>{
+  const bOpts=brands.map(b=>`<option value="${b.id}" data-name="${b.nameAr||b.name}">${b.nameAr||b.name}</option>`).join('');
+  document.getElementById('user-modal-inner').innerHTML=`
+    <h3>➕ إضافة عميل جديد</h3>
+    <div class="form-grid">
+      <div class="form-group"><label>اسم العميل</label><input id="cl-name" placeholder="الاسم الكامل"></div>
+      <div class="form-group"><label>رقم الجوال</label><input id="cl-phone" type="tel" placeholder="05xxxxxxxx"></div>
+      <div class="form-group"><label>الماركة</label>
+        <select id="cl-brand" onchange="onClientBrandChange()"><option value="">-- اختر --</option>${bOpts}</select>
+      </div>
+      <div class="form-group"><label>السيارة</label>
+        <select id="cl-car" onchange="onClientCarChange()"><option value="">-- اختر الماركة أولاً --</option></select>
+      </div>
+      <div class="form-group"><label>الموديل (السنة)</label>
+        <select id="cl-year"><option value="">--</option></select>
+      </div>
+      <div class="form-group"><label>اللون</label>
+        <select id="cl-color"><option value="">-- اختر السيارة أولاً --</option></select>
+      </div>
+      <div class="form-group"><label>الحالة</label>
+        <select id="cl-status">
+          ${Object.entries(CLIENT_STATUSES).map(([k,v])=>`<option value="${k}">${v.emoji} ${v.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group full"><label>ملاحظات</label>
+        <input id="cl-notes" placeholder="اكتب ملاحظاتك هنا...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-save" onclick="saveClient()">حفظ</button>
+      <button class="btn-cancel" onclick="document.getElementById('user-modal').classList.remove('open')">إلغاء</button>
+    </div>`;
+  document.getElementById('user-modal').classList.add('open');
+  window._editClientId=null;
+};
+
+window.onClientBrandChange=()=>{
+  const brandId=document.getElementById('cl-brand').value;
+  const brandCars=cars.filter(c=>c.brand===brandId);
+  const carSel=document.getElementById('cl-car');
+  carSel.innerHTML='<option value="">-- اختر --</option>'+
+    [...new Set(brandCars.map(c=>c.model))].map(m=>`<option value="${m}">${m}</option>`).join('');
+  document.getElementById('cl-year').innerHTML='<option value="">--</option>';
+  document.getElementById('cl-color').innerHTML='<option value="">--</option>';
+};
+
+window.onClientCarChange=()=>{
+  const brandId=document.getElementById('cl-brand').value;
+  const model=document.getElementById('cl-car').value;
+  const matchCars=cars.filter(c=>c.brand===brandId&&c.model===model);
+  const yearSel=document.getElementById('cl-year');
+  yearSel.innerHTML='<option value="">--</option>'+matchCars.map(c=>`<option value="${c.id}_${c.year}">${c.year}</option>`).join('');
+  yearSel.onchange=()=>{
+    const val=yearSel.value;
+    const carId=val.split('_')[0];
+    const car=cars.find(c=>c.id===carId);
+    const colors=car?.colors||[];
+    const colorPrices=car?.colorPrices||{};
+    const avail=car?.colorAvail||{};
+    const colorSel=document.getElementById('cl-color');
+    colorSel.innerHTML='<option value="">-- اختر --</option>'+
+      colors.filter(h=>avail[h]!==false).map(h=>{
+        const nm=COLORS.find(x=>x.hex===h)?.name||h;
+        return`<option value="${nm}">${nm}</option>`;
+      }).join('');
+  };
+};
+
+window.saveClient=async()=>{
+  const name=document.getElementById('cl-name').value.trim();
+  const phone=document.getElementById('cl-phone').value.trim();
+  const brandId=document.getElementById('cl-brand').value;
+  const brand=brands.find(b=>b.id===brandId);
+  const carModel=document.getElementById('cl-car').value;
+  const yearVal=document.getElementById('cl-year').value;
+  const year=yearVal?yearVal.split('_')[1]:'';
+  const color=document.getElementById('cl-color').value;
+  const status=document.getElementById('cl-status').value;
+  const notes=document.getElementById('cl-notes').value.trim();
+  if(!name||!phone){alert('يرجى إدخال الاسم والجوال');return;}
+  const data={
+    name,phone,brandId,brandName:brand?.nameAr||brand?.name||'',
+    carModel,year,color,status,notes,
+    agentId:currentUser.uid,
+    agentEmail:currentUser.email,
+    updatedAt:serverTimestamp()
+  };
+  if(window._editClientId){
+    await updateDoc(doc(db,'clients',window._editClientId),data);
+  } else {
+    await setDoc(doc(db,'clients','cl_'+Date.now()),{...data,createdAt:serverTimestamp()});
+  }
+  document.getElementById('user-modal').classList.remove('open');
+};
+
+window.openEditClient=async(id)=>{
+  const c=clientsList.find(x=>x.id===id);
+  if(!c)return;
+  window._editClientId=id;
+  const bOpts=brands.map(b=>`<option value="${b.id}" ${b.id===c.brandId?'selected':''}>${b.nameAr||b.name}</option>`).join('');
+  const brandCars=cars.filter(x=>x.brand===c.brandId);
+  const carOpts=[...new Set(brandCars.map(x=>x.model))].map(m=>`<option value="${m}" ${m===c.carModel?'selected':''}>${m}</option>`).join('');
+  const matchCars=brandCars.filter(x=>x.model===c.carModel);
+  const yearOpts=matchCars.map(x=>`<option value="${x.id}_${x.year}" ${x.year===c.year?'selected':''}>${x.year}</option>`).join('');
+  const car=matchCars.find(x=>x.year===c.year)||matchCars[0];
+  const colorOpts=(car?.colors||[]).filter(h=>(car?.colorAvail||{})[h]!==false).map(h=>{
+    const nm=COLORS.find(x=>x.hex===h)?.name||h;
+    return`<option value="${nm}" ${nm===c.color?'selected':''}>${nm}</option>`;
+  }).join('');
+  document.getElementById('user-modal-inner').innerHTML=`
+    <h3>✏️ تعديل بيانات العميل</h3>
+    <div class="form-grid">
+      <div class="form-group"><label>اسم العميل</label><input id="cl-name" value="${c.name||''}"></div>
+      <div class="form-group"><label>رقم الجوال</label><input id="cl-phone" value="${c.phone||''}"></div>
+      <div class="form-group"><label>الماركة</label><select id="cl-brand" onchange="onClientBrandChange()"><option value="">--</option>${bOpts}</select></div>
+      <div class="form-group"><label>السيارة</label><select id="cl-car" onchange="onClientCarChange()"><option value="">--</option>${carOpts}</select></div>
+      <div class="form-group"><label>الموديل (السنة)</label><select id="cl-year"><option value="">--</option>${yearOpts}</select></div>
+      <div class="form-group"><label>اللون</label><select id="cl-color"><option value="">--</option>${colorOpts}</select></div>
+      <div class="form-group"><label>الحالة</label><select id="cl-status">
+        ${Object.entries(CLIENT_STATUSES).map(([k,v])=>`<option value="${k}" ${k===c.status?'selected':''}>${v.emoji} ${v.label}</option>`).join('')}
+      </select></div>
+      <div class="form-group full"><label>ملاحظات</label><input id="cl-notes" value="${c.notes||''}"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-del" onclick="deleteClient('${id}');document.getElementById('user-modal').classList.remove('open')">🗑️ حذف</button>
+      <button class="btn-save" onclick="saveClient()">حفظ</button>
+      <button class="btn-cancel" onclick="document.getElementById('user-modal').classList.remove('open')">إلغاء</button>
+    </div>`;
+  document.getElementById('user-modal').classList.add('open');
+};
+
+window.deleteClient=async(id)=>{
+  if(!confirm('هل تريد حذف هذا العميل؟'))return;
+  await deleteDoc(doc(db,'clients',id));
 };
 
 
