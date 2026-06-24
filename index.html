@@ -111,6 +111,21 @@ tr:hover td{background:#f9fafb}
   .clock-time{font-size:18px}
 }
 .loading{text-align:center;padding:2rem;color:var(--muted)}
+@media print{
+  body{background:#fff!important}
+  .topbar,.clock-bar,.tabs,.brands-wrap,.controls,.action-bar,.mobile-cards,
+  .notif-bar,#tab-users,#tab-calc,#tab-banks,
+  .icon-btn,.edit-btn-tbl,.del-btn,#actions-col,
+  button{display:none!important}
+  .main{padding:0!important}
+  .table-card{box-shadow:none!important;border:1px solid #ddd}
+  table{font-size:11px!important}
+  th,td{padding:6px 5px!important}
+  .print-header{display:block!important}
+}
+.print-header{display:none;text-align:center;padding:10px 0 16px;border-bottom:2px solid #1B6FC8;margin-bottom:12px}
+.print-header h2{font-size:18px;color:#1B6FC8;margin-bottom:4px}
+.print-header p{font-size:11px;color:#888}
 /* بطاقات الجوال */
 .mobile-cards{display:none}
 .car-card{background:#fff;border-radius:12px;box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden;border:1px solid var(--border)}
@@ -179,6 +194,10 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
       <div class="tab" id="banks-tab-btn" onclick="switchTab('banks',this)" style="display:none">⚙️ نسب البنوك</div>
     </div>
     <div id="tab-cars">
+      <div class="print-header">
+        <h2>🚗 كتالوج أسعار السيارات — Al Hussaini Motors</h2>
+        <p id="print-date"></p>
+      </div>
       <div class="brands-wrap" id="brands-bar"></div>
       <div class="controls">
         <input type="text" id="search" placeholder="بحث..." oninput="renderCars()">
@@ -490,7 +509,8 @@ function renderAdminActions(){
   document.getElementById('admin-actions').innerHTML=`
     <button class="add-btn" onclick="openAddCar()">+ إضافة سيارة</button>
     <button class="add-btn green" onclick="openAddBrand()">+ إضافة ماركة</button>
-    <button class="add-btn" style="background:#a32d2d" onclick="openDeleteBrand()">🗑️ حذف ماركة</button>`;
+    <button class="add-btn" style="background:#a32d2d" onclick="openDeleteBrand()">🗑️ حذف ماركة</button>
+    <button class="add-btn" style="background:#6A1B9A" onclick="printPDF()">🖨️ طباعة / PDF</button>`;
 }
 
 function getFiltered(){
@@ -819,6 +839,19 @@ window.deleteUser=async(uid,email)=>{
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')window.doLogin();});
 
 
+
+
+// === طباعة PDF ===
+window.printPDF=()=>{
+  // تحديث تاريخ الطباعة
+  const now=new Date();
+  const dateStr=now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear();
+  const hr=now.getHours(),mn=String(now.getMinutes()).padStart(2,'0');
+  const ampm=hr<12?'AM':'PM';const h12=hr%12||12;
+  const el=document.getElementById('print-date');
+  if(el)el.textContent='تاريخ الطباعة: '+dateStr+' الساعة '+h12+':'+mn+' '+ampm;
+  window.print();
+};
 
 // === بطاقات الجوال ===
 function renderMobileCards(){
