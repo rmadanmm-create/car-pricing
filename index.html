@@ -1041,7 +1041,7 @@ window.calcFinance=(autoFill)=>{
   const years=months/12;
   const totalProfit=amount*(profitRate/100)*years;
   const totalIns=amount*(insRate/100)*years;
-  const adminAmt=Math.round(amount*(adminRate/100));
+  const adminAmt=Math.round(price*(adminRate/100));
 
   const monthlyNoIns=Math.round((amount+totalProfit)/months);
   const monthlyIns=Math.round(totalIns/months);
