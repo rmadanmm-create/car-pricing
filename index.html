@@ -467,6 +467,213 @@ function getBrandEn(brand){
   const ar=brand.nameAr||brand.name||'';
   return BRAND_TRANSLATE[ar]||ar;
 }
+// قاموس ترجمة نوع السيارة كلمة بكلمة
+const MODEL_WORD_MAP={
+  // ياريس
+  'ياريس':'YARIS',
+  // كامري
+  'كامري':'CAMRY',
+  // كورولا
+  'كورولا':'COROLLA',
+  // لاند كروزر
+  'لاند':'LAND','كروزر':'CRUISER',
+  // برادو
+  'برادو':'PRADO',
+  // هايلكس
+  'هايلكس':'HILUX','هايلاكس':'HILUX',
+  // فورتشنر
+  'فورتشنر':'FORTUNER','فورشنر':'FORTUNER',
+  // اف جي
+  'اف':'FJ','إف':'FJ',
+  // افانزا
+  'افانزا':'AVANZA','أفانزا':'AVANZA',
+  // راش
+  'راش':'RUSH',
+  // هايس
+  'هايس':'HIACE','هايسي':'HIACE',
+  // كوستر
+  'كوستر':'COASTER',
+  // تندرا
+  'تندرا':'TUNDRA',
+  // تاكوما
+  'تاكوما':'TACOMA',
+  // سيكويا
+  'سيكويا':'SEQUOIA',
+  // بريوس
+  'بريوس':'PRIUS',
+  // كراون
+  'كراون':'CROWN',
+  // سيينا
+  'سيينا':'SIENNA',
+  // اكورد
+  'اكورد':'ACCORD','أكورد':'ACCORD',
+  // سيفيك
+  'سيفيك':'CIVIC',
+  // باسات
+  'باسات':'PASSAT',
+  // جيتا
+  'جيتا':'JETTA',
+  // النترا
+  'النترا':'ELANTRA',
+  // سوناتا
+  'سوناتا':'SONATA',
+  // توسان
+  'توسان':'TUCSON',
+  // سانتافي
+  'سانتافي':'SANTA FE','سانتا':'SANTA','فيه':'FE',
+  // كريتا
+  'كريتا':'CRETA',
+  // اكسنت
+  'اكسنت':'ACCENT','أكسنت':'ACCENT',
+  // ستاريا
+  'ستاريا':'STARIA',
+  // بالاسيد
+  'بالاسيد':'PALISADE',
+  // ايونيك
+  'ايونيك':'IONIQ','أيونيك':'IONIQ',
+  // ES
+  'اي اس':'ES',
+  // LX
+  'ال اكس':'LX',
+  // NX
+  'ان اكس':'NX',
+  // RX
+  'ار اكس':'RX',
+  // GX
+  'جي اكس':'GX',
+  // UX
+  'يو اكس':'UX',
+  // نافارا
+  'نافارا':'NAVARA',
+  // باترول
+  'باترول':'PATROL',
+  // صني
+  'صني':'SUNNY',
+  // تيدا
+  'تيدا':'TIIDA',
+  // قشقاي
+  'قشقاي':'QASHQAI',
+  // اكس ترايل
+  'اكس ترايل':'X-TRAIL','إكس ترايل':'X-TRAIL',
+  // ارمادا
+  'ارمادا':'ARMADA','أرمادا':'ARMADA',
+  // مورانو
+  'مورانو':'MURANO',
+  // التيما
+  'التيما':'ALTIMA',
+  // ماكسيما
+  'ماكسيما':'MAXIMA',
+  // سبورتاج
+  'سبورتاج':'SPORTAGE',
+  // سيراتو
+  'سيراتو':'CERATO',
+  // بيكانتو
+  'بيكانتو':'PICANTO',
+  // سورنتو
+  'سورنتو':'SORENTO',
+  // ريو
+  'ريو':'RIO',
+  // كارنيفال
+  'كارنيفال':'CARNIVAL',
+  // تيلورايد
+  'تيلورايد':'TELLURIDE',
+  // سيلتوس
+  'سيلتوس':'SELTOS',
+  // ستنجر
+  'ستنجر':'STINGER',
+  // ك5
+  'ك5':'K5','ك9':'K9','ك8':'K8',
+  // اكسبلورر
+  'اكسبلورر':'EXPLORER','إكسبلورر':'EXPLORER',
+  // رانجر
+  'رانجر':'RANGER',
+  // F150
+  'اف 150':'F-150',
+  // ايدج
+  'ايدج':'EDGE','إيدج':'EDGE',
+  // موستنج
+  'موستنج':'MUSTANG',
+  // برونكو
+  'برونكو':'BRONCO',
+  // اكسبيديشن
+  'اكسبيديشن':'EXPEDITION',
+  // بارس
+  'بارس':'PARS',
+  // كوبيا
+  'كوبيا':'COBIA',
+  // ديماكس
+  'ديماكس':'D-MAX','دي ماكس':'D-MAX',
+  // تروبر
+  'تروبر':'TROOPER',
+  // موي
+  'موي':'MU-X','مو اكس':'MU-X',
+  // درافت
+  'درافت':'DMAX',
+  // دسكفري
+  'دسكفري':'DISCOVERY',
+  // ديفندر
+  'ديفندر':'DEFENDER',
+  // فيلار
+  'فيلار':'VELAR',
+  // ايفوك
+  'ايفوك':'EVOQUE','إيفوك':'EVOQUE',
+  // سبورت
+  'سبورت':'SPORT',
+  // اوتوبيوجرافي
+  'اوتوبيوجرافي':'AUTOBIOGRAPHY',
+  // كلمات شائعة
+  'ليمتد':'LIMITED',
+  'بلس':'PLUS',
+  'برو':'PRO',
+  'فل':'FULL','فول':'FULL',
+  'كامل':'FULL',
+  'مثبت':'STANDARD',
+  'مثبت سرعة':'CRUISE',
+  'اتوماتيك':'AUTOMATIC','أوتوماتيك':'AUTOMATIC',
+  'يدوي':'MANUAL',
+  'ديزل':'DIESEL',
+  'هجين':'HYBRID','هايبرد':'HYBRID','هايبريد':'HYBRID',
+  'كهربائي':'ELECTRIC',
+  'تيربو':'TURBO',
+  'فور ويل':'4WD','دفع رباعي':'4WD',
+  'دفع امامي':'2WD','دفع خلفي':'RWD',
+  'جي ال':'GL','جي ال اس':'GLS','جي ال اكس':'GLX',
+  'اس':'S','اس ار':'SR','اس ار 5':'SR5',
+  'في ال':'VL','في اكس ار':'VXR','في اكس':'VX',
+  'تي ار دي':'TRD',
+  'ستاندرد':'STANDARD',
+  'دي لوكس':'DELUXE','ديلوكس':'DELUXE',
+  'بريميوم':'PREMIUM',
+  'اكسكلوسيف':'EXCLUSIVE','اكسكلوسيف':'EXCLUSIVE',
+};
+
+function translateModelToEn(text){
+  if(!text)return'';
+  // إذا كان النص إنجليزي بالفعل (أحرف لاتينية أكثر من العربية)
+  const arabicChars=(text.match(/[؀-ۿ]/g)||[]).length;
+  const latinChars=(text.match(/[a-zA-Z]/g)||[]).length;
+  if(latinChars>arabicChars)return text.toUpperCase();
+  
+  // ترجمة كلمة بكلمة مع الحفاظ على الأرقام والرموز
+  const tokens=text.split(/\s+/);
+  const translated=tokens.map(token=>{
+    // إذا كان رقم أو رمز احتفظ به
+    if(/^[\d\.\-\/]+$/.test(token))return token;
+    // ابحث في القاموس
+    if(MODEL_WORD_MAP[token])return MODEL_WORD_MAP[token];
+    // إذا كان إنجليزي حوّله لكبير
+    if(/^[a-zA-Z\d]+$/.test(token))return token.toUpperCase();
+    // احتفظ بالكلمة العربية كما هي إذا لم توجد ترجمة
+    return token;
+  });
+  return translated.join(' ').trim().toUpperCase();
+}
+
+function getModelEn(c){
+  if(c.modelEn)return c.modelEn.toUpperCase();
+  return translateModelToEn(c.modelAr||c.model||'');
+}
+
 const DEFAULT_BRANDS=[
   {id:'toyota',name:'تويوتا',nameAr:'تويوتا',nameEn:'Toyota'},
   {id:'hyundai',name:'هيونداي',nameAr:'هيونداي',nameEn:'Hyundai'},
@@ -612,7 +819,7 @@ window.renderCars=()=>{
     if(!colors.length){
       return`<tr>
         <td class="price-buy buy-col" style="font-size:14px;font-weight:700">${fmt(p.buy)}</td>
-        <td style="text-align:right"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:14px;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>
+        <td style="text-align:right"><strong>${c.modelAr||c.model||''}</strong><br><span style="font-size:14px;color:#1B6FC8;font-weight:700;text-transform:uppercase">${getModelEn(c)}</span><br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>
         <td style="font-weight:600">${c.year||'-'}</td>
         <td colspan="4" style="color:#aaa;font-size:11px">لا توجد ألوان</td>
         <td style="font-size:10px;color:#888">${c.date||'-'}</td>
@@ -636,7 +843,7 @@ window.renderCars=()=>{
       const isFirst=i===0;
       return`<tr ${i===0?'data-car-id="'+c.id+'"':''} style="${sepStyle}${rowStyle}${isUnavail?'background:#fafafa;':''}">
         <td class="price-buy buy-col" style="font-size:14px;font-weight:700;background:${h};color:${txtColor};border-radius:6px;padding:6px 8px">${pr>0?fmt(pr):'—'}</td>
-        ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:14px;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>`:''}
+        ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.modelAr||c.model||''}</strong><br><span style="font-size:14px;color:#1B6FC8;font-weight:700;text-transform:uppercase">${getModelEn(c)}</span><br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>`:''}
         ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
         <td style="padding:5px 6px">
           <div style="background:${h};padding:4px 8px;border-radius:6px;text-align:center;border:1px solid #bbb">
@@ -944,7 +1151,7 @@ window.printPDF=()=>{
     const rowCount=Math.max(colors.length,1);
     if(!colors.length){
       rows+=`<tr>
-        <td rowspan="1" style="text-align:right;font-weight:700">${c.modelAr||c.model||''}<br>${c.modelEn?'<small style="color:#1B6FC8;font-size:14px;font-weight:700;text-transform:uppercase">'+c.modelEn+'</small><br>':''}<small style="color:#888;font-weight:400">${getBrandEn(brand)}</small></td>
+        <td rowspan="1" style="text-align:right;font-weight:700">${c.modelAr||c.model||''}<br><small style="color:#1B6FC8;font-size:14px;font-weight:700;text-transform:uppercase">${getModelEn(c)}</small><br><small style="color:#888;font-weight:400">${getBrandEn(brand)}</small></td>
         <td>${c.year||''}</td><td colspan="6" style="color:#aaa">لا توجد ألوان</td><td>${c.date||''}</td></tr>`;
     } else {
       colors.forEach((h,i)=>{
@@ -959,7 +1166,7 @@ window.printPDF=()=>{
         const isUnavail=avail[h]===false;
         const txtColor=lightColors.includes(h)?'#333':'#fff';
         rows+=`<tr style="${i===0?'border-top:2px solid #1B6FC8':''}${isUnavail?';opacity:0.4':''}">
-          ${i===0?`<td rowspan="${rowCount}" style="text-align:right;font-weight:700;vertical-align:middle">${c.modelAr||c.model||''}<br>${c.modelEn?'<small style="color:#1B6FC8;font-size:14px;font-weight:700;text-transform:uppercase">'+c.modelEn+'</small><br>':''}<small style="color:#888;font-weight:400">${getBrandEn(brand)}</small></td><td rowspan="${rowCount}" style="vertical-align:middle;text-align:center">${c.year||''}</td>`:''}
+          ${i===0?`<td rowspan="${rowCount}" style="text-align:right;font-weight:700;vertical-align:middle">${c.modelAr||c.model||''}<br><small style="color:#1B6FC8;font-size:14px;font-weight:700;text-transform:uppercase">${getModelEn(c)}</small><br><small style="color:#888;font-weight:400">${getBrandEn(brand)}</small></td><td rowspan="${rowCount}" style="vertical-align:middle;text-align:center">${c.year||''}</td>`:''}
           <td><span style="background:${h};color:${txtColor};padding:2px 8px;border-radius:4px;font-size:10px">${nm}</span></td>
           <td style="font-weight:700;color:#27500a">${pr>0?Math.round(pr).toLocaleString('en-US'):'—'}</td>
           <td style="color:#1a6b2a">${pr>0?Math.round(cashC).toLocaleString('en-US'):'—'}</td>
@@ -1056,7 +1263,7 @@ function renderMobileCards(){
     return`<div class="car-card" id="mcard_${ci}">
       <div class="car-card-header" onclick="toggleCard('mcard_${ci}')">
         <div>
-          <div class="car-card-title">${c.modelAr||c.model||''} ${c.modelEn?'<span style="font-size:14px;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}</div>
+          <div class="car-card-title">${c.modelAr||c.model||''} <span style="font-size:14px;color:#1B6FC8;font-weight:700;text-transform:uppercase">${getModelEn(c)}</span></div>
           <div class="car-card-sub">${getBrandEn(brand)} — ${c.year||''}</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
