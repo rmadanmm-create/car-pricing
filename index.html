@@ -404,7 +404,7 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 
 const COLORS=[
-  {name:'ALL COLORS',hex:'#E8E8E8'},{name:'WHITE',hex:'#FFFFFF'},{name:'BLACK',hex:'#1a1a1a'},{name:'SILVER',hex:'#C0C0C0'},
+  {name:'WHITE',hex:'#FFFFFF'},{name:'BLACK',hex:'#1a1a1a'},{name:'SILVER',hex:'#C0C0C0'},
   {name:'GRAY',hex:'#808080'},{name:'RED',hex:'#FF0000'},{name:'DARK BLUE',hex:'#1B3A6B'},
   {name:'LIGHT BLUE',hex:'#4A90D9'},{name:'BEIGE',hex:'#D4B896'},{name:'BROWN',hex:'#7B4F2E'},
   {name:'LIGHT GREEN',hex:'#4CAF50'},{name:'GOLD',hex:'#CFB53B'},{name:'ORANGE',hex:'#D45A00'},
@@ -807,7 +807,7 @@ window.renderCars=()=>{
     const avail=c.colorAvail||{};
     const colors=c.colors||[];
     const colorPrices=c.colorPrices||{};
-    const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
+    const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#4CAF50','#4A90D9'];
     const rowCount=Math.max(colors.length,1);
     const adminBtns=currentRole==='admin'?`<button class="icon-btn edit-btn-tbl" onclick="openEditCar('${c.id}')">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')">🗑️</button>`:'';
     
@@ -825,9 +825,11 @@ window.renderCars=()=>{
     return colors.map((h,i)=>{
       const sepStyle=i===0?'border-top:3px solid #1B6FC8;':'';
       const pr=colorPrices[h]||0; // pr = سعر القائمة لهذا اللون
-      const nm=COLORS.find(x=>x.hex===h)?.name||h;
+      const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50'};
+      const rh=COLOR_MIGRATE[h]||h;
+      const nm=COLORS.find(x=>x.hex===rh||x.hex===h)?.name||h;
       const isUnavail=avail[h]===false;
-      const txtColor=lightColors.includes(h)?'#333':'#fff';
+      const txtColor=lightColors.includes(COLOR_MIGRATE[h]||h)?'#333':'#fff';
       const cashC=pr+CASH_M;
       const bankC=pr+BANK_M;
       const cashVatC=Math.round(cashC*0.15);
@@ -841,7 +843,7 @@ window.renderCars=()=>{
         ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>`:''}
         ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
         <td style="padding:5px 6px">
-          <div style="background:${h};padding:4px 8px;border-radius:6px;text-align:center;border:1px solid #bbb">
+          <div style="background:${COLOR_MIGRATE[h]||h};padding:4px 8px;border-radius:6px;text-align:center;border:1px solid #bbb">
             <span style="font-size:11px;font-weight:700;color:${txtColor};text-transform:uppercase;letter-spacing:0.5px">${nm}</span>
             ${isUnavail?'<br><span style="font-size:9px;color:'+txtColor+';opacity:.7">غير متاح</span>':''}
           </div>
@@ -867,6 +869,7 @@ function buildColorSec(ec,ea,ep){
   selColorPrices={};
   Object.keys(rawPrices).forEach(k=>{if(rawPrices[k]>=10000)selColorPrices[k]=rawPrices[k];});
   return`<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:6px;text-transform:uppercase;margin-top:8px">الألوان والمخزون والسعر الإضافي</div>
+  <div style="margin-bottom:8px"><button type="button" onclick="selectAllColors()" style="padding:5px 14px;border:1.5px solid #1B6FC8;border-radius:20px;background:#fff;color:#1B6FC8;font-size:12px;font-weight:700;cursor:pointer">✔ تحديد جميع الألوان</button></div>
   <div class="color-grid">${COLORS.map(c=>{
     const s=selColors.includes(c.hex),av=selColorAvail[c.hex]!==false;
     return`<div class="cpick${s?' sel':''}${s&&!av?' unavail-pick':''}" style="background:${c.hex}" title="${c.name}" id="cp_${c.hex.replace('#','')}" onclick="toggleC('${c.hex}')"></div>`;
@@ -885,6 +888,14 @@ function buildAvailToggles(){
     </div>`;
   }).join('');
 }
+window.selectAllColors=()=>{
+  COLORS.forEach(c=>{
+    if(!selColors.includes(c.hex)){selColors.push(c.hex);selColorAvail[c.hex]=true;selColorPrices[c.hex]=0;}
+    const el=document.getElementById('cp_'+c.hex.replace('#',''));
+    if(el){el.classList.add('sel');el.classList.remove('unavail-pick');}
+  });
+  const ar=document.getElementById('avail-row');if(ar)ar.innerHTML=buildAvailToggles();
+};
 window.toggleC=hex=>{
   if(selColors.includes(hex)){selColors=selColors.filter(x=>x!==hex);delete selColorAvail[hex];delete selColorPrices[hex];}
   else{selColors.push(hex);selColorAvail[hex]=true;selColorPrices[hex]=0;}
@@ -1135,7 +1146,7 @@ window.printPDF=()=>{
   const now=new Date();
   const dateStr=now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear();
   const list=getFiltered();
-  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
+  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#4CAF50','#4A90D9'];
 
   let rows='';
   list.forEach(c=>{
@@ -1150,7 +1161,9 @@ window.printPDF=()=>{
         <td>${c.year||''}</td><td colspan="6" style="color:#aaa">لا توجد ألوان</td><td>${c.date||''}</td></tr>`;
     } else {
       colors.forEach((h,i)=>{
-        const nm=COLORS.find(x=>x.hex===h)?.name||h;
+        const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50'};
+      const rh=COLOR_MIGRATE[h]||h;
+      const nm=COLORS.find(x=>x.hex===rh||x.hex===h)?.name||h;
         const pr=colorPrices[h]||0;
         const cashC=pr+CASH_M;
         const bankC=pr+BANK_M;
@@ -1159,7 +1172,7 @@ window.printPDF=()=>{
         const totalCash=cashC+cashVat+ISSUE+(c.plateFee||900);
         const totalBank=bankC+bankVat+ISSUE+(c.plateFee||900);
         const isUnavail=avail[h]===false;
-        const txtColor=lightColors.includes(h)?'#333':'#fff';
+        const txtColor=lightColors.includes(COLOR_MIGRATE[h]||h)?'#333':'#fff';
         rows+=`<tr style="${i===0?'border-top:2px solid #1B6FC8':''}${isUnavail?';opacity:0.4':''}">
           ${i===0?`<td rowspan="${rowCount}" style="text-align:right;font-weight:700;vertical-align:middle">${c.modelAr||c.model||''}<br><small style="color:#1B6FC8;font-size:14px;font-weight:700;text-transform:uppercase">${getModelEn(c)}</small><br><small style="color:#888;font-weight:400">${getBrandEn(brand)}</small></td><td rowspan="${rowCount}" style="vertical-align:middle;text-align:center">${c.year||''}</td>`:''}
           <td><span style="background:${h};color:${txtColor};padding:2px 8px;border-radius:4px;font-size:10px">${nm}</span></td>
@@ -1219,7 +1232,7 @@ function renderMobileCards(){
   const list=getFiltered();
   const el=document.getElementById('mobile-cards');
   if(!el)return;
-  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
+  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#4CAF50','#4A90D9'];
   if(!list.length){el.innerHTML='<div class="empty">لا توجد سيارات</div>';return;}
   el.innerHTML=list.map((c,ci)=>{
     const brand=brands.find(b=>b.id===c.brand)||{nameAr:c.brand||'',nameEn:''};
@@ -1231,7 +1244,9 @@ function renderMobileCards(){
       <button class="icon-btn del-btn" onclick="deleteCar('${c.id}')">🗑️ حذف</button>
     </div>`:'';
     const colorsHtml=colors.map(h=>{
-      const nm=COLORS.find(x=>x.hex===h)?.name||h;
+      const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50'};
+      const rh=COLOR_MIGRATE[h]||h;
+      const nm=COLORS.find(x=>x.hex===rh||x.hex===h)?.name||h;
       const pr=colorPrices[h]||0;
       const cashC=pr+CASH_M;
       const bankC=pr+BANK_M;
@@ -1239,7 +1254,7 @@ function renderMobileCards(){
       const bankVat=Math.round(bankC*0.15);
       const totalCash=cashC+cashVat+ISSUE+(c.plateFee||900);
       const totalBank=bankC+bankVat+ISSUE+(c.plateFee||900);
-      const txtColor=lightColors.includes(h)?'#333':'#fff';
+      const txtColor=lightColors.includes(COLOR_MIGRATE[h]||h)?'#333':'#fff';
       const isUnavail=avail[h]===false;
       return`<div class="car-color-row" style="${isUnavail?'opacity:0.4':''}">
         <div class="car-color-name">
@@ -1560,7 +1575,9 @@ window.onClientCarChange=()=>{
     const colorSel=document.getElementById('cl-color');
     colorSel.innerHTML='<option value="">-- اختر --</option>'+
       colors.filter(h=>avail[h]!==false).map(h=>{
-        const nm=COLORS.find(x=>x.hex===h)?.name||h;
+        const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50'};
+      const rh=COLOR_MIGRATE[h]||h;
+      const nm=COLORS.find(x=>x.hex===rh||x.hex===h)?.name||h;
         return`<option value="${nm}">${nm}</option>`;
       }).join('');
   };
@@ -1604,7 +1621,9 @@ window.openEditClient=async(id)=>{
   const yearOpts=matchCars.map(x=>`<option value="${x.id}_${x.year}" ${x.year===c.year?'selected':''}>${x.year}</option>`).join('');
   const car=matchCars.find(x=>x.year===c.year)||matchCars[0];
   const colorOpts=(car?.colors||[]).filter(h=>(car?.colorAvail||{})[h]!==false).map(h=>{
-    const nm=COLORS.find(x=>x.hex===h)?.name||h;
+    const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50'};
+      const rh=COLOR_MIGRATE[h]||h;
+      const nm=COLORS.find(x=>x.hex===rh||x.hex===h)?.name||h;
     return`<option value="${nm}" ${nm===c.color?'selected':''}>${nm}</option>`;
   }).join('');
   document.getElementById('user-modal-inner').innerHTML=`
