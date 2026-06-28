@@ -839,13 +839,13 @@ window.renderCars=()=>{
       const rowStyle=isUnavail?'opacity:0.45;':'';
       const isFirst=i===0;
       return`<tr ${i===0?'data-car-id="'+c.id+'"':''} style="${sepStyle}${rowStyle}${isUnavail?'background:#fafafa;':''}">
-        <td class="price-buy buy-col" style="font-size:14px;font-weight:700;${(COLOR_MIGRATE[h]||h)==='#ALL'?'background:#1B3A6B;color:#333;':'background:'+(COLOR_MIGRATE[h]||h)+';color:'+txtColor+';'}border-radius:6px;padding:6px 8px">${pr>0?fmt(pr):'—'}</td>
+        <td class="price-buy buy-col" style="font-size:14px;font-weight:700;background:#f0f0f0;color:#1a1a2e;border-radius:6px;padding:6px 8px">${pr>0?fmt(pr):'—'}</td>
         ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>`:''}
         ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
         <td style="padding:5px 6px">
-          <div style="${(COLOR_MIGRATE[h]||h)==='#ALL'?'background:#1B3A6B;':'background:'+(COLOR_MIGRATE[h]||h)+';'}padding:4px 8px;border-radius:6px;text-align:center;border:1px solid #bbb">
-            <span style="font-size:11px;font-weight:700;color:${(COLOR_MIGRATE[h]||h)==='#ALL'?'#fff':txtColor};text-transform:uppercase;letter-spacing:0.5px">${(COLOR_MIGRATE[h]||h)==='#ALL'?'ALL COLORS':nm}</span>
-            ${isUnavail?'<br><span style="font-size:9px;color:#fff;opacity:.7">غير متاح</span>':''}
+          <div style="background:linear-gradient(135deg,#1B3A6B,#2a6db5);padding:6px 10px;border-radius:8px;text-align:center;border:none;min-width:120px">
+            <span style="font-size:12px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:0.5px">${(COLOR_MIGRATE[h]||h)==='#ALL'?'ALL COLORS':nm}</span>
+            ${isUnavail?'<br><span style="font-size:9px;color:rgba(255,255,255,0.7)">غير متاح</span>':''}
           </div>
         </td>
         <td style="font-size:14px;font-weight:600;color:#1a1a2e">${fmt(cashC)}</td>
