@@ -1,12 +1,8 @@
 <!DOCTYPE html>
-<!-- v2.0 -->
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <title>كتالوج أسعار السيارات</title>
 <style>
 :root{
@@ -116,13 +112,21 @@ tr:hover td{background:#f9fafb}
 }
 .loading{text-align:center;padding:2rem;color:var(--muted)}
 @media print{
-  body > *{display:none!important}
-  #print-area{display:block!important;position:fixed;top:0;left:0;width:100%;z-index:9999}
+  body.no-print-allowed *{display:none!important}
+  body{background:#fff!important}
+  .topbar,.clock-bar,.tabs,.brands-wrap,.controls,.action-bar,.mobile-cards,
+  .notif-bar,#tab-users,#tab-calc,#tab-banks,
+  .icon-btn,.edit-btn-tbl,.del-btn,#actions-col,
+  button{display:none!important}
+  .main{padding:0!important}
+  .table-card{box-shadow:none!important;border:1px solid #ddd}
+  table{font-size:11px!important}
+  th,td{padding:6px 5px!important}
+  .print-header{display:block!important}
 }
-#print-area{display:none}
-.print-header{text-align:center;padding:10px 0 14px;border-bottom:2px solid #1B6FC8;margin-bottom:12px}
-.print-header h2{font-size:16px;color:#1B6FC8;margin-bottom:4px}
-.print-header p{font-size:10px;color:#888}
+.print-header{display:none;text-align:center;padding:10px 0 16px;border-bottom:2px solid #1B6FC8;margin-bottom:12px}
+.print-header h2{font-size:18px;color:#1B6FC8;margin-bottom:4px}
+.print-header p{font-size:11px;color:#888}
 /* بطاقات الجوال */
 .mobile-cards{display:none}
 .car-card{background:#fff;border-radius:12px;box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden;border:1px solid var(--border)}
@@ -152,10 +156,11 @@ tr.drag-over td{border-top:3px solid var(--blue)!important;background:#e8f0fb!im
 tr[data-car-id]{cursor:grab}
 tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 
-<div id="print-area"></div>
 <div id="notif-bar" class="notif-bar" style="display:none">
   <span id="notif-msg">🔔 تم تحديث الأسعار</span>
   <button class="notif-close" onclick="dismissNotif()">تم ✓</button>
@@ -193,6 +198,10 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
       <div class="tab" id="banks-tab-btn" onclick="switchTab('banks',this)" style="display:none">⚙️ نسب البنوك</div>
     </div>
     <div id="tab-cars">
+      <div class="print-header">
+        <h2>🚗 كتالوج أسعار السيارات — Al Hussaini Motors</h2>
+        <p id="print-date"></p>
+      </div>
       <div class="brands-wrap" id="brands-bar"></div>
       <div class="controls">
         <input type="text" id="search" placeholder="بحث..." oninput="renderCars()">
@@ -408,271 +417,13 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 
 const COLORS=[
-  {name:'ALL COLORS',hex:'#E8E8E8'},{name:'WHITE',hex:'#FFFFFF'},{name:'BLACK',hex:'#1a1a1a'},{name:'SILVER',hex:'#C0C0C0'},
-  {name:'GRAY',hex:'#808080'},{name:'RED',hex:'#FF0000'},{name:'DARK BLUE',hex:'#1B3A6B'},{name:'BLUE',hex:'#004B93'},
-  {name:'LIGHT BLUE',hex:'#4A90D9'},{name:'BEIGE',hex:'#D4B896'},{name:'BROWN',hex:'#7B4F2E'},
-  {name:'LIGHT GREEN',hex:'#4CAF50'},{name:'GOLD',hex:'#CFB53B'},{name:'ORANGE',hex:'#D45A00'},
-  {name:'TURQUOISE',hex:'#00CED1'},
+  {name:'White',hex:'#FFFFFF'},{name:'Black',hex:'#1a1a1a'},{name:'Silver',hex:'#C0C0C0'},
+  {name:'Gray',hex:'#808080'},{name:'Red',hex:'#CC2200'},{name:'Dark Blue',hex:'#1B3A6B'},
+  {name:'Light Blue',hex:'#4A90D9'},{name:'Beige',hex:'#D4B896'},{name:'Brown',hex:'#7B4F2E'},
+  {name:'Green',hex:'#2E7D32'},{name:'Gold',hex:'#C5A028'},{name:'Orange',hex:'#D45A00'},
   {name:'Purple',hex:'#6A1B9A'},{name:'Yellow',hex:'#D4B000'}
 ];
 const VAT=0.15,CASH_M=-1500,BANK_M=2000,ISSUE=400;
-
-// قاموس ترجمة أسماء الماركات
-const BRAND_TRANSLATE={
-  'تويوتا':'Toyota','تويوتة':'Toyota',
-  'هيونداي':'Hyundai',
-  'لكزس':'Lexus','لكزز':'Lexus',
-  'إيسوزو':'Isuzu','ايسوزو':'Isuzu',
-  'فورد':'Ford',
-  'جيتور':'Jetour',
-  'بيجو':'Peugeot','بيجيو':'Peugeot',
-  'نيسان':'Nissan',
-  'فوتون':'Foton',
-  'كيا':'Kia',
-  'جي اي سي':'JAC','جي إي سي':'JAC',
-  'سوزوكي':'Suzuki',
-  'مرسيدس':'Mercedes-Benz','مرسيدس بنز':'Mercedes-Benz',
-  'بي ام دبليو':'BMW','بي إم دبليو':'BMW',
-  'اودي':'Audi','أودي':'Audi',
-  'فولكس واجن':'Volkswagen','فولكسواجن':'Volkswagen',
-  'شيفروليه':'Chevrolet','شيفروليت':'Chevrolet',
-  'جي ام سي':'GMC','جي إم سي':'GMC',
-  'كاديلاك':'Cadillac',
-  'لينكولن':'Lincoln',
-  'دودج':'Dodge',
-  'جيب':'Jeep',
-  'هوندا':'Honda',
-  'مازدا':'Mazda',
-  'ميتسوبيشي':'Mitsubishi','ميتسوبيشى':'Mitsubishi',
-  'سوبارو':'Subaru',
-  'إنفينيتي':'Infiniti','انفينيتي':'Infiniti',
-  'فولفو':'Volvo',
-  'لاند روفر':'Land Rover',
-  'رنج روفر':'Range Rover',
-  'جاكوار':'Jaguar',
-  'بورش':'Porsche',
-  'بنتلي':'Bentley',
-  'رولز رويس':'Rolls-Royce',
-  'فيراري':'Ferrari',
-  'لمبرغيني':'Lamborghini','لامبورجيني':'Lamborghini',
-  'مازيراتي':'Maserati',
-  'رينو':'Renault','رينول':'Renault',
-  'سيتروين':'Citroen',
-  'أوبل':'Opel','اوبل':'Opel',
-  'هافال':'Haval',
-  'شيري':'Chery',
-  'جيلي':'Geely',
-  'بي واي دي':'BYD',
-  'تيسلا':'Tesla',
-  'مان':'MAN',
-};
-function getBrandEn(brand){
-  if(!brand)return'';
-  if(brand.nameEn)return brand.nameEn;
-  const ar=brand.nameAr||brand.name||'';
-  return BRAND_TRANSLATE[ar]||ar;
-}
-// قاموس ترجمة نوع السيارة كلمة بكلمة
-const MODEL_WORD_MAP={
-  // ياريس
-  'ياريس':'YARIS',
-  // كامري
-  'كامري':'CAMRY',
-  // كورولا
-  'كورولا':'COROLLA',
-  // لاند كروزر
-  'لاند':'LAND','كروزر':'CRUISER',
-  // برادو
-  'برادو':'PRADO',
-  // هايلكس
-  'هايلكس':'HILUX','هايلاكس':'HILUX',
-  // فورتشنر
-  'فورتشنر':'FORTUNER','فورشنر':'FORTUNER',
-  // اف جي
-  'اف':'FJ','إف':'FJ',
-  // افانزا
-  'افانزا':'AVANZA','أفانزا':'AVANZA',
-  // راش
-  'راش':'RUSH',
-  // هايس
-  'هايس':'HIACE','هايسي':'HIACE',
-  // كوستر
-  'كوستر':'COASTER',
-  // تندرا
-  'تندرا':'TUNDRA',
-  // تاكوما
-  'تاكوما':'TACOMA',
-  // سيكويا
-  'سيكويا':'SEQUOIA',
-  // بريوس
-  'بريوس':'PRIUS',
-  // كراون
-  'كراون':'CROWN',
-  // سيينا
-  'سيينا':'SIENNA',
-  // اكورد
-  'اكورد':'ACCORD','أكورد':'ACCORD',
-  // سيفيك
-  'سيفيك':'CIVIC',
-  // باسات
-  'باسات':'PASSAT',
-  // جيتا
-  'جيتا':'JETTA',
-  // النترا
-  'النترا':'ELANTRA',
-  // سوناتا
-  'سوناتا':'SONATA',
-  // توسان
-  'توسان':'TUCSON',
-  // سانتافي
-  'سانتافي':'SANTA FE','سانتا':'SANTA','فيه':'FE',
-  // كريتا
-  'كريتا':'CRETA',
-  // اكسنت
-  'اكسنت':'ACCENT','أكسنت':'ACCENT',
-  // ستاريا
-  'ستاريا':'STARIA',
-  // بالاسيد
-  'بالاسيد':'PALISADE',
-  // ايونيك
-  'ايونيك':'IONIQ','أيونيك':'IONIQ',
-  // ES LX NX RX GX UX
-  'اي اس':'ES','ال اكس':'LX','ان اكس':'NX','ار اكس':'RX','جي اكس':'GX','يو اكس':'UX',
-  // نافارا
-  'نافارا':'NAVARA',
-  // باترول
-  'باترول':'PATROL',
-  // صني
-  'صني':'SUNNY',
-  // تيدا
-  'تيدا':'TIIDA',
-  // قشقاي
-  'قشقاي':'QASHQAI',
-  // اكس ترايل
-  'اكس ترايل':'X-TRAIL','إكس ترايل':'X-TRAIL',
-  // ارمادا
-  'ارمادا':'ARMADA','أرمادا':'ARMADA',
-  // مورانو
-  'مورانو':'MURANO',
-  // التيما
-  'التيما':'ALTIMA',
-  // ماكسيما
-  'ماكسيما':'MAXIMA',
-  // سبورتاج
-  'سبورتاج':'SPORTAGE',
-  // سيراتو
-  'سيراتو':'CERATO',
-  // بيكانتو
-  'بيكانتو':'PICANTO',
-  // سورنتو
-  'سورنتو':'SORENTO',
-  // ريو
-  'ريو':'RIO',
-  // كارنيفال
-  'كارنيفال':'CARNIVAL',
-  // تيلورايد
-  'تيلورايد':'TELLURIDE',
-  // سيلتوس
-  'سيلتوس':'SELTOS',
-  // ستنجر
-  'ستنجر':'STINGER',
-  // ك5
-  'ك5':'K5','ك9':'K9','ك8':'K8',
-  // اكسبلورر
-  'اكسبلورر':'EXPLORER','إكسبلورر':'EXPLORER',
-  // رانجر
-  'رانجر':'RANGER',
-  // F150
-  'اف 150':'F-150',
-  // ايدج
-  'ايدج':'EDGE','إيدج':'EDGE',
-  // موستنج
-  'موستنج':'MUSTANG',
-  // برونكو
-  'برونكو':'BRONCO',
-  // اكسبيديشن
-  'اكسبيديشن':'EXPEDITION',
-  // بارس
-  'بارس':'PARS',
-  // كوبيا
-  'كوبيا':'COBIA',
-  // ديماكس
-  'ديماكس':'D-MAX','دي ماكس':'D-MAX',
-  // تروبر
-  'تروبر':'TROOPER',
-  // موي
-  'موي':'MU-X','مو اكس':'MU-X',
-  // دسكفري
-  'دسكفري':'DISCOVERY',
-  // ديفندر
-  'ديفندر':'DEFENDER',
-  // فيلار
-  'فيلار':'VELAR',
-  // ايفوك
-  'ايفوك':'EVOQUE','إيفوك':'EVOQUE',
-  // كلمات الفئات والمواصفات
-  'سبورت':'SPORT',
-  'اوتوبيوجرافي':'AUTOBIOGRAPHY',
-  'ليمتد':'LIMITED',
-  'بلس':'PLUS',
-  'برو':'PRO',
-  'فل':'FULL','فول':'FULL',
-  'كامل':'FULL',
-  'جنوط':'ALLOY','جنط':'ALLOY',
-  'فتحة سقف':'SUNROOF','فتحه سقف':'SUNROOF',
-  'فتحة':'SUNROOF',
-  'سقف':'ROOF',
-  'أطياس':'ATYAS','اطياس':'ATYAS',
-  'مثبت سرعة':'CRUISE CONTROL','مثبت':'CRUISE',
-  'هايبرد':'HYBRID','هايبريد':'HYBRID','هجين':'HYBRID',
-  'اتوماتيك':'AUTOMATIC','أوتوماتيك':'AUTOMATIC',
-  'يدوي':'MANUAL',
-  'ديزل':'DIESEL',
-  'كهربائي':'ELECTRIC',
-  'تيربو':'TURBO',
-  'فور ويل':'4WD','دفع رباعي':'4WD',
-  'دفع امامي':'2WD','دفع خلفي':'RWD',
-  'جي ال':'GL','جي ال اس':'GLS','جي ال اكس':'GLX',
-  'اس ار 5':'SR5','اس ار':'SR','اس':'S',
-  'في اكس ار':'VXR','في اكس':'VX','في ال':'VL',
-  'تي ار دي':'TRD',
-  'ستاندرد':'STANDARD','ستاندارد':'STANDARD',
-  'دي لوكس':'DELUXE','ديلوكس':'DELUXE',
-  'بريميوم':'PREMIUM',
-  'اكسكلوسيف':'EXCLUSIVE',
-};
-
-function translateModelToEn(text){
-  if(!text)return'';
-  const arabicChars=(text.match(/[\u0600-\u06FF]/g)||[]).length;
-  const latinChars=(text.match(/[a-zA-Z]/g)||[]).length;
-  if(latinChars>=arabicChars&&arabicChars===0)return text.toUpperCase();
-  
-  // أولاً: ابحث عن عبارات متعددة الكلمات
-  let result=text;
-  const multiWord=Object.keys(MODEL_WORD_MAP).filter(k=>k.includes(' ')).sort((a,b)=>b.length-a.length);
-  multiWord.forEach(phrase=>{
-    const re=new RegExp(phrase,'g');
-    result=result.replace(re,' '+MODEL_WORD_MAP[phrase]+' ');
-  });
-  
-  // ثانياً: ترجمة كلمة بكلمة
-  const tokens=result.trim().split(/\s+/);
-  const translated=tokens.map(token=>{
-    if(!token)return'';
-    if(/^[\d\.\-\/]+$/.test(token))return token;
-    if(MODEL_WORD_MAP[token])return MODEL_WORD_MAP[token];
-    if(/^[a-zA-Z\d\-\/\.]+$/.test(token))return token.toUpperCase();
-    return token;
-  });
-  return translated.join(' ').replace(/\s+/,' ').trim();
-}
-
-function getModelEn(c){
-  if(c.modelEn)return c.modelEn.toUpperCase();
-  return translateModelToEn(c.modelAr||c.model||'');
-}
-
 const DEFAULT_BRANDS=[
   {id:'toyota',name:'تويوتا',nameAr:'تويوتا',nameEn:'Toyota'},
   {id:'hyundai',name:'هيونداي',nameAr:'هيونداي',nameEn:'Hyundai'},
@@ -776,7 +527,7 @@ function renderBrandsBar(){
   const bar=document.getElementById('brands-bar');
   bar.innerHTML=`<button class="brand-btn ${activeBrand==='all'?'active':''}" onclick="setBrand('all')">الكل</button>`;
   brands.forEach(b=>{
-    const lbl=`${b.nameAr||b.name} / ${getBrandEn(b)}`;
+    const lbl=b.nameEn?`${b.nameAr||b.name} / ${b.nameEn}`:b.name;
     bar.innerHTML+=`<button class="brand-btn ${activeBrand===b.id?'active':''}" onclick="setBrand('${b.id}')">${lbl}</button>`;
   });
 }
@@ -787,7 +538,7 @@ function renderAdminActions(){
     <button class="add-btn" onclick="openAddCar()">+ إضافة سيارة</button>
     <button class="add-btn green" onclick="openAddBrand()">+ إضافة ماركة</button>
     <button class="add-btn" style="background:#a32d2d" onclick="openDeleteBrand()">🗑️ حذف ماركة</button>
-    <button class="add-btn" style="background:#6A1B9A" onclick="printPDF()">🖨️ طباعة / PDF</button>`;
+    <button class="add-btn" style="background:#6A1B9A" onclick="printPDF()">🖨️ طباعة</button><button class="add-btn" style="background:#2E7D32" onclick="exportPDF()">📄 حفظ PDF</button>`;
 }
 
 function getFiltered(){
@@ -795,7 +546,7 @@ function getFiltered(){
   const yr=(document.getElementById('filter-year')||{}).value||'';
   return cars.filter(c=>{
     if(activeBrand!=='all'&&c.brand!==activeBrand)return false;
-    if(q&&!(c.modelAr||c.model||'').toLowerCase().includes(q)&&!(c.modelEn||'').toLowerCase().includes(q))return false;
+    if(q&&!c.model?.toLowerCase().includes(q))return false;
     if(yr&&c.year!==yr)return false;
     return true;
   });
@@ -811,14 +562,14 @@ window.renderCars=()=>{
     const avail=c.colorAvail||{};
     const colors=c.colors||[];
     const colorPrices=c.colorPrices||{};
-    const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
+    const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#C5A028','#D4B000','#808080'];
     const rowCount=Math.max(colors.length,1);
     const adminBtns=currentRole==='admin'?`<button class="icon-btn edit-btn-tbl" onclick="openEditCar('${c.id}')">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')">🗑️</button>`:'';
     
     if(!colors.length){
       return`<tr>
         <td class="price-buy buy-col" style="font-size:14px;font-weight:700">${fmt(p.buy)}</td>
-        <td style="text-align:right"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>
+        <td style="text-align:right"><strong>${c.model||''}</strong><br><span style="font-size:10px;color:#888">${brand.nameAr||brand.name}${brand.nameEn?' / '+brand.nameEn:''}</span></td>
         <td style="font-weight:600">${c.year||'-'}</td>
         <td colspan="4" style="color:#aaa;font-size:11px">لا توجد ألوان</td>
         <td style="font-size:10px;color:#888">${c.date||'-'}</td>
@@ -842,12 +593,12 @@ window.renderCars=()=>{
       const isFirst=i===0;
       return`<tr ${i===0?'data-car-id="'+c.id+'"':''} style="${sepStyle}${rowStyle}${isUnavail?'background:#fafafa;':''}">
         <td class="price-buy buy-col" style="font-size:14px;font-weight:700;background:${h};color:${txtColor};border-radius:6px;padding:6px 8px">${pr>0?fmt(pr):'—'}</td>
-        ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>`:''}
+        ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.model||''}</strong><br><span style="font-size:10px;color:#888">${brand.nameAr||brand.name}${brand.nameEn?' / '+brand.nameEn:''}</span></td>`:''}
         ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
         <td style="padding:5px 6px">
           <div style="${h==='#E8E8E8'?'background:linear-gradient(135deg,#1B3A6B,#4A90D9,#C0C0C0);border:none;':'background:'+h+';border:1px solid #bbb;'}padding:4px 8px;border-radius:6px;text-align:center">
-            <span style="font-size:11px;font-weight:700;color:${h==='#E8E8E8'?'#fff':txtColor};text-transform:uppercase;letter-spacing:0.5px">${nm}</span>
-            ${isUnavail?'<br><span style="font-size:9px;color:'+(h==='#E8E8E8'?'#fff':txtColor)+';opacity:.7">غير متاح</span>':''}
+            <span style="font-size:11px;font-weight:700;color:${h==='#E8E8E8'?'#fff':txtColor};text-transform:uppercase">${nm}</span>
+            ${isUnavail?'<br><span style="font-size:9px;color:'+txtColor+';opacity:.7">غير متاح</span>':''}
           </div>
         </td>
         <td style="font-size:14px;font-weight:600;color:#1a1a2e">${fmt(cashC)}</td>
@@ -870,10 +621,7 @@ function buildColorSec(ec,ea,ep){
   const rawPrices=ep||{};
   selColorPrices={};
   Object.keys(rawPrices).forEach(k=>{if(rawPrices[k]>=10000)selColorPrices[k]=rawPrices[k];});
-  return`<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;margin-bottom:6px">
-    <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase">الألوان والمخزون والسعر الإضافي</div>
-    <button type="button" onclick="cleanOldColors()" style="padding:4px 12px;border:1.5px solid #e53e3e;border-radius:20px;background:#fff;color:#e53e3e;font-size:11px;font-weight:700;cursor:pointer">🗑 حذف الألوان القديمة</button>
-  </div>
+  return`<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:6px;text-transform:uppercase;margin-top:8px">الألوان والمخزون والسعر الإضافي</div>
   <div class="color-grid">${COLORS.map(c=>{
     const s=selColors.includes(c.hex),av=selColorAvail[c.hex]!==false;
     return`<div class="cpick${s?' sel':''}${s&&!av?' unavail-pick':''}" style="background:${c.hex}" title="${c.name}" id="cp_${c.hex.replace('#','')}" onclick="toggleC('${c.hex}')"></div>`;
@@ -885,28 +633,13 @@ function buildAvailToggles(){
     const name=COLORS.find(x=>x.hex===h)?.name||h,av=selColorAvail[h]!==false,pr=selColorPrices[h]||0;
     return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
       <div style="width:13px;height:13px;border-radius:50%;background:${h};border:1px solid #ddd;flex-shrink:0"></div>
-      <span style="font-size:11px;color:var(--muted);min-width:60px;text-transform:uppercase;font-weight:600">${name}</span>
+      <span style="font-size:11px;color:var(--muted);min-width:60px">${name}</span>
       <label class="avail-lbl"><input type="checkbox" ${av?'checked':''} onchange="toggleAv('${h}',this.checked)"> متاح</label>
       <input type="number" value="${pr}" placeholder="سعر القائمة" style="width:130px;padding:3px 7px;border:1px solid #ddd;border-radius:6px;font-size:11px" onchange="togglePrice('${h}',this.value)">
       <span style="font-size:10px;color:#aaa">ر.س</span>
     </div>`;
   }).join('');
 }
-window.cleanOldColors=()=>{
-  const OLD_HEX=['#C5A028','#2E7D32','#CC2200','#EBEBEB'];
-  OLD_HEX.forEach(h=>{
-    if(selColors.includes(h)){
-      selColors=selColors.filter(x=>x!==h);
-      delete selColorAvail[h];
-      delete selColorPrices[h];
-      const el=document.getElementById('cp_'+h.replace('#',''));
-      if(el){el.classList.remove('sel','unavail-pick');}
-    }
-  });
-  const ar=document.getElementById('avail-row');
-  if(ar)ar.innerHTML=buildAvailToggles();
-  alert('تم حذف الألوان القديمة ✓ — اضغط حفظ لتأكيد التعديل');
-};
 window.toggleC=hex=>{
   if(selColors.includes(hex)){selColors=selColors.filter(x=>x!==hex);delete selColorAvail[hex];delete selColorPrices[hex];}
   else{selColors.push(hex);selColorAvail[hex]=true;selColorPrices[hex]=0;}
@@ -944,11 +677,11 @@ function carForm(c){
   const bOpts=brands.map(b=>`<option value="${b.id}"${c&&b.id===c.brand?' selected':''}>${b.nameAr||b.name}${b.nameEn?' / '+b.nameEn:''}</option>`).join('');
   const today=new Date().toISOString().slice(0,10);
   const p=c?calc(c):null;
-  return`<h3>${isEdit?'✏️ تعديل: '+(c.modelAr||c.model):'➕ إضافة سيارة جديدة'}</h3>
+  return`<h3>${isEdit?'✏️ تعديل: '+c.model:'➕ إضافة سيارة جديدة'}</h3>
   <div class="form-grid">
     <div class="form-group"><label>الماركة</label><select id="f-brand">${bOpts}</select></div>
     <div class="form-group"><label>نوع السيارة (عربي)</label><input id="f-model-ar" value="${c?.modelAr||c?.model||''}" placeholder="كامري 2.5S"></div>
-    <div class="form-group"><label>نوع السيارة (English)</label><input id="f-model-en" value="${c?.modelEn||''}" placeholder="CAMRY 2.5S" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+    <div class="form-group"><label>Car Type (English)</label><input id="f-model-en" value="${c?.modelEn||''}" placeholder="CAMRY 2.5S" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
     <div class="form-group"><label>الموديل (السنة)</label><select id="f-year">
       <option value="2025"${(!c||c.year==='2025')?' selected':''}>2025</option>
       <option value="2026"${c?.year==='2026'?' selected':''}>2026</option>
@@ -973,8 +706,8 @@ window.closeCarModal=()=>document.getElementById('car-modal').classList.remove('
 
 window.saveCar=async()=>{
   try{
-    const modelAr=document.getElementById('f-model-ar').value.trim();
-    const modelEn=document.getElementById('f-model-en').value.trim();
+    const modelAr=document.getElementById('f-model-ar')?document.getElementById('f-model-ar').value.trim():'';
+    const modelEn=document.getElementById('f-model-en')?document.getElementById('f-model-en').value.trim():'';
     const model=modelAr||(modelEn||'');
     const brand=document.getElementById('f-brand').value;
     const year=document.getElementById('f-year').value;
@@ -984,17 +717,13 @@ window.saveCar=async()=>{
     const notes=document.getElementById('f-notes').value.trim();
     if(!model){alert('يرجى إدخال نوع السيارة');return;}
     const d2={brand,model,modelAr,modelEn,year,buy,plateFee:plate,date,notes,colors:selColors,colorAvail:{...selColorAvail},colorPrices:{...selColorPrices},updatedAt:serverTimestamp()};
-    if(editCarId){
-      await updateDoc(doc(db,'cars',editCarId),d2);
-    } else {
-      await setDoc(doc(db,'cars','car_'+Date.now()),{...d2,order:cars.length,createdAt:serverTimestamp()});
-    }
-    try{await recordPriceUpdate(model);}catch(e){console.warn('recordPriceUpdate:',e);}
+    if(editCarId)await updateDoc(doc(db,'cars',editCarId),d2);
+    else await setDoc(doc(db,'cars','car_'+Date.now()),{...d2,order:cars.length,createdAt:serverTimestamp()});
+    try{await recordPriceUpdate(model);}catch(e){}
     closeCarModal();
     alert('تم الحفظ ✓');
   }catch(err){
-    console.error('saveCar error:',err);
-    alert('خطأ في الحفظ: '+err.message);
+    alert('خطأ: '+err.message);
   }
 };
 
@@ -1161,26 +890,30 @@ document.addEventListener('keydown',e=>{
 
 
 // === طباعة PDF ===
-window.printPDF=()=>{
-  if(currentRole!=='admin'){alert('⛔ الطباعة متاحة للمدير فقط');return;}
+window.exportPDF=()=>{
+  if(currentRole!=='admin'){alert('⛔ متاح للمدير فقط');return;}
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  // عنوان
+  doc.setFontSize(14);
+  doc.setTextColor(27,111,200);
+  doc.text('Al Hussaini Motors - katalog Asaar Al-Sayaraat', doc.internal.pageSize.width/2, 15, {align:'center'});
+  doc.setFontSize(9);
+  doc.setTextColor(100);
   const now=new Date();
-  const dateStr=now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear();
+  doc.text('Tarikh: '+now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear(), doc.internal.pageSize.width/2, 21, {align:'center'});
+  // بيانات الجدول
   const list=getFiltered();
-  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
-
-  let rows='';
+  const rows=[];
   list.forEach(c=>{
-    const brand=brands.find(b=>b.id===c.brand)||{nameAr:c.brand||'',nameEn:''};
+    const brand=brands.find(b=>b.id===c.brand)||{nameAr:c.brand||''};
     const colors=c.colors||[];
     const colorPrices=c.colorPrices||{};
     const avail=c.colorAvail||{};
-    const rowCount=Math.max(colors.length,1);
     if(!colors.length){
-      rows+=`<tr>
-        <td rowspan="1" style="text-align:right;font-weight:700">${c.modelAr||c.model||''}<br><small style="color:#1B6FC8;font-size:14px;font-weight:700;text-transform:uppercase">${getModelEn(c)}</small><br><small style="color:#888;font-weight:400">${getBrandEn(brand)}</small></td>
-        <td>${c.year||''}</td><td colspan="6" style="color:#aaa">لا توجد ألوان</td><td>${c.date||''}</td></tr>`;
+      rows.push([c.model||'',brand.nameAr||'',c.year||'','—','—','—','—','—',c.date||'']);
     } else {
-      colors.forEach((h,i)=>{
+      colors.forEach(h=>{
         const nm=COLORS.find(x=>x.hex===h)?.name||h;
         const pr=colorPrices[h]||0;
         const cashC=pr+CASH_M;
@@ -1190,67 +923,49 @@ window.printPDF=()=>{
         const totalCash=cashC+cashVat+ISSUE+(c.plateFee||900);
         const totalBank=bankC+bankVat+ISSUE+(c.plateFee||900);
         const isUnavail=avail[h]===false;
-        const txtColor=lightColors.includes(h)?'#333':'#fff';
-        rows+=`<tr style="${i===0?'border-top:2px solid #1B6FC8':''}${isUnavail?';opacity:0.4':''}">
-          ${i===0?`<td rowspan="${rowCount}" style="text-align:right;font-weight:700;vertical-align:middle">${c.modelAr||c.model||''}<br><small style="color:#1B6FC8;font-size:14px;font-weight:700;text-transform:uppercase">${getModelEn(c)}</small><br><small style="color:#888;font-weight:400">${getBrandEn(brand)}</small></td><td rowspan="${rowCount}" style="vertical-align:middle;text-align:center">${c.year||''}</td>`:''}
-          <td><span style="background:${h};color:${txtColor};padding:2px 8px;border-radius:4px;font-size:10px">${nm}</span></td>
-          <td style="font-weight:700;color:#27500a">${pr>0?Math.round(pr).toLocaleString('en-US'):'—'}</td>
-          <td style="color:#1a6b2a">${pr>0?Math.round(cashC).toLocaleString('en-US'):'—'}</td>
-          <td style="font-weight:600;color:#1a6b2a">${pr>0?Math.round(totalCash).toLocaleString('en-US'):'—'}</td>
-          <td style="color:#1B6FC8">${pr>0?Math.round(bankC).toLocaleString('en-US'):'—'}</td>
-          <td style="color:#1B6FC8">${pr>0?Math.round(totalBank).toLocaleString('en-US'):'—'}</td>
-          ${i===0?`<td rowspan="${rowCount}" style="vertical-align:middle;text-align:center;font-size:10px;color:#888">${c.date||''}</td>`:''}
-        </tr>`;
+        rows.push([
+          c.model||'',
+          brand.nameAr||'',
+          c.year||'',
+          nm+(isUnavail?' (غير متاح)':''),
+          pr>0?Math.round(pr).toLocaleString('en-US'):'—',
+          pr>0?Math.round(cashC).toLocaleString('en-US'):'—',
+          pr>0?Math.round(totalCash).toLocaleString('en-US'):'—',
+          pr>0?Math.round(bankC).toLocaleString('en-US'):'—',
+          pr>0?Math.round(totalBank).toLocaleString('en-US'):'—',
+          c.date||''
+        ]);
       });
     }
   });
-
-  const html=`<div style="font-family:'Segoe UI',Tahoma,Arial,sans-serif;direction:rtl;padding:20px">
-    <div style="text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #1B6FC8">
-      <h2 style="color:#1B6FC8;margin:0 0 4px;font-size:18px">🚗 كتالوج أسعار السيارات — Al Hussaini Motors</h2>
-      <p style="color:#888;margin:0;font-size:11px">تاريخ الطباعة: ${dateStr}</p>
-    </div>
-    <table style="width:100%;border-collapse:collapse;font-size:11px">
-      <thead>
-        <tr style="background:#1B6FC8;color:#fff">
-          <th style="padding:7px 6px;text-align:right">نوع السيارة</th>
-          <th style="padding:7px 6px">الموديل</th>
-          <th style="padding:7px 6px">اللون</th>
-          <th style="padding:7px 6px">سعر القائمة</th>
-          <th style="padding:7px 6px">سعر الكاش</th>
-          <th style="padding:7px 6px">إجمالي الكاش</th>
-          <th style="padding:7px 6px">سعر البنك</th>
-          <th style="padding:7px 6px">إجمالي البنك</th>
-          <th style="padding:7px 6px">التاريخ</th>
-        </tr>
-        <tr style="background:#e8edf5;font-size:9px;color:#666">
-          <th colspan="3"></th>
-          <th></th>
-          <th style="padding:3px">بدون ضريبة</th>
-          <th style="padding:3px">شامل الضريبة</th>
-          <th style="padding:3px">بدون ضريبة</th>
-          <th style="padding:3px">شامل الضريبة</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  </div>`;
-
-  const printArea=document.getElementById('print-area');
-  printArea.innerHTML=html;
-  window.print();
-  setTimeout(()=>{printArea.innerHTML='';},1000);
+  doc.autoTable({
+    head:[['النوع','الماركة','الموديل','اللون','سعر القائمة','سعر الكاش','إجمالي الكاش','سعر البنك','إجمالي البنك','التاريخ']],
+    body:rows,
+    startY:26,
+    styles:{fontSize:8,halign:'center'},
+    headStyles:{fillColor:[27,111,200],textColor:255,fontStyle:'bold'},
+    alternateRowStyles:{fillColor:[245,246,250]},
+  });
+  doc.save('katalog-asaar-'+now.getDate()+'_'+(now.getMonth()+1)+'_'+now.getFullYear()+'.pdf');
 };
 
-
+window.printPDF=()=>{
+  // تحديث تاريخ الطباعة
+  const now=new Date();
+  const dateStr=now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear();
+  const hr=now.getHours(),mn=String(now.getMinutes()).padStart(2,'0');
+  const ampm=hr<12?'AM':'PM';const h12=hr%12||12;
+  const el=document.getElementById('print-date');
+  if(el)el.textContent='تاريخ الطباعة: '+dateStr+' الساعة '+h12+':'+mn+' '+ampm;
+  window.print();
+};
 
 // === بطاقات الجوال ===
 function renderMobileCards(){
   const list=getFiltered();
   const el=document.getElementById('mobile-cards');
   if(!el)return;
-  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
+  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#C5A028','#D4B000','#808080'];
   if(!list.length){el.innerHTML='<div class="empty">لا توجد سيارات</div>';return;}
   el.innerHTML=list.map((c,ci)=>{
     const brand=brands.find(b=>b.id===c.brand)||{nameAr:c.brand||'',nameEn:''};
@@ -1289,8 +1004,8 @@ function renderMobileCards(){
     return`<div class="car-card" id="mcard_${ci}">
       <div class="car-card-header" onclick="toggleCard('mcard_${ci}')">
         <div>
-          <div class="car-card-title">${c.modelAr||c.model||''}${c.modelEn?'<span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}</div>
-          <div class="car-card-sub">${getBrandEn(brand)} — ${c.year||''}</div>
+          <div class="car-card-title">${c.model||''}</div>
+          <div class="car-card-sub">${brand.nameAr||brand.name}${brand.nameEn?' / '+brand.nameEn:''} — ${c.year||''}</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <div style="display:flex;gap:3px">${colors.slice(0,5).map(h=>`<div style="width:10px;height:10px;border-radius:50%;background:${h};border:1px solid #ddd"></div>`).join('')}</div>
