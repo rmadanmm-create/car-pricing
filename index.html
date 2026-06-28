@@ -404,10 +404,11 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 
 const COLORS=[
-  {name:'White',hex:'#FFFFFF'},{name:'Black',hex:'#1a1a1a'},{name:'Silver',hex:'#C0C0C0'},
-  {name:'Gray',hex:'#808080'},{name:'Red',hex:'#CC2200'},{name:'Dark Blue',hex:'#1B3A6B'},
-  {name:'Light Blue',hex:'#4A90D9'},{name:'Beige',hex:'#D4B896'},{name:'Brown',hex:'#7B4F2E'},
-  {name:'Green',hex:'#2E7D32'},{name:'Gold',hex:'#C5A028'},{name:'Orange',hex:'#D45A00'},
+  {name:'WHITE',hex:'#FFFFFF'},{name:'BLACK',hex:'#1a1a1a'},{name:'SILVER',hex:'#C0C0C0'},
+  {name:'GRAY',hex:'#808080'},{name:'RED',hex:'#FF0000'},{name:'DARK BLUE',hex:'#1B3A6B'},
+  {name:'LIGHT BLUE',hex:'#4A90D9'},{name:'BEIGE',hex:'#D4B896'},{name:'BROWN',hex:'#7B4F2E'},
+  {name:'LIGHT GREEN',hex:'#4CAF50'},{name:'GOLD',hex:'#CFB53B'},{name:'ORANGE',hex:'#D45A00'},
+  {name:'TURQUOISE',hex:'#00CED1'},
   {name:'Purple',hex:'#6A1B9A'},{name:'Yellow',hex:'#D4B000'}
 ];
 const VAT=0.15,CASH_M=-1500,BANK_M=2000,ISSUE=400;
@@ -531,18 +532,8 @@ const MODEL_WORD_MAP={
   'بالاسيد':'PALISADE',
   // ايونيك
   'ايونيك':'IONIQ','أيونيك':'IONIQ',
-  // ES
-  'اي اس':'ES',
-  // LX
-  'ال اكس':'LX',
-  // NX
-  'ان اكس':'NX',
-  // RX
-  'ار اكس':'RX',
-  // GX
-  'جي اكس':'GX',
-  // UX
-  'يو اكس':'UX',
+  // ES LX NX RX GX UX
+  'اي اس':'ES','ال اكس':'LX','ان اكس':'NX','ار اكس':'RX','جي اكس':'GX','يو اكس':'UX',
   // نافارا
   'نافارا':'NAVARA',
   // باترول
@@ -607,8 +598,6 @@ const MODEL_WORD_MAP={
   'تروبر':'TROOPER',
   // موي
   'موي':'MU-X','مو اكس':'MU-X',
-  // درافت
-  'درافت':'DMAX',
   // دسكفري
   'دسكفري':'DISCOVERY',
   // ديفندر
@@ -617,56 +606,62 @@ const MODEL_WORD_MAP={
   'فيلار':'VELAR',
   // ايفوك
   'ايفوك':'EVOQUE','إيفوك':'EVOQUE',
-  // سبورت
+  // كلمات الفئات والمواصفات
   'سبورت':'SPORT',
-  // اوتوبيوجرافي
   'اوتوبيوجرافي':'AUTOBIOGRAPHY',
-  // كلمات شائعة
   'ليمتد':'LIMITED',
   'بلس':'PLUS',
   'برو':'PRO',
   'فل':'FULL','فول':'FULL',
   'كامل':'FULL',
-  'مثبت':'STANDARD',
-  'مثبت سرعة':'CRUISE',
+  'جنوط':'ALLOY','جنط':'ALLOY',
+  'فتحة سقف':'SUNROOF','فتحه سقف':'SUNROOF',
+  'فتحة':'SUNROOF',
+  'سقف':'ROOF',
+  'أطياس':'ATYAS','اطياس':'ATYAS',
+  'مثبت سرعة':'CRUISE CONTROL','مثبت':'CRUISE',
+  'هايبرد':'HYBRID','هايبريد':'HYBRID','هجين':'HYBRID',
   'اتوماتيك':'AUTOMATIC','أوتوماتيك':'AUTOMATIC',
   'يدوي':'MANUAL',
   'ديزل':'DIESEL',
-  'هجين':'HYBRID','هايبرد':'HYBRID','هايبريد':'HYBRID',
   'كهربائي':'ELECTRIC',
   'تيربو':'TURBO',
   'فور ويل':'4WD','دفع رباعي':'4WD',
   'دفع امامي':'2WD','دفع خلفي':'RWD',
   'جي ال':'GL','جي ال اس':'GLS','جي ال اكس':'GLX',
-  'اس':'S','اس ار':'SR','اس ار 5':'SR5',
-  'في ال':'VL','في اكس ار':'VXR','في اكس':'VX',
+  'اس ار 5':'SR5','اس ار':'SR','اس':'S',
+  'في اكس ار':'VXR','في اكس':'VX','في ال':'VL',
   'تي ار دي':'TRD',
-  'ستاندرد':'STANDARD',
+  'ستاندرد':'STANDARD','ستاندارد':'STANDARD',
   'دي لوكس':'DELUXE','ديلوكس':'DELUXE',
   'بريميوم':'PREMIUM',
-  'اكسكلوسيف':'EXCLUSIVE','اكسكلوسيف':'EXCLUSIVE',
+  'اكسكلوسيف':'EXCLUSIVE',
 };
 
 function translateModelToEn(text){
   if(!text)return'';
-  // إذا كان النص إنجليزي بالفعل (أحرف لاتينية أكثر من العربية)
-  const arabicChars=(text.match(/[؀-ۿ]/g)||[]).length;
+  const arabicChars=(text.match(/[\u0600-\u06FF]/g)||[]).length;
   const latinChars=(text.match(/[a-zA-Z]/g)||[]).length;
-  if(latinChars>arabicChars)return text.toUpperCase();
+  if(latinChars>=arabicChars&&arabicChars===0)return text.toUpperCase();
   
-  // ترجمة كلمة بكلمة مع الحفاظ على الأرقام والرموز
-  const tokens=text.split(/\s+/);
+  // أولاً: ابحث عن عبارات متعددة الكلمات
+  let result=text;
+  const multiWord=Object.keys(MODEL_WORD_MAP).filter(k=>k.includes(' ')).sort((a,b)=>b.length-a.length);
+  multiWord.forEach(phrase=>{
+    const re=new RegExp(phrase,'g');
+    result=result.replace(re,' '+MODEL_WORD_MAP[phrase]+' ');
+  });
+  
+  // ثانياً: ترجمة كلمة بكلمة
+  const tokens=result.trim().split(/\s+/);
   const translated=tokens.map(token=>{
-    // إذا كان رقم أو رمز احتفظ به
+    if(!token)return'';
     if(/^[\d\.\-\/]+$/.test(token))return token;
-    // ابحث في القاموس
     if(MODEL_WORD_MAP[token])return MODEL_WORD_MAP[token];
-    // إذا كان إنجليزي حوّله لكبير
-    if(/^[a-zA-Z\d]+$/.test(token))return token.toUpperCase();
-    // احتفظ بالكلمة العربية كما هي إذا لم توجد ترجمة
+    if(/^[a-zA-Z\d\-\/\.]+$/.test(token))return token.toUpperCase();
     return token;
   });
-  return translated.join(' ').trim().toUpperCase();
+  return translated.join(' ').replace(/\s+/,' ').trim();
 }
 
 function getModelEn(c){
@@ -812,14 +807,14 @@ window.renderCars=()=>{
     const avail=c.colorAvail||{};
     const colors=c.colors||[];
     const colorPrices=c.colorPrices||{};
-    const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#C5A028','#D4B000','#808080'];
+    const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#4CAF50','#4A90D9'];
     const rowCount=Math.max(colors.length,1);
     const adminBtns=currentRole==='admin'?`<button class="icon-btn edit-btn-tbl" onclick="openEditCar('${c.id}')">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')">🗑️</button>`:'';
     
     if(!colors.length){
       return`<tr>
         <td class="price-buy buy-col" style="font-size:14px;font-weight:700">${fmt(p.buy)}</td>
-        <td style="text-align:right"><strong>${c.modelAr||c.model||''}</strong><br><span style="font-size:14px;color:#1B6FC8;font-weight:700;text-transform:uppercase">${getModelEn(c)}</span><br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>
+        <td style="text-align:right"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>
         <td style="font-weight:600">${c.year||'-'}</td>
         <td colspan="4" style="color:#aaa;font-size:11px">لا توجد ألوان</td>
         <td style="font-size:10px;color:#888">${c.date||'-'}</td>
@@ -830,9 +825,11 @@ window.renderCars=()=>{
     return colors.map((h,i)=>{
       const sepStyle=i===0?'border-top:3px solid #1B6FC8;':'';
       const pr=colorPrices[h]||0; // pr = سعر القائمة لهذا اللون
-      const nm=COLORS.find(x=>x.hex===h)?.name||h;
+      const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50','#EBEBEB':'#ALL','#E8E8E8':'#ALL'};
+      const rh=COLOR_MIGRATE[h]||h;
+      const nm=COLORS.find(x=>x.hex===rh||x.hex===h)?.name||h;
       const isUnavail=avail[h]===false;
-      const txtColor=lightColors.includes(h)?'#333':'#fff';
+      const txtColor=lightColors.includes(COLOR_MIGRATE[h]||h)?'#333':'#fff';
       const cashC=pr+CASH_M;
       const bankC=pr+BANK_M;
       const cashVatC=Math.round(cashC*0.15);
@@ -842,13 +839,13 @@ window.renderCars=()=>{
       const rowStyle=isUnavail?'opacity:0.45;':'';
       const isFirst=i===0;
       return`<tr ${i===0?'data-car-id="'+c.id+'"':''} style="${sepStyle}${rowStyle}${isUnavail?'background:#fafafa;':''}">
-        <td class="price-buy buy-col" style="font-size:14px;font-weight:700;background:${h};color:${txtColor};border-radius:6px;padding:6px 8px">${pr>0?fmt(pr):'—'}</td>
-        ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.modelAr||c.model||''}</strong><br><span style="font-size:14px;color:#1B6FC8;font-weight:700;text-transform:uppercase">${getModelEn(c)}</span><br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>`:''}
+        <td class="price-buy buy-col" style="font-size:14px;font-weight:700;background:#f0f0f0;color:#1a1a2e;border-radius:6px;padding:6px 8px">${pr>0?fmt(pr):'—'}</td>
+        ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>`:''}
         ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
         <td style="padding:5px 6px">
-          <div style="background:${h};padding:4px 8px;border-radius:6px;text-align:center;border:1px solid #bbb">
-            <span style="font-size:11px;font-weight:700;color:${txtColor}">${nm}</span>
-            ${isUnavail?'<br><span style="font-size:9px;color:'+txtColor+';opacity:.7">غير متاح</span>':''}
+          <div style="background:linear-gradient(135deg,#1B3A6B,#2a6db5);padding:6px 10px;border-radius:8px;text-align:center;border:none;min-width:120px">
+            <span style="font-size:12px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:0.5px">${(COLOR_MIGRATE[h]||h)==='#ALL'?'ALL COLORS':nm}</span>
+            ${isUnavail?'<br><span style="font-size:9px;color:rgba(255,255,255,0.7)">غير متاح</span>':''}
           </div>
         </td>
         <td style="font-size:14px;font-weight:600;color:#1a1a2e">${fmt(cashC)}</td>
@@ -872,6 +869,12 @@ function buildColorSec(ec,ea,ep){
   selColorPrices={};
   Object.keys(rawPrices).forEach(k=>{if(rawPrices[k]>=10000)selColorPrices[k]=rawPrices[k];});
   return`<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:6px;text-transform:uppercase;margin-top:8px">الألوان والمخزون والسعر الإضافي</div>
+  <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px">
+    <div class="cpick${selColors.includes('#EBEBEB')?' sel':''}" 
+      style="background:#1B3A6B;width:36px;height:36px;border-radius:50%;cursor:pointer;border:2px solid #ddd" 
+      id="cp_EBEBEB" onclick="toggleC('#EBEBEB')" title="ALL COLORS"></div>
+    <span style="font-size:12px;font-weight:700;color:#1B6FC8;cursor:pointer" onclick="toggleC('#EBEBEB')">ALL COLORS</span>
+  </div>
   <div class="color-grid">${COLORS.map(c=>{
     const s=selColors.includes(c.hex),av=selColorAvail[c.hex]!==false;
     return`<div class="cpick${s?' sel':''}${s&&!av?' unavail-pick':''}" style="background:${c.hex}" title="${c.name}" id="cp_${c.hex.replace('#','')}" onclick="toggleC('${c.hex}')"></div>`;
@@ -880,16 +883,19 @@ function buildColorSec(ec,ea,ep){
 }
 function buildAvailToggles(){
   return selColors.map(h=>{
-    const name=COLORS.find(x=>x.hex===h)?.name||h,av=selColorAvail[h]!==false,pr=selColorPrices[h]||0;
+    const COLOR_MIGRATE_NAMES={'#EBEBEB':'ALL COLORS','#E8E8E8':'ALL COLORS','#CC2200':'RED','#C5A028':'GOLD','#2E7D32':'LIGHT GREEN'};
+    const rh2=COLOR_MIGRATE[h]||h;
+    const name=COLOR_MIGRATE_NAMES[h]||(rh2==='#ALL'?'ALL COLORS':COLORS.find(x=>x.hex===rh2||x.hex===h)?.name||h),av=selColorAvail[h]!==false,pr=selColorPrices[h]||0;
     return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
-      <div style="width:13px;height:13px;border-radius:50%;background:${h};border:1px solid #ddd;flex-shrink:0"></div>
-      <span style="font-size:11px;color:var(--muted);min-width:60px">${name}</span>
+      <div style="width:13px;height:13px;border-radius:50%;${(COLOR_MIGRATE[h]||h)==='#ALL'?'background:#1B3A6B;':('background:'+(COLOR_MIGRATE[h]||h)+';')}border:1px solid #ddd;flex-shrink:0"></div>
+      <span style="font-size:11px;color:var(--muted);min-width:60px;text-transform:uppercase;font-weight:600">${name}</span>
       <label class="avail-lbl"><input type="checkbox" ${av?'checked':''} onchange="toggleAv('${h}',this.checked)"> متاح</label>
       <input type="number" value="${pr}" placeholder="سعر القائمة" style="width:130px;padding:3px 7px;border:1px solid #ddd;border-radius:6px;font-size:11px" onchange="togglePrice('${h}',this.value)">
       <span style="font-size:10px;color:#aaa">ر.س</span>
     </div>`;
   }).join('');
 }
+
 window.toggleC=hex=>{
   if(selColors.includes(hex)){selColors=selColors.filter(x=>x!==hex);delete selColorAvail[hex];delete selColorPrices[hex];}
   else{selColors.push(hex);selColorAvail[hex]=true;selColorPrices[hex]=0;}
@@ -1140,7 +1146,7 @@ window.printPDF=()=>{
   const now=new Date();
   const dateStr=now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear();
   const list=getFiltered();
-  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#C5A028','#D4B000','#808080'];
+  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#4CAF50','#4A90D9'];
 
   let rows='';
   list.forEach(c=>{
@@ -1155,7 +1161,9 @@ window.printPDF=()=>{
         <td>${c.year||''}</td><td colspan="6" style="color:#aaa">لا توجد ألوان</td><td>${c.date||''}</td></tr>`;
     } else {
       colors.forEach((h,i)=>{
-        const nm=COLORS.find(x=>x.hex===h)?.name||h;
+        const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50','#EBEBEB':'#ALL','#E8E8E8':'#ALL'};
+      const rh=COLOR_MIGRATE[h]||h;
+      const nm=COLORS.find(x=>x.hex===rh||x.hex===h)?.name||h;
         const pr=colorPrices[h]||0;
         const cashC=pr+CASH_M;
         const bankC=pr+BANK_M;
@@ -1164,7 +1172,7 @@ window.printPDF=()=>{
         const totalCash=cashC+cashVat+ISSUE+(c.plateFee||900);
         const totalBank=bankC+bankVat+ISSUE+(c.plateFee||900);
         const isUnavail=avail[h]===false;
-        const txtColor=lightColors.includes(h)?'#333':'#fff';
+        const txtColor=lightColors.includes(COLOR_MIGRATE[h]||h)?'#333':'#fff';
         rows+=`<tr style="${i===0?'border-top:2px solid #1B6FC8':''}${isUnavail?';opacity:0.4':''}">
           ${i===0?`<td rowspan="${rowCount}" style="text-align:right;font-weight:700;vertical-align:middle">${c.modelAr||c.model||''}<br><small style="color:#1B6FC8;font-size:14px;font-weight:700;text-transform:uppercase">${getModelEn(c)}</small><br><small style="color:#888;font-weight:400">${getBrandEn(brand)}</small></td><td rowspan="${rowCount}" style="vertical-align:middle;text-align:center">${c.year||''}</td>`:''}
           <td><span style="background:${h};color:${txtColor};padding:2px 8px;border-radius:4px;font-size:10px">${nm}</span></td>
@@ -1224,7 +1232,7 @@ function renderMobileCards(){
   const list=getFiltered();
   const el=document.getElementById('mobile-cards');
   if(!el)return;
-  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#C5A028','#D4B000','#808080'];
+  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#4CAF50','#4A90D9'];
   if(!list.length){el.innerHTML='<div class="empty">لا توجد سيارات</div>';return;}
   el.innerHTML=list.map((c,ci)=>{
     const brand=brands.find(b=>b.id===c.brand)||{nameAr:c.brand||'',nameEn:''};
@@ -1236,7 +1244,9 @@ function renderMobileCards(){
       <button class="icon-btn del-btn" onclick="deleteCar('${c.id}')">🗑️ حذف</button>
     </div>`:'';
     const colorsHtml=colors.map(h=>{
-      const nm=COLORS.find(x=>x.hex===h)?.name||h;
+      const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50','#EBEBEB':'#ALL','#E8E8E8':'#ALL'};
+      const rh=COLOR_MIGRATE[h]||h;
+      const nm=COLORS.find(x=>x.hex===rh||x.hex===h)?.name||h;
       const pr=colorPrices[h]||0;
       const cashC=pr+CASH_M;
       const bankC=pr+BANK_M;
@@ -1244,7 +1254,7 @@ function renderMobileCards(){
       const bankVat=Math.round(bankC*0.15);
       const totalCash=cashC+cashVat+ISSUE+(c.plateFee||900);
       const totalBank=bankC+bankVat+ISSUE+(c.plateFee||900);
-      const txtColor=lightColors.includes(h)?'#333':'#fff';
+      const txtColor=lightColors.includes(COLOR_MIGRATE[h]||h)?'#333':'#fff';
       const isUnavail=avail[h]===false;
       return`<div class="car-color-row" style="${isUnavail?'opacity:0.4':''}">
         <div class="car-color-name">
@@ -1263,7 +1273,7 @@ function renderMobileCards(){
     return`<div class="car-card" id="mcard_${ci}">
       <div class="car-card-header" onclick="toggleCard('mcard_${ci}')">
         <div>
-          <div class="car-card-title">${c.modelAr||c.model||''} <span style="font-size:14px;color:#1B6FC8;font-weight:700;text-transform:uppercase">${getModelEn(c)}</span></div>
+          <div class="car-card-title">${c.modelAr||c.model||''}${c.modelEn?'<span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}</div>
           <div class="car-card-sub">${getBrandEn(brand)} — ${c.year||''}</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
@@ -1565,7 +1575,9 @@ window.onClientCarChange=()=>{
     const colorSel=document.getElementById('cl-color');
     colorSel.innerHTML='<option value="">-- اختر --</option>'+
       colors.filter(h=>avail[h]!==false).map(h=>{
-        const nm=COLORS.find(x=>x.hex===h)?.name||h;
+        const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50','#EBEBEB':'#ALL','#E8E8E8':'#ALL'};
+      const rh=COLOR_MIGRATE[h]||h;
+      const nm=COLORS.find(x=>x.hex===rh||x.hex===h)?.name||h;
         return`<option value="${nm}">${nm}</option>`;
       }).join('');
   };
@@ -1609,7 +1621,9 @@ window.openEditClient=async(id)=>{
   const yearOpts=matchCars.map(x=>`<option value="${x.id}_${x.year}" ${x.year===c.year?'selected':''}>${x.year}</option>`).join('');
   const car=matchCars.find(x=>x.year===c.year)||matchCars[0];
   const colorOpts=(car?.colors||[]).filter(h=>(car?.colorAvail||{})[h]!==false).map(h=>{
-    const nm=COLORS.find(x=>x.hex===h)?.name||h;
+    const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50','#EBEBEB':'#ALL','#E8E8E8':'#ALL'};
+      const rh=COLOR_MIGRATE[h]||h;
+      const nm=COLORS.find(x=>x.hex===rh||x.hex===h)?.name||h;
     return`<option value="${nm}" ${nm===c.color?'selected':''}>${nm}</option>`;
   }).join('');
   document.getElementById('user-modal-inner').innerHTML=`
