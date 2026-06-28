@@ -127,6 +127,7 @@ tr:hover td{background:#f9fafb}
 .print-header{display:none;text-align:center;padding:10px 0 16px;border-bottom:2px solid #1B6FC8;margin-bottom:12px}
 .print-header h2{font-size:18px;color:#1B6FC8;margin-bottom:4px}
 .print-header p{font-size:11px;color:#888}
+/* بطاقات الجوال */
 .mobile-cards{display:none}
 .car-card{background:#fff;border-radius:12px;box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden;border:1px solid var(--border)}
 .car-card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;user-select:none}
@@ -252,10 +253,13 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
       </div>
     </div>
 
+    <!-- تاب حاسبة التمويل -->
     <div id="tab-calc" style="display:none">
       <div class="panel">
         <h4>🧮 حاسبة التمويل البنكي</h4>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+          <!-- المدخلات -->
           <div>
             <div class="form-group" style="margin-bottom:10px">
               <label>جهة التمويل</label>
@@ -299,6 +303,8 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
               <input id="calc-admin-rate" type="number" placeholder="مثال: 1" step="0.01" min="0" oninput="calcFinance()">
             </div>
           </div>
+
+          <!-- النتائج -->
           <div id="calc-result" style="display:none;background:#f8f9fb;border-radius:12px;padding:14px">
             <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px;text-align:center" id="r-bank"></div>
             <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #e8eaef">
@@ -344,6 +350,7 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
           </div>
           <div id="calc-empty" style="display:flex;align-items:center;justify-content:center;background:#f8f9fb;border-radius:12px;padding:14px;color:var(--muted);font-size:13px;text-align:center">أدخل البيانات واختر جهة التمويل</div>
         </div>
+        <!-- حقول مخفية للتوافق -->
         <span id="r-profit" style="display:none"></span>
         <span id="r-rate" style="display:none"></span>
         <span id="calc-down-amt" style="display:none"></span>
@@ -351,6 +358,7 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
       </div>
     </div>
 
+    <!-- تاب العملاء -->
     <div id="tab-clients" style="display:none">
       <div style="display:flex;gap:8px;margin-bottom:.75rem;flex-wrap:wrap;align-items:center">
         <input type="text" id="client-search" placeholder="بحث بالاسم أو الجوال..." oninput="renderClients()"
@@ -367,10 +375,13 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
         </select>
         <button class="add-btn" onclick="openAddClient()">+ إضافة عميل</button>
       </div>
+      <!-- إحصائيات -->
       <div id="client-stats" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.75rem"></div>
+      <!-- قائمة العملاء -->
       <div id="clients-list"></div>
     </div>
 
+    <!-- تاب إعداد نسب البنوك (للمدير فقط) -->
     <div id="tab-banks" style="display:none">
       <div class="panel">
         <h4>⚙️ نسب جهات التمويل</h4>
@@ -568,7 +579,7 @@ window.renderCars=()=>{
     
     return colors.map((h,i)=>{
       const sepStyle=i===0?'border-top:3px solid #1B6FC8;':'';
-      const pr=colorPrices[h]||0;
+      const pr=colorPrices[h]||0; // pr = سعر القائمة لهذا اللون
       const nm=COLORS.find(x=>x.hex===h)?.name||h;
       const isUnavail=avail[h]===false;
       const txtColor=lightColors.includes(h)?'#333':'#fff';
@@ -606,6 +617,7 @@ let selColorPrices={};
 
 function buildColorSec(ec,ea,ep){
   selColors=[...(ec||[])];selColorAvail={...(ea||{})};
+  // تنقية: القيم الأقل من 10000 تعتبر سعر إضافي قديم وليس سعر قائمة
   const rawPrices=ep||{};
   selColorPrices={};
   Object.keys(rawPrices).forEach(k=>{if(rawPrices[k]>=10000)selColorPrices[k]=rawPrices[k];});
@@ -664,6 +676,7 @@ function carForm(c){
   const isEdit=!!c;
   const bOpts=brands.map(b=>`<option value="${b.id}"${c&&b.id===c.brand?' selected':''}>${b.nameAr||b.name}${b.nameEn?' / '+b.nameEn:''}</option>`).join('');
   const today=new Date().toISOString().slice(0,10);
+  const p=c?calc(c):null;
   return`<h3>${isEdit?'✏️ تعديل: '+c.model:'➕ إضافة سيارة جديدة'}</h3>
   <div class="form-grid">
     <div class="form-group"><label>الماركة</label><select id="f-brand">${bOpts}</select></div>
@@ -765,15 +778,10 @@ window.saveBrand=async()=>{
   document.getElementById('brand-modal').classList.remove('open');
 };
 
-// =============================================
-// switchTab — الإصلاح هنا: إخفاء mobile-cards
-// =============================================
 window.switchTab=(tab,el)=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const isCars=tab==='cars';
-  document.getElementById('tab-cars').style.display=isCars?'block':'none';
-  document.getElementById('mobile-cards').style.display=isCars?'block':'none';
+  document.getElementById('tab-cars').style.display=tab==='cars'?'block':'none';
   document.getElementById('tab-users').style.display=tab==='users'?'block':'none';
   document.getElementById('tab-calc').style.display=tab==='calc'?'block':'none';
   document.getElementById('tab-banks').style.display=tab==='banks'?'block':'none';
@@ -848,7 +856,14 @@ window.saveUser=async()=>{
 window.deleteUser=async(uid,email)=>{
   if(!confirm(`هل تريد حذف المستخدم ${email||''}؟\nسيتم حذفه نهائياً من النظام.`))return;
   try{
+    // Delete from Firestore
     await deleteDoc(doc(db,'users',uid));
+    // Delete from Authentication via admin-style secondary app
+    const app3=initializeApp(firebaseConfig,'del_'+Date.now());
+    const auth3=getAuth(app3);
+    // We cannot delete other users from client SDK directly
+    // So we mark them as deleted in Firestore and they cannot login
+    // The admin can also delete from Firebase Console
     renderUsers();
     alert('تم حذف المستخدم من قائمة الموظفين ✅\nللحذف الكامل من Firebase Authentication افتح Firebase Console → Authentication → Users');
   }catch(e){
@@ -861,6 +876,7 @@ window.deleteUser=async(uid,email)=>{
 });
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')window.doLogin();});
 
+// منع الطباعة للموظف
 window.addEventListener('beforeprint',e=>{
   if(currentRole!=='admin'){e.preventDefault();window.stop();alert('⛔ الطباعة متاحة للمدير فقط');return false;}
 });
@@ -870,10 +886,15 @@ document.addEventListener('keydown',e=>{
   }
 });
 
+
+
+
+// === طباعة PDF ===
 window.exportPDF=()=>{
   if(currentRole!=='admin'){alert('⛔ متاح للمدير فقط');return;}
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  // عنوان
   doc.setFontSize(14);
   doc.setTextColor(27,111,200);
   doc.text('Al Hussaini Motors - katalog Asaar Al-Sayaraat', doc.internal.pageSize.width/2, 15, {align:'center'});
@@ -881,6 +902,7 @@ window.exportPDF=()=>{
   doc.setTextColor(100);
   const now=new Date();
   doc.text('Tarikh: '+now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear(), doc.internal.pageSize.width/2, 21, {align:'center'});
+  // بيانات الجدول
   const list=getFiltered();
   const rows=[];
   list.forEach(c=>{
@@ -902,7 +924,9 @@ window.exportPDF=()=>{
         const totalBank=bankC+bankVat+ISSUE+(c.plateFee||900);
         const isUnavail=avail[h]===false;
         rows.push([
-          c.model||'',brand.nameAr||'',c.year||'',
+          c.model||'',
+          brand.nameAr||'',
+          c.year||'',
           nm+(isUnavail?' (غير متاح)':''),
           pr>0?Math.round(pr).toLocaleString('en-US'):'—',
           pr>0?Math.round(cashC).toLocaleString('en-US'):'—',
@@ -926,6 +950,7 @@ window.exportPDF=()=>{
 };
 
 window.printPDF=()=>{
+  // تحديث تاريخ الطباعة
   const now=new Date();
   const dateStr=now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear();
   const hr=now.getHours(),mn=String(now.getMinutes()).padStart(2,'0');
@@ -935,6 +960,7 @@ window.printPDF=()=>{
   window.print();
 };
 
+// === بطاقات الجوال ===
 function renderMobileCards(){
   const list=getFiltered();
   const el=document.getElementById('mobile-cards');
@@ -998,6 +1024,7 @@ window.toggleCard=id=>{
   if(card)card.classList.toggle('open');
 };
 
+// === البنوك وجهات التمويل ===
 const DEFAULT_BANKS=[
   {id:'rajhi',name:'بنك الراجحي',rate:0,insRate:0},
   {id:'ahli',name:'البنك الأهلي',rate:0,insRate:0},
@@ -1020,6 +1047,7 @@ async function loadBankRates(){
       bankRates=[...DEFAULT_BANKS];
     } else {
       bankRates=snap.docs.map(d=>({id:d.id,...d.data()}));
+      // أضف أي بنك ناقص
       DEFAULT_BANKS.forEach(b=>{if(!bankRates.find(x=>x.id===b.id))bankRates.push({...b});});
     }
   }catch(e){bankRates=[...DEFAULT_BANKS];}
@@ -1069,7 +1097,9 @@ window.saveBankRates=async()=>{
   alert('✅ تم حفظ النسب بنجاح');
 };
 
+
 window.onBankChange=()=>{
+  // إعادة ضبط النسب عند تغيير البنك
   const profitEl=document.getElementById('calc-profit-rate');
   const insEl=document.getElementById('calc-ins-rate');
   const bankId=document.getElementById('calc-bank')?.value;
@@ -1085,6 +1115,7 @@ window.calcFinance=(autoFill)=>{
   const months=parseInt(document.getElementById('calc-months')?.value)||48;
   const bankId=document.getElementById('calc-bank')?.value;
   const bank=bankRates.find(b=>b.id===bankId);
+  // ملء النسب تلقائياً من البنك
   if(bank){
     const profitEl=document.getElementById('calc-profit-rate');
     const insEl=document.getElementById('calc-ins-rate');
@@ -1113,6 +1144,7 @@ window.calcFinance=(autoFill)=>{
     return;
   }
 
+  // حساب القسط بطريقة Flat Rate (نسبة الربح السنوية × المبلغ × عدد السنوات / عدد الأشهر)
   const years=months/12;
   const totalProfit=amount*(profitRate/100)*years;
   const totalIns=amount*(insRate/100)*years;
@@ -1121,6 +1153,7 @@ window.calcFinance=(autoFill)=>{
   const monthlyNoIns=Math.round((amount+totalProfit)/months);
   const monthlyIns=Math.round(totalIns/months);
   const monthly=monthlyNoIns+monthlyIns;
+
   const total=downAmt+lastAmt+monthly*months+adminAmt;
 
   const fmt2=n=>Math.round(n).toLocaleString('en-US');
@@ -1141,6 +1174,9 @@ window.calcFinance=(autoFill)=>{
   if(empty)empty.style.display='none';
 };
 
+
+
+// === نظام العملاء ===
 const CLIENT_STATUSES={
   new:{label:'جديد',emoji:'🔵',color:'#1B6FC8'},
   interested:{label:'مهتم',emoji:'🟡',color:'#D4B000'},
@@ -1155,6 +1191,7 @@ async function loadClients(){
   const q=collection(db,'clients');
   onSnapshot(q,snap=>{
     const all=snap.docs.map(d=>({id:d.id,...d.data()}));
+    // المدير يشوف الكل، الموظف يشوف عملاءه فقط
     clientsList=currentRole==='admin'?all:all.filter(c=>c.agentId===currentUser.uid);
     renderClients();
   });
@@ -1167,6 +1204,7 @@ window.renderClients=()=>{
   if(search)list=list.filter(c=>(c.name||'').toLowerCase().includes(search)||(c.phone||'').includes(search));
   if(statusFilter)list=list.filter(c=>c.status===statusFilter);
 
+  // إحصائيات
   const statsEl=document.getElementById('client-stats');
   if(statsEl){
     const counts={};
@@ -1263,6 +1301,7 @@ window.onClientCarChange=()=>{
     const carId=val.split('_')[0];
     const car=cars.find(c=>c.id===carId);
     const colors=car?.colors||[];
+    const colorPrices=car?.colorPrices||{};
     const avail=car?.colorAvail||{};
     const colorSel=document.getElementById('cl-color');
     colorSel.innerHTML='<option value="">-- اختر --</option>'+
@@ -1341,6 +1380,8 @@ window.deleteClient=async(id)=>{
   await deleteDoc(doc(db,'clients',id));
 };
 
+
+// === نظام الإشعارات ===
 function checkPriceNotif(){
   const lastSeenKey='last_seen_'+currentUser.uid;
   onSnapshot(doc(db,'settings','lastPriceUpdate'),snap=>{
@@ -1378,6 +1419,7 @@ async function recordPriceUpdate(carModel=''){
   }catch(e){console.error('recordPriceUpdate error',e);}
 }
 
+// === السحب والإفلات ===
 let dragCarId=null;
 function enableDragDrop(){
   if(currentRole!=='admin')return;
@@ -1420,6 +1462,7 @@ function enableDragDrop(){
   observer.observe(tbody,{childList:true,subtree:true});
   tbody.querySelectorAll('tr[data-car-id]').forEach(tr=>{tr.draggable=true;});
 }
+// enableDragDrop يُستدعى بعد renderCars
 </script>
 </body>
 </html>
