@@ -813,7 +813,7 @@ window.renderCars=()=>{
     if(!colors.length){
       return`<tr>
         <td class="price-buy buy-col" style="font-size:14px;font-weight:700">${fmt(p.buy)}</td>
-        <td style="text-align:right"><strong>${c.modelAr||c.model||''}</strong><br><span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">${getModelEn(c)}</span><br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>
+        <td style="text-align:right"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>
         <td style="font-weight:600">${c.year||'-'}</td>
         <td colspan="4" style="color:#aaa;font-size:11px">لا توجد ألوان</td>
         <td style="font-size:10px;color:#888">${c.date||'-'}</td>
@@ -837,7 +837,7 @@ window.renderCars=()=>{
       const isFirst=i===0;
       return`<tr ${i===0?'data-car-id="'+c.id+'"':''} style="${sepStyle}${rowStyle}${isUnavail?'background:#fafafa;':''}">
         <td class="price-buy buy-col" style="font-size:14px;font-weight:700;background:${h};color:${txtColor};border-radius:6px;padding:6px 8px">${pr>0?fmt(pr):'—'}</td>
-        ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.modelAr||c.model||''}</strong><br><span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">${getModelEn(c)}</span><br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>`:''}
+        ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>`:''}
         ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
         <td style="padding:5px 6px">
           <div style="background:${h};padding:4px 8px;border-radius:6px;text-align:center;border:1px solid #bbb">
@@ -1257,7 +1257,7 @@ function renderMobileCards(){
     return`<div class="car-card" id="mcard_${ci}">
       <div class="car-card-header" onclick="toggleCard('mcard_${ci}')">
         <div>
-          <div class="car-card-title">${c.modelAr||c.model||''} <span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">${getModelEn(c)}</span></div>
+          <div class="car-card-title">${c.modelAr||c.model||''}${c.modelEn?'<span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}</div>
           <div class="car-card-sub">${getBrandEn(brand)} — ${c.year||''}</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
