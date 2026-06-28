@@ -839,7 +839,7 @@ window.renderCars=()=>{
       const rowStyle=isUnavail?'opacity:0.45;':'';
       const isFirst=i===0;
       return`<tr ${i===0?'data-car-id="'+c.id+'"':''} style="${sepStyle}${rowStyle}${isUnavail?'background:#fafafa;':''}">
-        <td class="price-buy buy-col" style="font-size:14px;font-weight:700;background:${h};color:${txtColor};border-radius:6px;padding:6px 8px">${pr>0?fmt(pr):'—'}</td>
+        <td class="price-buy buy-col" style="font-size:14px;font-weight:700;${(COLOR_MIGRATE[h]||h)==='#ALL'?'background:linear-gradient(90deg,#1B3A6B,#1B6FC8,#4A90D9,#C0C0C0);color:#333;':'background:'+(COLOR_MIGRATE[h]||h)+';color:'+txtColor+';'}border-radius:6px;padding:6px 8px">${pr>0?fmt(pr):'—'}</td>
         ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>`:''}
         ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
         <td style="padding:5px 6px">
@@ -883,9 +883,11 @@ function buildColorSec(ec,ea,ep){
 }
 function buildAvailToggles(){
   return selColors.map(h=>{
-    const name=h==='#EBEBEB'?'ALL COLORS':(COLORS.find(x=>x.hex===h)?.name||h),av=selColorAvail[h]!==false,pr=selColorPrices[h]||0;
+    const COLOR_MIGRATE_NAMES={'#EBEBEB':'ALL COLORS','#E8E8E8':'ALL COLORS','#CC2200':'RED','#C5A028':'GOLD','#2E7D32':'LIGHT GREEN'};
+    const rh2=COLOR_MIGRATE[h]||h;
+    const name=COLOR_MIGRATE_NAMES[h]||(rh2==='#ALL'?'ALL COLORS':COLORS.find(x=>x.hex===rh2||x.hex===h)?.name||h),av=selColorAvail[h]!==false,pr=selColorPrices[h]||0;
     return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
-      <div style="width:13px;height:13px;border-radius:50%;background:${h};border:1px solid #ddd;flex-shrink:0"></div>
+      <div style="width:13px;height:13px;border-radius:50%;${(COLOR_MIGRATE[h]||h)==='#ALL'?'background:linear-gradient(90deg,#1B3A6B,#1B6FC8,#4A90D9,#C0C0C0);':('background:'+(COLOR_MIGRATE[h]||h)+';')}border:1px solid #ddd;flex-shrink:0"></div>
       <span style="font-size:11px;color:var(--muted);min-width:60px;text-transform:uppercase;font-weight:600">${name}</span>
       <label class="avail-lbl"><input type="checkbox" ${av?'checked':''} onchange="toggleAv('${h}',this.checked)"> متاح</label>
       <input type="number" value="${pr}" placeholder="سعر القائمة" style="width:130px;padding:3px 7px;border:1px solid #ddd;border-radius:6px;font-size:11px" onchange="togglePrice('${h}',this.value)">
