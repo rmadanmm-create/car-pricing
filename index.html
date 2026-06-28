@@ -411,6 +411,62 @@ const COLORS=[
   {name:'Purple',hex:'#6A1B9A'},{name:'Yellow',hex:'#D4B000'}
 ];
 const VAT=0.15,CASH_M=-1500,BANK_M=2000,ISSUE=400;
+
+// قاموس ترجمة أسماء الماركات
+const BRAND_TRANSLATE={
+  'تويوتا':'Toyota','تويوتة':'Toyota',
+  'هيونداي':'Hyundai',
+  'لكزس':'Lexus','لكزز':'Lexus',
+  'إيسوزو':'Isuzu','ايسوزو':'Isuzu',
+  'فورد':'Ford',
+  'جيتور':'Jetour',
+  'بيجو':'Peugeot','بيجيو':'Peugeot',
+  'نيسان':'Nissan',
+  'فوتون':'Foton',
+  'كيا':'Kia',
+  'جي اي سي':'JAC','جي إي سي':'JAC',
+  'سوزوكي':'Suzuki',
+  'مرسيدس':'Mercedes-Benz','مرسيدس بنز':'Mercedes-Benz',
+  'بي ام دبليو':'BMW','بي إم دبليو':'BMW',
+  'اودي':'Audi','أودي':'Audi',
+  'فولكس واجن':'Volkswagen','فولكسواجن':'Volkswagen',
+  'شيفروليه':'Chevrolet','شيفروليت':'Chevrolet',
+  'جي ام سي':'GMC','جي إم سي':'GMC',
+  'كاديلاك':'Cadillac',
+  'لينكولن':'Lincoln',
+  'دودج':'Dodge',
+  'جيب':'Jeep',
+  'هوندا':'Honda',
+  'مازدا':'Mazda',
+  'ميتسوبيشي':'Mitsubishi','ميتسوبيشى':'Mitsubishi',
+  'سوبارو':'Subaru',
+  'إنفينيتي':'Infiniti','انفينيتي':'Infiniti',
+  'فولفو':'Volvo',
+  'لاند روفر':'Land Rover',
+  'رنج روفر':'Range Rover',
+  'جاكوار':'Jaguar',
+  'بورش':'Porsche',
+  'بنتلي':'Bentley',
+  'رولز رويس':'Rolls-Royce',
+  'فيراري':'Ferrari',
+  'لمبرغيني':'Lamborghini','لامبورجيني':'Lamborghini',
+  'مازيراتي':'Maserati',
+  'رينو':'Renault','رينول':'Renault',
+  'سيتروين':'Citroen',
+  'أوبل':'Opel','اوبل':'Opel',
+  'هافال':'Haval',
+  'شيري':'Chery',
+  'جيلي':'Geely',
+  'بي واي دي':'BYD',
+  'تيسلا':'Tesla',
+  'مان':'MAN',
+};
+function getBrandEn(brand){
+  if(!brand)return'';
+  if(brand.nameEn)return brand.nameEn;
+  const ar=brand.nameAr||brand.name||'';
+  return BRAND_TRANSLATE[ar]||ar;
+}
 const DEFAULT_BRANDS=[
   {id:'toyota',name:'تويوتا',nameAr:'تويوتا',nameEn:'Toyota'},
   {id:'hyundai',name:'هيونداي',nameAr:'هيونداي',nameEn:'Hyundai'},
@@ -514,7 +570,7 @@ function renderBrandsBar(){
   const bar=document.getElementById('brands-bar');
   bar.innerHTML=`<button class="brand-btn ${activeBrand==='all'?'active':''}" onclick="setBrand('all')">الكل</button>`;
   brands.forEach(b=>{
-    const lbl=b.nameEn?`${b.nameAr||b.name} / ${b.nameEn}`:b.name;
+    const lbl=`${b.nameAr||b.name} / ${getBrandEn(b)}`;
     bar.innerHTML+=`<button class="brand-btn ${activeBrand===b.id?'active':''}" onclick="setBrand('${b.id}')">${lbl}</button>`;
   });
 }
@@ -556,7 +612,7 @@ window.renderCars=()=>{
     if(!colors.length){
       return`<tr>
         <td class="price-buy buy-col" style="font-size:14px;font-weight:700">${fmt(p.buy)}</td>
-        <td style="text-align:right"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:14px;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${brand.nameEn||brand.nameAr||brand.name}</span></td>
+        <td style="text-align:right"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:14px;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>
         <td style="font-weight:600">${c.year||'-'}</td>
         <td colspan="4" style="color:#aaa;font-size:11px">لا توجد ألوان</td>
         <td style="font-size:10px;color:#888">${c.date||'-'}</td>
@@ -580,7 +636,7 @@ window.renderCars=()=>{
       const isFirst=i===0;
       return`<tr ${i===0?'data-car-id="'+c.id+'"':''} style="${sepStyle}${rowStyle}${isUnavail?'background:#fafafa;':''}">
         <td class="price-buy buy-col" style="font-size:14px;font-weight:700;background:${h};color:${txtColor};border-radius:6px;padding:6px 8px">${pr>0?fmt(pr):'—'}</td>
-        ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:14px;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${brand.nameEn||brand.nameAr||brand.name}</span></td>`:''}
+        ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:14px;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>`:''}
         ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
         <td style="padding:5px 6px">
           <div style="background:${h};padding:4px 8px;border-radius:6px;text-align:center;border:1px solid #bbb">
@@ -888,7 +944,7 @@ window.printPDF=()=>{
     const rowCount=Math.max(colors.length,1);
     if(!colors.length){
       rows+=`<tr>
-        <td rowspan="1" style="text-align:right;font-weight:700">${c.modelAr||c.model||''}<br>${c.modelEn?'<small style="color:#1B6FC8;font-size:14px;font-weight:700;text-transform:uppercase">'+c.modelEn+'</small><br>':''}<small style="color:#888;font-weight:400">${brand.nameEn||brand.nameAr||''}</small></td>
+        <td rowspan="1" style="text-align:right;font-weight:700">${c.modelAr||c.model||''}<br>${c.modelEn?'<small style="color:#1B6FC8;font-size:14px;font-weight:700;text-transform:uppercase">'+c.modelEn+'</small><br>':''}<small style="color:#888;font-weight:400">${getBrandEn(brand)}</small></td>
         <td>${c.year||''}</td><td colspan="6" style="color:#aaa">لا توجد ألوان</td><td>${c.date||''}</td></tr>`;
     } else {
       colors.forEach((h,i)=>{
@@ -903,7 +959,7 @@ window.printPDF=()=>{
         const isUnavail=avail[h]===false;
         const txtColor=lightColors.includes(h)?'#333':'#fff';
         rows+=`<tr style="${i===0?'border-top:2px solid #1B6FC8':''}${isUnavail?';opacity:0.4':''}">
-          ${i===0?`<td rowspan="${rowCount}" style="text-align:right;font-weight:700;vertical-align:middle">${c.modelAr||c.model||''}<br>${c.modelEn?'<small style="color:#1B6FC8;font-size:14px;font-weight:700;text-transform:uppercase">'+c.modelEn+'</small><br>':''}<small style="color:#888;font-weight:400">${brand.nameEn||brand.nameAr||''}</small></td><td rowspan="${rowCount}" style="vertical-align:middle;text-align:center">${c.year||''}</td>`:''}
+          ${i===0?`<td rowspan="${rowCount}" style="text-align:right;font-weight:700;vertical-align:middle">${c.modelAr||c.model||''}<br>${c.modelEn?'<small style="color:#1B6FC8;font-size:14px;font-weight:700;text-transform:uppercase">'+c.modelEn+'</small><br>':''}<small style="color:#888;font-weight:400">${getBrandEn(brand)}</small></td><td rowspan="${rowCount}" style="vertical-align:middle;text-align:center">${c.year||''}</td>`:''}
           <td><span style="background:${h};color:${txtColor};padding:2px 8px;border-radius:4px;font-size:10px">${nm}</span></td>
           <td style="font-weight:700;color:#27500a">${pr>0?Math.round(pr).toLocaleString('en-US'):'—'}</td>
           <td style="color:#1a6b2a">${pr>0?Math.round(cashC).toLocaleString('en-US'):'—'}</td>
@@ -1001,7 +1057,7 @@ function renderMobileCards(){
       <div class="car-card-header" onclick="toggleCard('mcard_${ci}')">
         <div>
           <div class="car-card-title">${c.modelAr||c.model||''} ${c.modelEn?'<span style="font-size:14px;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}</div>
-          <div class="car-card-sub">${brand.nameEn||brand.nameAr||brand.name} — ${c.year||''}</div>
+          <div class="car-card-sub">${getBrandEn(brand)} — ${c.year||''}</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <div style="display:flex;gap:3px">${colors.slice(0,5).map(h=>`<div style="width:10px;height:10px;border-radius:50%;background:${h};border:1px solid #ddd"></div>`).join('')}</div>
