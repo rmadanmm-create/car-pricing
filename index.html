@@ -160,13 +160,13 @@ tr:hover td{background:#f9fafb}
           <table>
             <thead>
               <tr>
-                <th class="buy-col" style="width:80px"><span class="th-ar">سعر الشراء</span><span class="th-en">LIST PRICE</span></th>
-                <th style="width:130px"><span class="th-ar">نوع السيارة</span><span class="th-en">CAR TYPE</span></th>
+                <th class="buy-col" style="width:80px"><span class="th-ar">سعر الشراء</span><span class="th-en">PURCHASE PRICE</span></th>
+                <th style="width:120px"><span class="th-ar">نوع السيارة</span><span class="th-en">CAR TYPE</span></th>
                 <th style="width:50px"><span class="th-ar">الموديل</span><span class="th-en">MODEL</span></th>
-                <th style="width:80px"><span class="th-ar">اللون</span><span class="th-en">COLOR</span></th>
-                <th style="width:90px"><span class="th-ar">سعر الكاش</span><span class="th-en">CASH PRICE</span></th>
-                <th style="width:90px"><span class="th-ar">سعر البنك</span><span class="th-en">BANK PRICE</span></th>
-                <th style="width:130px"><span class="th-ar">الإجمالي الكامل</span><span class="th-en">TOTAL PRICE</span></th>
+                <th style="width:85px"><span class="th-ar">سعر الكاش</span><span class="th-en">CASH PRICE</span></th>
+                <th style="width:85px"><span class="th-ar">سعر البنك</span><span class="th-en">BANK PRICE</span></th>
+                <th style="width:110px"><span class="th-ar">الإجمالي الكامل</span><span class="th-en">TOTAL PRICE</span></th>
+                <th style="width:75px"><span class="th-ar">الألوان</span><span class="th-en">COLORS</span></th>
                 <th style="width:68px"><span class="th-ar">تاريخ السعر</span><span class="th-en">PRICE DATE</span></th>
                 <th id="actions-col" style="width:50px;display:none"></th>
               </tr>
@@ -331,57 +331,23 @@ window.renderCars=()=>{
     const brand=brands.find(b=>b.id===c.brand)||{name:c.brand||''};
     const p=calc(c);
     const avail=c.colorAvail||{};
-    const colors=c.colors||[];
-    const colorPrices=c.colorPrices||{};
-    const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#C5A028','#D4B000','#808080'];
-    const adminBtns=currentRole==='admin'?`<button class="icon-btn edit-btn-tbl" onclick="openEditCar('${c.id}')">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')">🗑️</button>`:'';
-
-    if(!colors.length){
-      return`<tr>
-        <td class="price-buy buy-col">${fmt(p.buy)}</td>
-        <td style="text-align:right"><strong>${c.model||''}</strong><br><span style="font-size:10px;color:#888">${brand.name}</span></td>
-        <td style="font-weight:600">${c.year||'-'}</td>
-        <td class="price-cash">${fmt(p.ce)}</td>
-        <td class="price-bank">${fmt(p.be)}</td>
-        <td><div class="price-total">كاش: ${fmt(p.tc)}</div><div class="price-total">بنك: ${fmt(p.tb)}</div></td>
-        <td>—</td>
-        <td style="font-size:10px;color:#888">${c.date||'-'}</td>
-        ${currentRole==='admin'?`<td>${adminBtns}</td>`:''}
-      </tr>`;
-    }
-
-    const rowCount=colors.length;
-    return colors.map((h,i)=>{
-      const pr=colorPrices[h]||c.buy||0;
-      const nm=COLORS.find(x=>x.hex===h)?.name||h;
-      const isUnavail=avail[h]===false;
-      const txtColor=lightColors.includes(h)?'#333':'#fff';
-      const cashC=pr+CASH_M;
-      const bankC=pr+BANK_M;
-      const cashVat=Math.round(cashC*VAT);
-      const bankVat=Math.round(bankC*VAT);
-      const totalCash=cashC+cashVat+ISSUE+(c.plateFee||900);
-      const totalBank=bankC+bankVat+ISSUE+(c.plateFee||900);
-      const sepStyle=i===0?'border-top:2px solid #1B6FC8;':'';
-      const isFirst=i===0;
-      return`<tr style="${sepStyle}${isUnavail?'opacity:0.4;':''}">
-        <td class="price-buy buy-col" style="background:${h};color:${txtColor};font-weight:700">${pr>0?fmt(pr):'—'}</td>
-        ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.model||''}</strong><br><span style="font-size:10px;color:#888">${brand.name}</span></td>`:''}
-        ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
-        <td style="font-size:11px;font-weight:700;color:${txtColor};background:${h};border-radius:4px;padding:4px 6px">${nm}${isUnavail?' ✗':''}</td>
-        <td class="price-cash">${pr>0?fmt(cashC):'—'}</td>
-        <td class="price-bank">${pr>0?fmt(bankC):'—'}</td>
-        <td>${pr>0?`<div class="price-total">كاش: ${fmt(totalCash)}</div><div class="price-total" style="color:var(--blue)">بنك: ${fmt(totalBank)}</div>`:'—'}</td>
-        ${isFirst?`<td rowspan="${rowCount}" style="font-size:10px;color:#888;vertical-align:middle;text-align:center">${c.date||'-'}</td>`:''}
-        ${isFirst&&currentRole==='admin'?`<td rowspan="${rowCount}" style="vertical-align:middle;text-align:center">${adminBtns}</td>`:''}
-      </tr>`;
-    }).join('');
+    const dots=(c.colors||[]).map(h=>`<div class="color-dot${avail[h]===false?' unavail':''}" style="background:${h}" title="${COLORS.find(x=>x.hex===h)?.name||h}"></div>`).join('');
+    return`<tr>
+      <td class="price-buy buy-col">${fmt(p.buy)}</td>
+      <td style="text-align:right"><strong>${c.model||''}</strong><br><span style="font-size:10px;color:#888">${brand.name}</span></td>
+      <td style="font-weight:600">${c.year||'-'}</td>
+      <td class="price-cash">${fmt(p.ce)}</td>
+      <td class="price-bank">${fmt(p.be)}</td>
+      <td><div class="price-total">كاش: ${fmt(p.tc)}</div><div class="price-total">بنك: ${fmt(p.tb)}</div><div style="font-size:10px;color:#aaa">لوح: ${fmt(p.pl)} + إصدار: ${ISSUE}</div></td>
+      <td><div class="color-dots">${dots}</div></td>
+      <td style="font-size:10px;color:#888">${c.date||'-'}</td>
+      ${currentRole==='admin'?`<td><button class="icon-btn edit-btn-tbl" onclick="openEditCar('${c.id}')">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')">🗑️</button></td>`:''}
+    </tr>`;
   }).join('');
 };
 
-let selColorPrices={};
-function buildColorSec(ec,ea,ep){
-  selColors=[...(ec||[])];selColorAvail={...(ea||{})};selColorPrices={...(ep||{})};
+function buildColorSec(ec,ea){
+  selColors=[...(ec||[])];selColorAvail={...(ea||{})};
   return`<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:6px;text-transform:uppercase;margin-top:8px">الألوان والمخزون</div>
   <div class="color-grid">${COLORS.map(c=>{
     const s=selColors.includes(c.hex),av=selColorAvail[c.hex]!==false;
@@ -391,19 +357,13 @@ function buildColorSec(ec,ea,ep){
 }
 function buildAvailToggles(){
   return selColors.map(h=>{
-    const name=COLORS.find(x=>x.hex===h)?.name||h,av=selColorAvail[h]!==false,pr=selColorPrices[h]||0;
-    return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
-      <div style="width:11px;height:11px;border-radius:50%;background:${h};border:1px solid #ddd;flex-shrink:0"></div>
-      <span style="font-size:11px;color:var(--muted);min-width:55px">${name}</span>
-      <label class="avail-lbl"><input type="checkbox" ${av?'checked':''} onchange="toggleAv('${h}',this.checked)"> متاح</label>
-      <input type="number" value="${pr||''}" placeholder="سعر الشراء" style="width:120px;padding:3px 7px;border:1px solid #ddd;border-radius:6px;font-size:11px" onchange="togglePrice('${h}',this.value)">
-      <span style="font-size:10px;color:#aaa">ر.س</span>
-    </div>`;
+    const name=COLORS.find(x=>x.hex===h)?.name||h,av=selColorAvail[h]!==false;
+    return`<label class="avail-lbl"><div style="width:11px;height:11px;border-radius:50%;background:${h};border:1px solid #ddd;flex-shrink:0"></div><input type="checkbox" ${av?'checked':''} onchange="toggleAv('${h}',this.checked)"> ${name}</label>`;
   }).join('');
 }
 window.toggleC=hex=>{
-  if(selColors.includes(hex)){selColors=selColors.filter(x=>x!==hex);delete selColorAvail[hex];delete selColorPrices[hex];}
-  else{selColors.push(hex);selColorAvail[hex]=true;selColorPrices[hex]=0;}
+  if(selColors.includes(hex)){selColors=selColors.filter(x=>x!==hex);delete selColorAvail[hex];}
+  else{selColors.push(hex);selColorAvail[hex]=true;}
   const el=document.getElementById('cp_'+hex.replace('#',''));
   if(el){el.classList.toggle('sel',selColors.includes(hex));el.classList.toggle('unavail-pick',selColors.includes(hex)&&selColorAvail[hex]===false);}
   const ar=document.getElementById('avail-row');if(ar)ar.innerHTML=buildAvailToggles();
@@ -413,7 +373,6 @@ window.toggleAv=(hex,val)=>{
   const el=document.getElementById('cp_'+hex.replace('#',''));
   if(el)el.classList.toggle('unavail-pick',!val);
 };
-window.togglePrice=(hex,val)=>{selColorPrices[hex]=parseInt(val)||0;};
 
 function brkHtml(p){
   return`<div class="row"><span>سعر الشراء</span><span>${fmt(p.buy)} SAR</span></div>
@@ -450,7 +409,7 @@ function carForm(c){
     <div class="form-group full"><label>ملاحظات</label><input id="f-notes" value="${c?.notes||''}" placeholder="اختياري"></div>
   </div>
   <div class="breakdown" id="breakdown">${p?brkHtml(p):''}</div>
-  ${buildColorSec(c?.colors,c?.colorAvail,c?.colorPrices)}
+  ${buildColorSec(c?.colors,c?.colorAvail)}
   <div class="modal-footer">
     ${isEdit?`<button class="btn-del" onclick="deleteCar('${c.id}');closeCarModal()">🗑️ حذف</button>`:''}
     <button class="btn-save" onclick="saveCar()">حفظ</button>
@@ -463,23 +422,18 @@ window.openEditCar=id=>{const c=cars.find(x=>x.id===id);if(!c)return;editCarId=i
 window.closeCarModal=()=>document.getElementById('car-modal').classList.remove('open');
 
 window.saveCar=async()=>{
-  try{
-    const model=document.getElementById('f-model').value.trim();
-    const brand=document.getElementById('f-brand').value;
-    const year=document.getElementById('f-year').value;
-    const buy=parseInt(document.getElementById('f-buy').value)||0;
-    const plate=parseInt(document.getElementById('f-plate').value)||900;
-    const date=document.getElementById('f-date').value;
-    const notes=document.getElementById('f-notes').value.trim();
-    if(!model){alert('يرجى إدخال نوع السيارة');return;}
-    const d2={brand,model,year,buy,plateFee:plate,date,notes,colors:selColors,colorAvail:{...selColorAvail},colorPrices:{...selColorPrices},updatedAt:serverTimestamp()};
-    if(editCarId)await updateDoc(doc(db,'cars',editCarId),d2);
-    else await setDoc(doc(db,'cars','car_'+Date.now()),{...d2,createdAt:serverTimestamp()});
-    closeCarModal();
-    alert('تم الحفظ بنجاح');
-  }catch(err){
-    alert('خطأ في الحفظ: '+err.message);
-  }
+  const model=document.getElementById('f-model').value.trim();
+  const brand=document.getElementById('f-brand').value;
+  const year=document.getElementById('f-year').value;
+  const buy=parseInt(document.getElementById('f-buy').value)||0;
+  const plate=parseInt(document.getElementById('f-plate').value)||900;
+  const date=document.getElementById('f-date').value;
+  const notes=document.getElementById('f-notes').value.trim();
+  if(!model){alert('يرجى إدخال نوع السيارة');return;}
+  const d2={brand,model,year,buy,plateFee:plate,date,notes,colors:selColors,colorAvail:{...selColorAvail},updatedAt:serverTimestamp()};
+  if(editCarId)await updateDoc(doc(db,'cars',editCarId),d2);
+  else await setDoc(doc(db,'cars','car_'+Date.now()),{...d2,createdAt:serverTimestamp()});
+  closeCarModal();
 };
 
 window.deleteCar=async id=>{
