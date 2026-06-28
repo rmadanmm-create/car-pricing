@@ -843,7 +843,7 @@ window.renderCars=()=>{
         ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>`:''}
         ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
         <td style="padding:5px 6px">
-          <div style="${(COLOR_MIGRATE[h]||h)==='#ALL'?'background:linear-gradient(90deg,#FF0000,#FF7F00,#CFB53B,#4CAF50,#4A90D9,#1B3A6B,#8B00FF);':'background:'+(COLOR_MIGRATE[h]||h)+';'}padding:4px 8px;border-radius:6px;text-align:center;border:1px solid #bbb">
+          <div style="${(COLOR_MIGRATE[h]||h)==='#ALL'?'background:linear-gradient(90deg,#1B3A6B,#1B6FC8,#4A90D9,#C0C0C0);':'background:'+(COLOR_MIGRATE[h]||h)+';'}padding:4px 8px;border-radius:6px;text-align:center;border:1px solid #bbb">
             <span style="font-size:11px;font-weight:700;color:${(COLOR_MIGRATE[h]||h)==='#ALL'?'#fff':txtColor};text-transform:uppercase;letter-spacing:0.5px">${(COLOR_MIGRATE[h]||h)==='#ALL'?'ALL COLORS':nm}</span>
             ${isUnavail?'<br><span style="font-size:9px;color:#fff;opacity:.7">غير متاح</span>':''}
           </div>
@@ -869,7 +869,12 @@ function buildColorSec(ec,ea,ep){
   selColorPrices={};
   Object.keys(rawPrices).forEach(k=>{if(rawPrices[k]>=10000)selColorPrices[k]=rawPrices[k];});
   return`<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:6px;text-transform:uppercase;margin-top:8px">الألوان والمخزون والسعر الإضافي</div>
-  <div style="margin-bottom:8px"><button type="button" onclick="selectAllColors()" style="padding:5px 14px;border:1.5px solid #1B6FC8;border-radius:20px;background:#fff;color:#1B6FC8;font-size:12px;font-weight:700;cursor:pointer">✔ تحديد جميع الألوان</button></div>
+  <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px">
+    <div class="cpick${selColors.includes('#EBEBEB')?' sel':''}" 
+      style="background:linear-gradient(90deg,#1B3A6B,#1B6FC8,#4A90D9,#C0C0C0);width:36px;height:36px;border-radius:50%;cursor:pointer;border:2px solid #ddd" 
+      id="cp_EBEBEB" onclick="toggleC('#EBEBEB')" title="ALL COLORS"></div>
+    <span style="font-size:12px;font-weight:700;color:#1B6FC8;cursor:pointer" onclick="toggleC('#EBEBEB')">ALL COLORS</span>
+  </div>
   <div class="color-grid">${COLORS.map(c=>{
     const s=selColors.includes(c.hex),av=selColorAvail[c.hex]!==false;
     return`<div class="cpick${s?' sel':''}${s&&!av?' unavail-pick':''}" style="background:${c.hex}" title="${c.name}" id="cp_${c.hex.replace('#','')}" onclick="toggleC('${c.hex}')"></div>`;
@@ -878,7 +883,7 @@ function buildColorSec(ec,ea,ep){
 }
 function buildAvailToggles(){
   return selColors.map(h=>{
-    const name=COLORS.find(x=>x.hex===h)?.name||h,av=selColorAvail[h]!==false,pr=selColorPrices[h]||0;
+    const name=h==='#EBEBEB'?'ALL COLORS':(COLORS.find(x=>x.hex===h)?.name||h),av=selColorAvail[h]!==false,pr=selColorPrices[h]||0;
     return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
       <div style="width:13px;height:13px;border-radius:50%;background:${h};border:1px solid #ddd;flex-shrink:0"></div>
       <span style="font-size:11px;color:var(--muted);min-width:60px;text-transform:uppercase;font-weight:600">${name}</span>
@@ -888,14 +893,7 @@ function buildAvailToggles(){
     </div>`;
   }).join('');
 }
-window.selectAllColors=()=>{
-  COLORS.forEach(c=>{
-    if(!selColors.includes(c.hex)){selColors.push(c.hex);selColorAvail[c.hex]=true;selColorPrices[c.hex]=0;}
-    const el=document.getElementById('cp_'+c.hex.replace('#',''));
-    if(el){el.classList.add('sel');el.classList.remove('unavail-pick');}
-  });
-  const ar=document.getElementById('avail-row');if(ar)ar.innerHTML=buildAvailToggles();
-};
+
 window.toggleC=hex=>{
   if(selColors.includes(hex)){selColors=selColors.filter(x=>x!==hex);delete selColorAvail[hex];delete selColorPrices[hex];}
   else{selColors.push(hex);selColorAvail[hex]=true;selColorPrices[hex]=0;}
