@@ -866,7 +866,10 @@ function buildColorSec(ec,ea,ep){
   const rawPrices=ep||{};
   selColorPrices={};
   Object.keys(rawPrices).forEach(k=>{if(rawPrices[k]>=10000)selColorPrices[k]=rawPrices[k];});
-  return`<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:6px;text-transform:uppercase;margin-top:8px">الألوان والمخزون والسعر الإضافي</div>
+  return`<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;margin-bottom:6px">
+    <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase">الألوان والمخزون والسعر الإضافي</div>
+    <button type="button" onclick="cleanOldColors()" style="padding:4px 12px;border:1.5px solid #e53e3e;border-radius:20px;background:#fff;color:#e53e3e;font-size:11px;font-weight:700;cursor:pointer">🗑 حذف الألوان القديمة</button>
+  </div>
   <div class="color-grid">${COLORS.map(c=>{
     const s=selColors.includes(c.hex),av=selColorAvail[c.hex]!==false;
     return`<div class="cpick${s?' sel':''}${s&&!av?' unavail-pick':''}" style="background:${c.hex}" title="${c.name}" id="cp_${c.hex.replace('#','')}" onclick="toggleC('${c.hex}')"></div>`;
@@ -885,6 +888,21 @@ function buildAvailToggles(){
     </div>`;
   }).join('');
 }
+window.cleanOldColors=()=>{
+  const OLD_HEX=['#C5A028','#2E7D32','#CC2200','#EBEBEB'];
+  OLD_HEX.forEach(h=>{
+    if(selColors.includes(h)){
+      selColors=selColors.filter(x=>x!==h);
+      delete selColorAvail[h];
+      delete selColorPrices[h];
+      const el=document.getElementById('cp_'+h.replace('#',''));
+      if(el){el.classList.remove('sel','unavail-pick');}
+    }
+  });
+  const ar=document.getElementById('avail-row');
+  if(ar)ar.innerHTML=buildAvailToggles();
+  alert('تم حذف الألوان القديمة ✓ — اضغط حفظ لتأكيد التعديل');
+};
 window.toggleC=hex=>{
   if(selColors.includes(hex)){selColors=selColors.filter(x=>x!==hex);delete selColorAvail[hex];delete selColorPrices[hex];}
   else{selColors.push(hex);selColorAvail[hex]=true;selColorPrices[hex]=0;}
