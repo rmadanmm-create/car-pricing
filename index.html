@@ -404,11 +404,10 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 
 const COLORS=[
-  {name:'ALL COLORS',hex:'#E8E8E8'},{name:'WHITE',hex:'#FFFFFF'},{name:'BLACK',hex:'#1a1a1a'},{name:'SILVER',hex:'#C0C0C0'},
-  {name:'GRAY',hex:'#808080'},{name:'RED',hex:'#FF0000'},{name:'DARK BLUE',hex:'#1B3A6B'},
-  {name:'LIGHT BLUE',hex:'#4A90D9'},{name:'BEIGE',hex:'#D4B896'},{name:'BROWN',hex:'#7B4F2E'},
-  {name:'LIGHT GREEN',hex:'#4CAF50'},{name:'GOLD',hex:'#CFB53B'},{name:'ORANGE',hex:'#D45A00'},
-  {name:'TURQUOISE',hex:'#00CED1'},
+  {name:'White',hex:'#FFFFFF'},{name:'Black',hex:'#1a1a1a'},{name:'Silver',hex:'#C0C0C0'},
+  {name:'Gray',hex:'#808080'},{name:'Red',hex:'#CC2200'},{name:'Dark Blue',hex:'#1B3A6B'},
+  {name:'Light Blue',hex:'#4A90D9'},{name:'Beige',hex:'#D4B896'},{name:'Brown',hex:'#7B4F2E'},
+  {name:'Green',hex:'#2E7D32'},{name:'Gold',hex:'#C5A028'},{name:'Orange',hex:'#D45A00'},
   {name:'Purple',hex:'#6A1B9A'},{name:'Yellow',hex:'#D4B000'}
 ];
 const VAT=0.15,CASH_M=-1500,BANK_M=2000,ISSUE=400;
@@ -807,7 +806,7 @@ window.renderCars=()=>{
     const avail=c.colorAvail||{};
     const colors=c.colors||[];
     const colorPrices=c.colorPrices||{};
-    const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
+    const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#C5A028','#D4B000','#808080'];
     const rowCount=Math.max(colors.length,1);
     const adminBtns=currentRole==='admin'?`<button class="icon-btn edit-btn-tbl" onclick="openEditCar('${c.id}')">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')">🗑️</button>`:'';
     
@@ -842,7 +841,7 @@ window.renderCars=()=>{
         ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
         <td style="padding:5px 6px">
           <div style="background:${h};padding:4px 8px;border-radius:6px;text-align:center;border:1px solid #bbb">
-            <span style="font-size:11px;font-weight:700;color:${txtColor};text-transform:uppercase;letter-spacing:0.5px">${nm}</span>
+            <span style="font-size:11px;font-weight:700;color:${txtColor}">${nm}</span>
             ${isUnavail?'<br><span style="font-size:9px;color:'+txtColor+';opacity:.7">غير متاح</span>':''}
           </div>
         </td>
@@ -878,7 +877,7 @@ function buildAvailToggles(){
     const name=COLORS.find(x=>x.hex===h)?.name||h,av=selColorAvail[h]!==false,pr=selColorPrices[h]||0;
     return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
       <div style="width:13px;height:13px;border-radius:50%;background:${h};border:1px solid #ddd;flex-shrink:0"></div>
-      <span style="font-size:11px;color:var(--muted);min-width:60px;text-transform:uppercase;font-weight:600">${name}</span>
+      <span style="font-size:11px;color:var(--muted);min-width:60px">${name}</span>
       <label class="avail-lbl"><input type="checkbox" ${av?'checked':''} onchange="toggleAv('${h}',this.checked)"> متاح</label>
       <input type="number" value="${pr}" placeholder="سعر القائمة" style="width:130px;padding:3px 7px;border:1px solid #ddd;border-radius:6px;font-size:11px" onchange="togglePrice('${h}',this.value)">
       <span style="font-size:10px;color:#aaa">ر.س</span>
@@ -1135,7 +1134,7 @@ window.printPDF=()=>{
   const now=new Date();
   const dateStr=now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear();
   const list=getFiltered();
-  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
+  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#C5A028','#D4B000','#808080'];
 
   let rows='';
   list.forEach(c=>{
@@ -1219,7 +1218,7 @@ function renderMobileCards(){
   const list=getFiltered();
   const el=document.getElementById('mobile-cards');
   if(!el)return;
-  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
+  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#C5A028','#D4B000','#808080'];
   if(!list.length){el.innerHTML='<div class="empty">لا توجد سيارات</div>';return;}
   el.innerHTML=list.map((c,ci)=>{
     const brand=brands.find(b=>b.id===c.brand)||{nameAr:c.brand||'',nameEn:''};
