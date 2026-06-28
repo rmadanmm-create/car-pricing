@@ -841,9 +841,9 @@ window.renderCars=()=>{
         ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>`:''}
         ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
         <td style="padding:5px 6px">
-          <div style="background:${h};padding:4px 8px;border-radius:6px;text-align:center;border:1px solid #bbb">
-            <span style="font-size:11px;font-weight:700;color:${txtColor};text-transform:uppercase;letter-spacing:0.5px">${nm}</span>
-            ${isUnavail?'<br><span style="font-size:9px;color:'+txtColor+';opacity:.7">غير متاح</span>':''}
+          <div style="${h==='#E8E8E8'?'background:linear-gradient(135deg,#1B3A6B,#4A90D9,#C0C0C0);border:none;':'background:'+h+';border:1px solid #bbb;'}padding:4px 8px;border-radius:6px;text-align:center">
+            <span style="font-size:11px;font-weight:700;color:${h==='#E8E8E8'?'#fff':txtColor};text-transform:uppercase;letter-spacing:0.5px">${nm}</span>
+            ${isUnavail?'<br><span style="font-size:9px;color:'+(h==='#E8E8E8'?'#fff':txtColor)+';opacity:.7">غير متاح</span>':''}
           </div>
         </td>
         <td style="font-size:14px;font-weight:600;color:#1a1a2e">${fmt(cashC)}</td>
