@@ -843,9 +843,9 @@ window.renderCars=()=>{
         ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>`:''}
         ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
         <td style="padding:5px 6px">
-          <div style="background:linear-gradient(135deg,#1B3A6B,#2a6db5);padding:6px 10px;border-radius:8px;text-align:center;border:none;min-width:120px">
-            <span style="font-size:12px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:0.5px">${(COLOR_MIGRATE[h]||h)==='#ALL'?'ALL COLORS':nm}</span>
-            ${isUnavail?'<br><span style="font-size:9px;color:rgba(255,255,255,0.7)">غير متاح</span>':''}
+          <div style="background:${(COLOR_MIGRATE[h]||h)==='#ALL'?'linear-gradient(135deg,#1B3A6B,#2a6db5)':(COLOR_MIGRATE[h]||h)};padding:6px 10px;border-radius:8px;text-align:center;border:1px solid rgba(0,0,0,0.15);min-width:120px">
+            <span style="font-size:12px;font-weight:700;color:${txtColor};text-transform:uppercase;letter-spacing:0.5px;text-shadow:${txtColor==='#fff'?'0 1px 2px rgba(0,0,0,0.4)':'none'}">${(COLOR_MIGRATE[h]||h)==='#ALL'?'ALL COLORS':nm}</span>
+            ${isUnavail?'<br><span style="font-size:9px;color:'+txtColor+';opacity:0.7">غير متاح</span>':''}
           </div>
         </td>
         <td style="font-size:14px;font-weight:600;color:#1a1a2e">${fmt(cashC)}</td>
