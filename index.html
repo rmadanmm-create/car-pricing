@@ -47,15 +47,15 @@ body{background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
 .table-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:1rem}
 .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:12px;min-width:700px}
-th{background:#f8f9fb;color:var(--muted);font-weight:600;padding:10px 8px;text-align:center;border-bottom:2px solid #b0b5bf;border-right:1.5px solid #dde0e7;font-size:11px;line-height:1.4}
-td{padding:9px 8px;border-bottom:1.5px solid #dde0e7;border-right:1.5px solid #dde0e7;text-align:center;vertical-align:middle}
+th{background:#f8f9fb;color:var(--muted);font-weight:600;padding:10px 8px;text-align:center;border-bottom:1px solid var(--border);font-size:11px;line-height:1.4}
+td{padding:9px 8px;border-bottom:1px solid #f0f0f0;text-align:center;vertical-align:middle}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#f9fafb}
 .th-ar{display:block;font-size:11px}.th-en{display:block;font-size:9px;color:#aaa;letter-spacing:.3px}
-.price-buy{color:var(--green);font-weight:700;font-size:14px}
-.price-cash{color:#1a6b2a;font-weight:700;font-size:14px}
-.price-bank{color:var(--blue);font-weight:600;font-size:14px}
-.price-total{font-size:13px;color:#1a6b2a;font-weight:700}
+.price-buy{color:var(--green);font-weight:700}
+.price-cash{color:var(--text);font-weight:600}
+.price-bank{color:var(--blue);font-weight:600}
+.price-total{font-size:11px;color:var(--red);font-weight:600}
 .buy-col{background:#f0f7eb}
 .color-dots{display:flex;gap:3px;flex-wrap:wrap;justify-content:center}
 .color-dot{width:14px;height:14px;border-radius:50%;border:1px solid #ddd;flex-shrink:0;position:relative;cursor:help}
@@ -111,59 +111,10 @@ tr:hover td{background:#f9fafb}
   .clock-time{font-size:18px}
 }
 .loading{text-align:center;padding:2rem;color:var(--muted)}
-@media print{
-  body.no-print-allowed *{display:none!important}
-  body{background:#fff!important}
-  .topbar,.clock-bar,.tabs,.brands-wrap,.controls,.action-bar,.mobile-cards,
-  .notif-bar,#tab-users,#tab-calc,#tab-banks,
-  .icon-btn,.edit-btn-tbl,.del-btn,#actions-col,
-  button{display:none!important}
-  .main{padding:0!important}
-  .table-card{box-shadow:none!important;border:1px solid #ddd}
-  table{font-size:11px!important}
-  th,td{padding:6px 5px!important}
-  .print-header{display:block!important}
-}
-.print-header{display:none;text-align:center;padding:10px 0 16px;border-bottom:2px solid #1B6FC8;margin-bottom:12px}
-.print-header h2{font-size:18px;color:#1B6FC8;margin-bottom:4px}
-.print-header p{font-size:11px;color:#888}
-.mobile-cards{display:none}
-.car-card{background:#fff;border-radius:12px;box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden;border:1px solid var(--border)}
-.car-card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;user-select:none}
-.car-card-title{font-size:14px;font-weight:700;color:var(--text)}
-.car-card-sub{font-size:11px;color:var(--muted);margin-top:2px}
-.car-card-arrow{font-size:12px;color:var(--muted);transition:transform .2s}
-.car-card.open .car-card-arrow{transform:rotate(180deg)}
-.car-card-body{display:none;border-top:1px solid var(--border)}
-.car-card.open .car-card-body{display:block}
-.car-color-row{padding:10px 14px;border-bottom:1px solid #f0f0f0}
-.car-color-row:last-child{border-bottom:none}
-.car-color-name{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.car-color-dot{width:16px;height:16px;border-radius:50%;border:1px solid #ddd;flex-shrink:0}
-.car-price-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.car-price-item{background:#f8f9fb;border-radius:8px;padding:7px 10px}
-.car-price-label{font-size:10px;color:var(--muted);margin-bottom:2px}
-.car-price-val{font-size:13px;font-weight:700}
-@media(max-width:600px){
-  .table-card{display:none}
-  .mobile-cards{display:block}
-}
-.notif-bar{position:fixed;top:0;left:0;right:0;z-index:999;background:#f59e0b;color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.15);animation:slideDown .3s ease}
-@keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
-.notif-bar .notif-close{background:rgba(255,255,255,.25);border:none;color:#fff;padding:3px 10px;border-radius:6px;cursor:pointer;font-size:12px}
-tr.drag-over td{border-top:3px solid var(--blue)!important;background:#e8f0fb!important}
-tr[data-car-id]{cursor:grab}
-tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 
-<div id="notif-bar" class="notif-bar" style="display:none">
-  <span id="notif-msg">🔔 تم تحديث الأسعار</span>
-  <button class="notif-close" onclick="dismissNotif()">تم ✓</button>
-</div>
 <div id="auth-screen">
   <div class="auth-card">
     <div class="auth-logo">🚗</div>
@@ -192,15 +143,8 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
     <div class="tabs">
       <div class="tab active" onclick="switchTab('cars',this)">السيارات</div>
       <div class="tab" id="users-tab-btn" onclick="switchTab('users',this)" style="display:none">إدارة المستخدمين</div>
-      <div class="tab" id="calc-tab-btn" onclick="switchTab('calc',this)">🧮 حاسبة التمويل</div>
-      <div class="tab" id="clients-tab-btn" onclick="switchTab('clients',this)">👥 العملاء</div>
-      <div class="tab" id="banks-tab-btn" onclick="switchTab('banks',this)" style="display:none">⚙️ نسب البنوك</div>
     </div>
     <div id="tab-cars">
-      <div class="print-header">
-        <h2>🚗 كتالوج أسعار السيارات — Al Hussaini Motors</h2>
-        <p id="print-date"></p>
-      </div>
       <div class="brands-wrap" id="brands-bar"></div>
       <div class="controls">
         <input type="text" id="search" placeholder="بحث..." oninput="renderCars()">
@@ -208,8 +152,6 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
           <option value="">كل الموديلات</option>
           <option value="2025">2025</option>
           <option value="2026">2026</option>
-          <option value="2027">2027</option>
-          <option value="2028">2028</option>
         </select>
       </div>
       <div class="action-bar" id="admin-actions"></div>
@@ -218,22 +160,15 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
           <table>
             <thead>
               <tr>
-                <th class="buy-col" style="width:80px" rowspan="2"><span class="th-ar">سعر القائمة</span><span class="th-en">LIST PRICE</span></th>
-                <th style="width:120px" rowspan="2"><span class="th-ar">نوع السيارة</span><span class="th-en">CAR TYPE</span></th>
-                <th style="width:50px" rowspan="2"><span class="th-ar">الموديل</span><span class="th-en">MODEL</span></th>
-                <th style="width:80px" rowspan="2"><span class="th-ar">اللون</span><span class="th-en">COLOR</span></th>
+                <th class="buy-col" style="width:80px"><span class="th-ar">سعر الشراء</span><span class="th-en">LIST PRICE</span></th>
+                <th style="width:130px"><span class="th-ar">نوع السيارة</span><span class="th-en">CAR TYPE</span></th>
+                <th style="width:50px"><span class="th-ar">الموديل</span><span class="th-en">MODEL</span></th>
+                <th style="width:80px"><span class="th-ar">اللون</span><span class="th-en">COLOR</span></th>
                 <th style="width:90px"><span class="th-ar">سعر الكاش</span><span class="th-en">CASH PRICE</span></th>
-                <th style="width:115px"><span class="th-ar">إجمالي الكاش</span><span class="th-en">TOTAL CASH</span></th>
                 <th style="width:90px"><span class="th-ar">سعر البنك</span><span class="th-en">BANK PRICE</span></th>
-                <th style="width:115px"><span class="th-ar">إجمالي البنك</span><span class="th-en">TOTAL BANK</span></th>
-                <th style="width:68px" rowspan="2"><span class="th-ar">تاريخ السعر</span><span class="th-en">PRICE DATE</span></th>
-                <th id="actions-col" style="width:50px;display:none" rowspan="2"></th>
-              </tr>
-              <tr>
-                <th style="font-size:9px;color:#aaa;font-weight:400">بدون ضريبة</th>
-                <th style="font-size:9px;color:#aaa;font-weight:400">شامل الضريبة والرسوم</th>
-                <th style="font-size:9px;color:#aaa;font-weight:400">بدون ضريبة</th>
-                <th style="font-size:9px;color:#aaa;font-weight:400">شامل الضريبة والرسوم</th>
+                <th style="width:130px"><span class="th-ar">الإجمالي الكامل</span><span class="th-en">TOTAL PRICE</span></th>
+                <th style="width:68px"><span class="th-ar">تاريخ السعر</span><span class="th-en">PRICE DATE</span></th>
+                <th id="actions-col" style="width:50px;display:none"></th>
               </tr>
             </thead>
             <tbody id="car-table"></tbody>
@@ -241,7 +176,6 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
         </div>
       </div>
     </div>
-    <div class="mobile-cards" id="mobile-cards"></div>
     <div id="tab-users" style="display:none">
       <div class="action-bar">
         <button class="add-btn green" onclick="openAddUser()">+ إضافة موظف</button>
@@ -249,134 +183,6 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
       <div class="panel">
         <h4>المستخدمون</h4>
         <div id="users-list"><div class="loading">جاري التحميل...</div></div>
-      </div>
-    </div>
-
-    <div id="tab-calc" style="display:none">
-      <div class="panel">
-        <h4>🧮 حاسبة التمويل البنكي</h4>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div>
-            <div class="form-group" style="margin-bottom:10px">
-              <label>جهة التمويل</label>
-              <select id="calc-bank" onchange="calcFinance()">
-                <option value="">-- اختر --</option>
-              </select>
-            </div>
-            <div class="form-group" style="margin-bottom:10px">
-              <label>سعر السيارة (ر.س)</label>
-              <input id="calc-price" type="number" placeholder="0" oninput="calcFinance()">
-            </div>
-            <div class="form-group" style="margin-bottom:10px">
-              <label>الدفعة الأولى %</label>
-              <input id="calc-down-pct" type="number" placeholder="0" min="0" max="50" value="0" oninput="calcFinance()">
-            </div>
-            <div class="form-group" style="margin-bottom:10px">
-              <label>الدفعة الأخيرة %</label>
-              <input id="calc-last-pct" type="number" placeholder="0" min="0" max="50" value="0" oninput="calcFinance()">
-            </div>
-            <div class="form-group" style="margin-bottom:10px">
-              <label>مدة التمويل</label>
-              <select id="calc-months" onchange="calcFinance()">
-                <option value="12">12 شهر</option>
-                <option value="24">24 شهر</option>
-                <option value="36">36 شهر</option>
-                <option value="48" selected>48 شهر</option>
-                <option value="60">60 شهر</option>
-                <option value="72">72 شهر</option>
-              </select>
-            </div>
-            <div class="form-group" style="margin-bottom:10px">
-              <label>نسبة الربح % (سنوي)</label>
-              <input id="calc-profit-rate" type="number" placeholder="مثال: 6" step="0.01" min="0" oninput="calcFinance()">
-            </div>
-            <div class="form-group" style="margin-bottom:10px">
-              <label>نسبة التأمين % (سنوي)</label>
-              <input id="calc-ins-rate" type="number" placeholder="مثال: 2.7" step="0.01" min="0" oninput="calcFinance()">
-            </div>
-            <div class="form-group" style="margin-bottom:10px">
-              <label>الرسوم الإدارية % (اختياري)</label>
-              <input id="calc-admin-rate" type="number" placeholder="مثال: 1" step="0.01" min="0" oninput="calcFinance()">
-            </div>
-          </div>
-          <div id="calc-result" style="display:none;background:#f8f9fb;border-radius:12px;padding:14px">
-            <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px;text-align:center" id="r-bank"></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #e8eaef">
-              <span style="font-size:12px;color:var(--muted)">سعر السيارة</span>
-              <span id="r-price" style="font-size:14px;font-weight:700;color:var(--text)"></span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #e8eaef">
-              <span style="font-size:12px;color:var(--muted)">الدفعة الأولى</span>
-              <span id="r-down" style="font-size:14px;font-weight:700;color:var(--blue)"></span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #e8eaef">
-              <span style="font-size:12px;color:var(--muted)">الدفعة الأخيرة</span>
-              <span id="r-last" style="font-size:14px;font-weight:700;color:#6A1B9A"></span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #e8eaef">
-              <span style="font-size:12px;color:var(--muted)">مبلغ التمويل</span>
-              <span id="r-amount" style="font-size:13px;font-weight:700;color:var(--text)"></span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #e8eaef">
-              <span style="font-size:12px;color:var(--muted)">المدة</span>
-              <span id="r-months" style="font-size:13px;font-weight:700;color:var(--text)"></span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #e8eaef">
-              <span style="font-size:12px;color:var(--muted)">الرسوم الإدارية</span>
-              <span id="r-admin" style="font-size:13px;font-weight:700;color:#e65100"></span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #e8eaef">
-              <span style="font-size:12px;color:var(--muted)">القسط بدون تأمين</span>
-              <span id="r-monthly-no-ins" style="font-size:13px;font-weight:600;color:#27500a"></span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #e8eaef">
-              <span style="font-size:12px;color:var(--muted)">التأمين الشهري</span>
-              <span id="r-ins-monthly" style="font-size:13px;font-weight:600;color:#6A1B9A"></span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 10px;background:#27500a;border-radius:8px;margin-top:4px">
-              <span style="font-size:13px;color:#fff;font-weight:600">القسط شامل التأمين</span>
-              <span id="r-monthly" style="font-size:15px;font-weight:700;color:#fff"></span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 10px;background:#1B6FC8;border-radius:8px;margin-top:6px">
-              <span style="font-size:13px;color:#fff;font-weight:600">الإجمالي الكلي</span>
-              <span id="r-total" style="font-size:15px;font-weight:700;color:#fff"></span>
-            </div>
-          </div>
-          <div id="calc-empty" style="display:flex;align-items:center;justify-content:center;background:#f8f9fb;border-radius:12px;padding:14px;color:var(--muted);font-size:13px;text-align:center">أدخل البيانات واختر جهة التمويل</div>
-        </div>
-        <span id="r-profit" style="display:none"></span>
-        <span id="r-rate" style="display:none"></span>
-        <span id="calc-down-amt" style="display:none"></span>
-        <span id="calc-last-amt" style="display:none"></span>
-      </div>
-    </div>
-
-    <div id="tab-clients" style="display:none">
-      <div style="display:flex;gap:8px;margin-bottom:.75rem;flex-wrap:wrap;align-items:center">
-        <input type="text" id="client-search" placeholder="بحث بالاسم أو الجوال..." oninput="renderClients()"
-          style="flex:1;min-width:180px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;outline:none">
-        <select id="client-filter-status" onchange="renderClients()"
-          style="padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:#fff;outline:none">
-          <option value="">كل الحالات</option>
-          <option value="new">🔵 جديد</option>
-          <option value="interested">🟡 مهتم</option>
-          <option value="offer">🟠 عرض سعر</option>
-          <option value="followup">🟣 متابعة</option>
-          <option value="sold">🟢 تم البيع</option>
-          <option value="lost">🔴 لم يشتر</option>
-        </select>
-        <button class="add-btn" onclick="openAddClient()">+ إضافة عميل</button>
-      </div>
-      <div id="client-stats" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.75rem"></div>
-      <div id="clients-list"></div>
-    </div>
-
-    <div id="tab-banks" style="display:none">
-      <div class="panel">
-        <h4>⚙️ نسب جهات التمويل</h4>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:1rem">حدّث النسب شهرياً — تنطبق على جميع الحسابات فوراً</p>
-        <div id="banks-list"></div>
-        <button class="add-btn" style="margin-top:.75rem" onclick="saveBankRates()">💾 حفظ النسب</button>
       </div>
     </div>
   </div>
@@ -412,20 +218,14 @@ const COLORS=[
   {name:'Green',hex:'#2E7D32'},{name:'Gold',hex:'#C5A028'},{name:'Orange',hex:'#D45A00'},
   {name:'Purple',hex:'#6A1B9A'},{name:'Yellow',hex:'#D4B000'}
 ];
-const VAT=0.15,CASH_M=-1500,BANK_M=2000,ISSUE=400;
+const VAT=0.15,CASH_M=2000,BANK_M=4000,ISSUE=400;
 const DEFAULT_BRANDS=[
-  {id:'toyota',name:'تويوتا',nameAr:'تويوتا',nameEn:'Toyota'},
-  {id:'hyundai',name:'هيونداي',nameAr:'هيونداي',nameEn:'Hyundai'},
-  {id:'lexus',name:'لكزس',nameAr:'لكزس',nameEn:'Lexus'},
-  {id:'isuzu',name:'إيسوزو',nameAr:'إيسوزو',nameEn:'Isuzu'},
-  {id:'ford',name:'فورد',nameAr:'فورد',nameEn:'Ford'},
-  {id:'jetour',name:'جيتور',nameAr:'جيتور',nameEn:'Jetour'},
-  {id:'peugeot',name:'بيجو',nameAr:'بيجو',nameEn:'Peugeot'},
-  {id:'nissan',name:'نيسان',nameAr:'نيسان',nameEn:'Nissan'},
-  {id:'foton',name:'فوتون',nameAr:'فوتون',nameEn:'Foton'},
-  {id:'kia',name:'كيا',nameAr:'كيا',nameEn:'Kia'},
-  {id:'jac',name:'جي اي سي',nameAr:'جي اي سي',nameEn:'JAC'},
-  {id:'suzuki',name:'سوزوكي',nameAr:'سوزوكي',nameEn:'Suzuki'}
+  {id:'toyota',name:'تويوتا'},{id:'hyundai',name:'هيونداي'},
+  {id:'lexus',name:'لكزس'},{id:'isuzu',name:'إيسوزو'},
+  {id:'ford',name:'فورد'},{id:'jetour',name:'جيتور'},
+  {id:'peugeot',name:'بيجو'},{id:'nissan',name:'نيسان'},
+  {id:'foton',name:'فوتون'},{id:'kia',name:'كيا'},
+  {id:'jac',name:'جي اي سي'},{id:'suzuki',name:'سوزوكي'}
 ];
 
 let currentUser=null,currentRole=null,activeBrand='all',editCarId=null,selColors=[],selColorAvail={};
@@ -446,8 +246,7 @@ function startClock(){
   setInterval(()=>{
     const n=new Date();
     const el=document.getElementById('clock');
-    const hr=n.getHours();const h12=hr%12||12;const ampm=hr<12?'AM':'PM';
-    if(el)el.textContent=String(h12).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0')+' '+ampm;
+    if(el)el.textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0');
     const de=document.getElementById('clock-date');
     if(de)de.textContent=days[n.getDay()]+', '+n.getDate()+' '+months[n.getMonth()]+' '+n.getFullYear();
   },1000);
@@ -467,12 +266,8 @@ window.doLogout=async()=>await signOut(auth);
 onAuthStateChanged(auth,async user=>{
   if(user){
     currentUser=user;
-    let snap=await getDoc(doc(db,'users',user.uid));
-    if(!snap.exists()||!snap.data().role){
-      await new Promise(r=>setTimeout(r,2000));
-      snap=await getDoc(doc(db,'users',user.uid));
-    }
-    currentRole=(snap.exists()&&snap.data().role)?snap.data().role:'viewer';
+    const snap=await getDoc(doc(db,'users',user.uid));
+    currentRole=snap.exists()?snap.data().role||'viewer':'viewer';
     document.getElementById('auth-screen').style.display='none';
     document.getElementById('app-screen').style.display='flex';
     document.getElementById('role-badge').textContent=currentRole==='admin'?'مدير 👑':'موظف - مشاهدة فقط';
@@ -493,41 +288,28 @@ async function loadData(){
   const bSnap=await getDocs(collection(db,'brands'));
   brands=bSnap.docs.map(d=>({id:d.id,...d.data()}));
   if(brands.length===0){
-    for(const b of DEFAULT_BRANDS)await setDoc(doc(db,'brands',b.id),{name:b.name,nameAr:b.nameAr,nameEn:b.nameEn});
+    for(const b of DEFAULT_BRANDS)await setDoc(doc(db,'brands',b.id),{name:b.name});
     brands=[...DEFAULT_BRANDS];
   }
   renderBrandsBar();
-  if(currentRole==='admin'){
-    renderAdminActions();
-    document.getElementById('banks-tab-btn').style.display='';
-  }
-  await loadBankRates();
-  if(currentRole!=='admin')checkPriceNotif();
-  await loadClients();
+  if(currentRole==='admin')renderAdminActions();
   onSnapshot(collection(db,'cars'),snap=>{
     cars=snap.docs.map(d=>({id:d.id,...d.data()}));
-    cars.sort((a,b)=>(a.order||0)-(b.order||0));
     renderCars();
-    setTimeout(enableDragDrop,300);
   });
 }
 
 function renderBrandsBar(){
   const bar=document.getElementById('brands-bar');
   bar.innerHTML=`<button class="brand-btn ${activeBrand==='all'?'active':''}" onclick="setBrand('all')">الكل</button>`;
-  brands.forEach(b=>{
-    const lbl=b.nameEn?`${b.nameAr||b.name} / ${b.nameEn}`:b.name;
-    bar.innerHTML+=`<button class="brand-btn ${activeBrand===b.id?'active':''}" onclick="setBrand('${b.id}')">${lbl}</button>`;
-  });
+  brands.forEach(b=>{bar.innerHTML+=`<button class="brand-btn ${activeBrand===b.id?'active':''}" onclick="setBrand('${b.id}')">${b.name}</button>`;});
 }
 window.setBrand=id=>{activeBrand=id;renderBrandsBar();renderCars();};
 
 function renderAdminActions(){
   document.getElementById('admin-actions').innerHTML=`
     <button class="add-btn" onclick="openAddCar()">+ إضافة سيارة</button>
-    <button class="add-btn green" onclick="openAddBrand()">+ إضافة ماركة</button>
-    <button class="add-btn" style="background:#a32d2d" onclick="openDeleteBrand()">🗑️ حذف ماركة</button>
-    <button class="add-btn" style="background:#6A1B9A" onclick="printPDF()">🖨️ طباعة</button><button class="add-btn" style="background:#2E7D32" onclick="exportPDF()">📄 حفظ PDF</button>`;
+    <button class="add-btn green" onclick="openAddBrand()">+ إضافة ماركة</button>`;
 }
 
 function getFiltered(){
@@ -546,70 +328,61 @@ window.renderCars=()=>{
   const tbody=document.getElementById('car-table');
   if(!list.length){tbody.innerHTML=`<tr><td colspan="9"><div class="empty">لا توجد سيارات — اضغط إضافة سيارة</div></td></tr>`;return;}
   tbody.innerHTML=list.map(c=>{
-    const brand=brands.find(b=>b.id===c.brand)||{name:c.brand||'',nameAr:c.brand,nameEn:''};
+    const brand=brands.find(b=>b.id===c.brand)||{name:c.brand||''};
     const p=calc(c);
     const avail=c.colorAvail||{};
     const colors=c.colors||[];
     const colorPrices=c.colorPrices||{};
     const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#C5A028','#D4B000','#808080'];
-    const rowCount=Math.max(colors.length,1);
     const adminBtns=currentRole==='admin'?`<button class="icon-btn edit-btn-tbl" onclick="openEditCar('${c.id}')">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')">🗑️</button>`:'';
-    
+
     if(!colors.length){
       return`<tr>
-        <td class="price-buy buy-col" style="font-size:14px;font-weight:700">${fmt(p.buy)}</td>
-        <td style="text-align:right"><strong>${c.model||''}</strong><br><span style="font-size:10px;color:#888">${brand.nameAr||brand.name}${brand.nameEn?' / '+brand.nameEn:''}</span></td>
+        <td class="price-buy buy-col">${fmt(p.buy)}</td>
+        <td style="text-align:right"><strong>${c.model||''}</strong><br><span style="font-size:10px;color:#888">${brand.name}</span></td>
         <td style="font-weight:600">${c.year||'-'}</td>
-        <td colspan="4" style="color:#aaa;font-size:11px">لا توجد ألوان</td>
+        <td class="price-cash">${fmt(p.ce)}</td>
+        <td class="price-bank">${fmt(p.be)}</td>
+        <td><div class="price-total">كاش: ${fmt(p.tc)}</div><div class="price-total">بنك: ${fmt(p.tb)}</div></td>
+        <td>—</td>
         <td style="font-size:10px;color:#888">${c.date||'-'}</td>
         ${currentRole==='admin'?`<td>${adminBtns}</td>`:''}
       </tr>`;
     }
-    
+
+    const rowCount=colors.length;
     return colors.map((h,i)=>{
-      const sepStyle=i===0?'border-top:3px solid #1B6FC8;':'';
-      const pr=colorPrices[h]||0;
+      const pr=colorPrices[h]||c.buy||0;
       const nm=COLORS.find(x=>x.hex===h)?.name||h;
       const isUnavail=avail[h]===false;
       const txtColor=lightColors.includes(h)?'#333':'#fff';
       const cashC=pr+CASH_M;
       const bankC=pr+BANK_M;
-      const cashVatC=Math.round(cashC*0.15);
-      const bankVatC=Math.round(bankC*0.15);
-      const totalCashC=cashC+cashVatC+ISSUE+(c.plateFee||900);
-      const totalBankC=bankC+bankVatC+ISSUE+(c.plateFee||900);
-      const rowStyle=isUnavail?'opacity:0.45;':'';
+      const cashVat=Math.round(cashC*VAT);
+      const bankVat=Math.round(bankC*VAT);
+      const totalCash=cashC+cashVat+ISSUE+(c.plateFee||900);
+      const totalBank=bankC+bankVat+ISSUE+(c.plateFee||900);
+      const sepStyle=i===0?'border-top:2px solid #1B6FC8;':'';
       const isFirst=i===0;
-      return`<tr ${i===0?'data-car-id="'+c.id+'"':''} style="${sepStyle}${rowStyle}${isUnavail?'background:#fafafa;':''}">
-        <td class="price-buy buy-col" style="font-size:14px;font-weight:700;background:${h};color:${txtColor};border-radius:6px;padding:6px 8px">${pr>0?fmt(pr):'—'}</td>
-        ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.model||''}</strong><br><span style="font-size:10px;color:#888">${brand.nameAr||brand.name}${brand.nameEn?' / '+brand.nameEn:''}</span></td>`:''}
+      return`<tr style="${sepStyle}${isUnavail?'opacity:0.4;':''}">
+        <td class="price-buy buy-col" style="background:${h};color:${txtColor};font-weight:700">${pr>0?fmt(pr):'—'}</td>
+        ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.model||''}</strong><br><span style="font-size:10px;color:#888">${brand.name}</span></td>`:''}
         ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
-        <td style="padding:5px 6px">
-          <div style="${h==='#E8E8E8'?'background:linear-gradient(135deg,#1B3A6B,#4A90D9,#C0C0C0);border:none;':'background:'+h+';border:1px solid #bbb;'}padding:4px 8px;border-radius:6px;text-align:center">
-            <span style="font-size:11px;font-weight:700;color:${h==='#E8E8E8'?'#fff':txtColor};text-transform:uppercase">${nm}</span>
-            ${isUnavail?'<br><span style="font-size:9px;color:'+txtColor+';opacity:.7">غير متاح</span>':''}
-          </div>
-        </td>
-        <td style="font-size:14px;font-weight:600;color:#1a1a2e">${fmt(cashC)}</td>
-        <td class="price-cash" style="font-size:14px">${fmt(totalCashC)}</td>
-        <td class="price-bank" style="font-size:14px">${fmt(bankC)}</td>
-        <td class="price-cash" style="font-size:14px">${fmt(totalBankC)}</td>
+        <td style="font-size:11px;font-weight:700;color:${txtColor};background:${h};border-radius:4px;padding:4px 6px">${nm}${isUnavail?' ✗':''}</td>
+        <td class="price-cash">${pr>0?fmt(cashC):'—'}</td>
+        <td class="price-bank">${pr>0?fmt(bankC):'—'}</td>
+        <td>${pr>0?`<div class="price-total">كاش: ${fmt(totalCash)}</div><div class="price-total" style="color:var(--blue)">بنك: ${fmt(totalBank)}</div>`:'—'}</td>
         ${isFirst?`<td rowspan="${rowCount}" style="font-size:10px;color:#888;vertical-align:middle;text-align:center">${c.date||'-'}</td>`:''}
         ${isFirst&&currentRole==='admin'?`<td rowspan="${rowCount}" style="vertical-align:middle;text-align:center">${adminBtns}</td>`:''}
       </tr>`;
     }).join('');
   }).join('');
-  setTimeout(renderMobileCards,0);
 };
 
 let selColorPrices={};
-
 function buildColorSec(ec,ea,ep){
-  selColors=[...(ec||[])];selColorAvail={...(ea||{})};
-  const rawPrices=ep||{};
-  selColorPrices={};
-  Object.keys(rawPrices).forEach(k=>{if(rawPrices[k]>=10000)selColorPrices[k]=rawPrices[k];});
-  return`<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:6px;text-transform:uppercase;margin-top:8px">الألوان والمخزون والسعر الإضافي</div>
+  selColors=[...(ec||[])];selColorAvail={...(ea||{})};selColorPrices={...(ep||{})};
+  return`<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:6px;text-transform:uppercase;margin-top:8px">الألوان والمخزون</div>
   <div class="color-grid">${COLORS.map(c=>{
     const s=selColors.includes(c.hex),av=selColorAvail[c.hex]!==false;
     return`<div class="cpick${s?' sel':''}${s&&!av?' unavail-pick':''}" style="background:${c.hex}" title="${c.name}" id="cp_${c.hex.replace('#','')}" onclick="toggleC('${c.hex}')"></div>`;
@@ -620,10 +393,10 @@ function buildAvailToggles(){
   return selColors.map(h=>{
     const name=COLORS.find(x=>x.hex===h)?.name||h,av=selColorAvail[h]!==false,pr=selColorPrices[h]||0;
     return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
-      <div style="width:13px;height:13px;border-radius:50%;background:${h};border:1px solid #ddd;flex-shrink:0"></div>
-      <span style="font-size:11px;color:var(--muted);min-width:60px">${name}</span>
+      <div style="width:11px;height:11px;border-radius:50%;background:${h};border:1px solid #ddd;flex-shrink:0"></div>
+      <span style="font-size:11px;color:var(--muted);min-width:55px">${name}</span>
       <label class="avail-lbl"><input type="checkbox" ${av?'checked':''} onchange="toggleAv('${h}',this.checked)"> متاح</label>
-      <input type="number" value="${pr}" placeholder="سعر القائمة" style="width:130px;padding:3px 7px;border:1px solid #ddd;border-radius:6px;font-size:11px" onchange="togglePrice('${h}',this.value)">
+      <input type="number" value="${pr||''}" placeholder="سعر الشراء" style="width:120px;padding:3px 7px;border:1px solid #ddd;border-radius:6px;font-size:11px" onchange="togglePrice('${h}',this.value)">
       <span style="font-size:10px;color:#aaa">ر.س</span>
     </div>`;
   }).join('');
@@ -640,13 +413,11 @@ window.toggleAv=(hex,val)=>{
   const el=document.getElementById('cp_'+hex.replace('#',''));
   if(el)el.classList.toggle('unavail-pick',!val);
 };
-window.togglePrice=(hex,val)=>{
-  selColorPrices[hex]=parseInt(val)||0;
-};
+window.togglePrice=(hex,val)=>{selColorPrices[hex]=parseInt(val)||0;};
 
 function brkHtml(p){
-  return`<div class="row"><span>سعر القائمة</span><span>${fmt(p.buy)} SAR</span></div>
-  <div class="row"><span>سعر الكاش (${CASH_M>0?"+":""}${CASH_M})</span><span>${fmt(p.ce)} SAR</span></div>
+  return`<div class="row"><span>سعر الشراء</span><span>${fmt(p.buy)} SAR</span></div>
+  <div class="row"><span>سعر الكاش (+${CASH_M})</span><span>${fmt(p.ce)} SAR</span></div>
   <div class="row"><span>سعر البنك (+${BANK_M})</span><span>${fmt(p.be)} SAR</span></div>
   <div class="row"><span>رسوم الإصدار</span><span>${ISSUE} SAR</span></div>
   <div class="row"><span>رسوم اللوحات</span><span>${fmt(p.pl)} SAR</span></div>
@@ -662,23 +433,23 @@ window.updateBreakdown=()=>{
 
 function carForm(c){
   const isEdit=!!c;
-  const bOpts=brands.map(b=>`<option value="${b.id}"${c&&b.id===c.brand?' selected':''}>${b.nameAr||b.name}${b.nameEn?' / '+b.nameEn:''}</option>`).join('');
+  const bOpts=brands.map(b=>`<option value="${b.id}"${c&&b.id===c.brand?' selected':''}>${b.name}</option>`).join('');
   const today=new Date().toISOString().slice(0,10);
+  const p=c?calc(c):null;
   return`<h3>${isEdit?'✏️ تعديل: '+c.model:'➕ إضافة سيارة جديدة'}</h3>
   <div class="form-grid">
     <div class="form-group"><label>الماركة</label><select id="f-brand">${bOpts}</select></div>
-    <div class="form-group"><label>نوع السيارة (عربي)</label><input id="f-model-ar" value="${c?.modelAr||c?.model||''}" placeholder="كامري 2.5S"></div>
-    <div class="form-group"><label>Car Type (English)</label><input id="f-model-en" value="${c?.modelEn||''}" placeholder="CAMRY 2.5S" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+    <div class="form-group"><label>نوع السيارة</label><input id="f-model" value="${c?.model||''}" placeholder="كامري 2.5S"></div>
     <div class="form-group"><label>الموديل (السنة)</label><select id="f-year">
       <option value="2025"${(!c||c.year==='2025')?' selected':''}>2025</option>
       <option value="2026"${c?.year==='2026'?' selected':''}>2026</option>
-      <option value="2027"${c?.year==='2027'?' selected':''}>2027</option>
-      <option value="2028"${c?.year==='2028'?' selected':''}>2028</option>
     </select></div>
+    <div class="form-group"><label>سعر الشراء (ر.س)</label><input id="f-buy" type="number" value="${c?.buy||''}" placeholder="0" oninput="updateBreakdown()"></div>
     <div class="form-group"><label>رسوم اللوحات (ر.س)</label><input id="f-plate" type="number" value="${c?.plateFee||900}" placeholder="900" oninput="updateBreakdown()"></div>
     <div class="form-group"><label>تاريخ السعر</label><input id="f-date" type="date" value="${c?.date||today}"></div>
     <div class="form-group full"><label>ملاحظات</label><input id="f-notes" value="${c?.notes||''}" placeholder="اختياري"></div>
   </div>
+  <div class="breakdown" id="breakdown">${p?brkHtml(p):''}</div>
   ${buildColorSec(c?.colors,c?.colorAvail,c?.colorPrices)}
   <div class="modal-footer">
     ${isEdit?`<button class="btn-del" onclick="deleteCar('${c.id}');closeCarModal()">🗑️ حذف</button>`:''}
@@ -692,26 +463,18 @@ window.openEditCar=id=>{const c=cars.find(x=>x.id===id);if(!c)return;editCarId=i
 window.closeCarModal=()=>document.getElementById('car-modal').classList.remove('open');
 
 window.saveCar=async()=>{
-  try{
-    const modelAr=document.getElementById('f-model-ar')?document.getElementById('f-model-ar').value.trim():'';
-    const modelEn=document.getElementById('f-model-en')?document.getElementById('f-model-en').value.trim():'';
-    const model=modelAr||(modelEn||'');
-    const brand=document.getElementById('f-brand').value;
-    const year=document.getElementById('f-year').value;
-    const buy=0;
-    const plate=parseInt(document.getElementById('f-plate').value)||900;
-    const date=document.getElementById('f-date').value;
-    const notes=document.getElementById('f-notes').value.trim();
-    if(!model){alert('يرجى إدخال نوع السيارة');return;}
-    const d2={brand,model,modelAr,modelEn,year,buy,plateFee:plate,date,notes,colors:selColors,colorAvail:{...selColorAvail},colorPrices:{...selColorPrices},updatedAt:serverTimestamp()};
-    if(editCarId)await updateDoc(doc(db,'cars',editCarId),d2);
-    else await setDoc(doc(db,'cars','car_'+Date.now()),{...d2,order:cars.length,createdAt:serverTimestamp()});
-    try{await recordPriceUpdate(model);}catch(e){}
-    closeCarModal();
-    alert('تم الحفظ ✓');
-  }catch(err){
-    alert('خطأ: '+err.message);
-  }
+  const model=document.getElementById('f-model').value.trim();
+  const brand=document.getElementById('f-brand').value;
+  const year=document.getElementById('f-year').value;
+  const buy=parseInt(document.getElementById('f-buy').value)||0;
+  const plate=parseInt(document.getElementById('f-plate').value)||900;
+  const date=document.getElementById('f-date').value;
+  const notes=document.getElementById('f-notes').value.trim();
+  if(!model){alert('يرجى إدخال نوع السيارة');return;}
+  const d2={brand,model,year,buy,plateFee:plate,date,notes,colors:selColors,colorAvail:{...selColorAvail},colorPrices:{...selColorPrices},updatedAt:serverTimestamp()};
+  if(editCarId)await updateDoc(doc(db,'cars',editCarId),d2);
+  else await setDoc(doc(db,'cars','car_'+Date.now()),{...d2,createdAt:serverTimestamp()});
+  closeCarModal();
 };
 
 window.deleteCar=async id=>{
@@ -722,9 +485,8 @@ window.deleteCar=async id=>{
 window.openAddBrand=()=>{
   document.getElementById('brand-modal-inner').innerHTML=`<h3>➕ إضافة ماركة جديدة</h3>
   <div class="form-grid">
-    <div class="form-group"><label>معرف (إنجليزي بدون مسافة)</label><input id="b-id" placeholder="bmw"></div>
-    <div class="form-group"><label>اسم الماركة بالعربي</label><input id="b-name" placeholder="بي ام دبليو"></div>
-    <div class="form-group full"><label>اسم الماركة بالإنجليزي</label><input id="b-name-en" placeholder="BMW"></div>
+    <div class="form-group"><label>معرف (إنجليزي)</label><input id="b-id" placeholder="bmw"></div>
+    <div class="form-group"><label>اسم الماركة عربي</label><input id="b-name" placeholder="بي ام دبليو"></div>
   </div>
   <div class="modal-footer">
     <button class="btn-save" onclick="saveBrand()">إضافة</button>
@@ -732,54 +494,22 @@ window.openAddBrand=()=>{
   </div>`;
   document.getElementById('brand-modal').classList.add('open');
 };
-window.openDeleteBrand=()=>{
-  const opts=brands.map(b=>`<option value="${b.id}">${b.nameAr||b.name}${b.nameEn?' / '+b.nameEn:''}</option>`).join('');
-  document.getElementById('brand-modal-inner').innerHTML=`<h3>🗑️ حذف ماركة</h3>
-  <div class="form-grid">
-    <div class="form-group full"><label>اختر الماركة للحذف</label><select id="b-del-id">${opts}</select></div>
-  </div>
-  <p style="font-size:12px;color:#c0392b;margin:.5rem 0">تنبيه: لن تُحذف السيارات المرتبطة بهذه الماركة</p>
-  <div class="modal-footer">
-    <button class="btn-del" onclick="deleteBrand()">🗑️ حذف</button>
-    <button class="btn-cancel" onclick="document.getElementById('brand-modal').classList.remove('open')">إلغاء</button>
-  </div>`;
-  document.getElementById('brand-modal').classList.add('open');
-};
-window.deleteBrand=async()=>{
-  const id=document.getElementById('b-del-id').value;
-  if(!id){alert('اختر ماركة');return;}
-  if(!confirm('هل أنت متأكد من حذف هذه الماركة؟'))return;
-  await deleteDoc(doc(db,'brands',id));
-  brands=brands.filter(x=>x.id!==id);
-  renderBrandsBar();
-  document.getElementById('brand-modal').classList.remove('open');
-};
 window.saveBrand=async()=>{
   const id=document.getElementById('b-id').value.trim().toLowerCase().replace(/\s/g,'');
-  const nameAr=document.getElementById('b-name').value.trim();
-  const nameEn=document.getElementById('b-name-en').value.trim();
-  if(!id||!nameAr){alert('يرجى تعبئة المعرف والاسم العربي');return;}
+  const name=document.getElementById('b-name').value.trim();
+  if(!id||!name){alert('يرجى تعبئة الحقول');return;}
   if(brands.find(x=>x.id===id)){alert('هذا المعرف موجود');return;}
-  await setDoc(doc(db,'brands',id),{name:nameAr,nameAr,nameEn});
-  brands.push({id,name:nameAr,nameAr,nameEn});renderBrandsBar();
+  await setDoc(doc(db,'brands',id),{name});
+  brands.push({id,name});renderBrandsBar();
   document.getElementById('brand-modal').classList.remove('open');
 };
 
-// =============================================
-// switchTab — الإصلاح هنا: إخفاء mobile-cards
-// =============================================
 window.switchTab=(tab,el)=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  const isCars=tab==='cars';
-  document.getElementById('tab-cars').style.display=isCars?'block':'none';
-  document.getElementById('mobile-cards').style.display=isCars?'block':'none';
+  document.getElementById('tab-cars').style.display=tab==='cars'?'block':'none';
   document.getElementById('tab-users').style.display=tab==='users'?'block':'none';
-  document.getElementById('tab-calc').style.display=tab==='calc'?'block':'none';
-  document.getElementById('tab-banks').style.display=tab==='banks'?'block':'none';
-  document.getElementById('tab-clients').style.display=tab==='clients'?'block':'none';
   if(tab==='users')renderUsers();
-  if(tab==='clients')renderClients();
 };
 
 async function renderUsers(){
@@ -797,7 +527,7 @@ async function renderUsers(){
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="badge ${u.role==='admin'?'admin':'viewer'}">${u.role==='admin'?'مدير':'موظف'}</span>
-        ${!isMe?`<button class="icon-btn del-btn" onclick="deleteUser('${u.uid}','${u.email||''}')">🗑️</button>`:''}
+        ${!isMe?`<button class="icon-btn del-btn" onclick="deleteUser('${u.uid}')">🗑️</button>`:''}
       </div>
     </div>`;
   }).join('');
@@ -845,581 +575,16 @@ window.saveUser=async()=>{
   }
 };
 
-window.deleteUser=async(uid,email)=>{
-  if(!confirm(`هل تريد حذف المستخدم ${email||''}؟\nسيتم حذفه نهائياً من النظام.`))return;
-  try{
-    await deleteDoc(doc(db,'users',uid));
-    renderUsers();
-    alert('تم حذف المستخدم من قائمة الموظفين ✅\nللحذف الكامل من Firebase Authentication افتح Firebase Console → Authentication → Users');
-  }catch(e){
-    alert('حدث خطأ: '+e.message);
-  }
+window.deleteUser=async uid=>{
+  if(!confirm('هل تريد حذف هذا المستخدم؟'))return;
+  await deleteDoc(doc(db,'users',uid));
+  renderUsers();
 };
 
 ['car-modal','user-modal','brand-modal'].forEach(id=>{
   document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 });
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')window.doLogin();});
-
-window.addEventListener('beforeprint',e=>{
-  if(currentRole!=='admin'){e.preventDefault();window.stop();alert('⛔ الطباعة متاحة للمدير فقط');return false;}
-});
-document.addEventListener('keydown',e=>{
-  if((e.ctrlKey||e.metaKey)&&e.key==='p'){
-    if(currentRole!=='admin'){e.preventDefault();alert('⛔ الطباعة متاحة للمدير فقط');}
-  }
-});
-
-window.exportPDF=()=>{
-  if(currentRole!=='admin'){alert('⛔ متاح للمدير فقط');return;}
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
-  doc.setFontSize(14);
-  doc.setTextColor(27,111,200);
-  doc.text('Al Hussaini Motors - katalog Asaar Al-Sayaraat', doc.internal.pageSize.width/2, 15, {align:'center'});
-  doc.setFontSize(9);
-  doc.setTextColor(100);
-  const now=new Date();
-  doc.text('Tarikh: '+now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear(), doc.internal.pageSize.width/2, 21, {align:'center'});
-  const list=getFiltered();
-  const rows=[];
-  list.forEach(c=>{
-    const brand=brands.find(b=>b.id===c.brand)||{nameAr:c.brand||''};
-    const colors=c.colors||[];
-    const colorPrices=c.colorPrices||{};
-    const avail=c.colorAvail||{};
-    if(!colors.length){
-      rows.push([c.model||'',brand.nameAr||'',c.year||'','—','—','—','—','—',c.date||'']);
-    } else {
-      colors.forEach(h=>{
-        const nm=COLORS.find(x=>x.hex===h)?.name||h;
-        const pr=colorPrices[h]||0;
-        const cashC=pr+CASH_M;
-        const bankC=pr+BANK_M;
-        const cashVat=Math.round(cashC*0.15);
-        const bankVat=Math.round(bankC*0.15);
-        const totalCash=cashC+cashVat+ISSUE+(c.plateFee||900);
-        const totalBank=bankC+bankVat+ISSUE+(c.plateFee||900);
-        const isUnavail=avail[h]===false;
-        rows.push([
-          c.model||'',brand.nameAr||'',c.year||'',
-          nm+(isUnavail?' (غير متاح)':''),
-          pr>0?Math.round(pr).toLocaleString('en-US'):'—',
-          pr>0?Math.round(cashC).toLocaleString('en-US'):'—',
-          pr>0?Math.round(totalCash).toLocaleString('en-US'):'—',
-          pr>0?Math.round(bankC).toLocaleString('en-US'):'—',
-          pr>0?Math.round(totalBank).toLocaleString('en-US'):'—',
-          c.date||''
-        ]);
-      });
-    }
-  });
-  doc.autoTable({
-    head:[['النوع','الماركة','الموديل','اللون','سعر القائمة','سعر الكاش','إجمالي الكاش','سعر البنك','إجمالي البنك','التاريخ']],
-    body:rows,
-    startY:26,
-    styles:{fontSize:8,halign:'center'},
-    headStyles:{fillColor:[27,111,200],textColor:255,fontStyle:'bold'},
-    alternateRowStyles:{fillColor:[245,246,250]},
-  });
-  doc.save('katalog-asaar-'+now.getDate()+'_'+(now.getMonth()+1)+'_'+now.getFullYear()+'.pdf');
-};
-
-window.printPDF=()=>{
-  const now=new Date();
-  const dateStr=now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear();
-  const hr=now.getHours(),mn=String(now.getMinutes()).padStart(2,'0');
-  const ampm=hr<12?'AM':'PM';const h12=hr%12||12;
-  const el=document.getElementById('print-date');
-  if(el)el.textContent='تاريخ الطباعة: '+dateStr+' الساعة '+h12+':'+mn+' '+ampm;
-  window.print();
-};
-
-function renderMobileCards(){
-  const list=getFiltered();
-  const el=document.getElementById('mobile-cards');
-  if(!el)return;
-  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#C5A028','#D4B000','#808080'];
-  if(!list.length){el.innerHTML='<div class="empty">لا توجد سيارات</div>';return;}
-  el.innerHTML=list.map((c,ci)=>{
-    const brand=brands.find(b=>b.id===c.brand)||{nameAr:c.brand||'',nameEn:''};
-    const colors=c.colors||[];
-    const colorPrices=c.colorPrices||{};
-    const avail=c.colorAvail||{};
-    const adminBtns=currentRole==='admin'?`<div style="display:flex;gap:6px;padding:10px 14px;border-top:1px solid #f0f0f0">
-      <button class="icon-btn edit-btn-tbl" onclick="openEditCar('${c.id}')">✏️ تعديل</button>
-      <button class="icon-btn del-btn" onclick="deleteCar('${c.id}')">🗑️ حذف</button>
-    </div>`:'';
-    const colorsHtml=colors.map(h=>{
-      const nm=COLORS.find(x=>x.hex===h)?.name||h;
-      const pr=colorPrices[h]||0;
-      const cashC=pr+CASH_M;
-      const bankC=pr+BANK_M;
-      const cashVat=Math.round(cashC*0.15);
-      const bankVat=Math.round(bankC*0.15);
-      const totalCash=cashC+cashVat+ISSUE+(c.plateFee||900);
-      const totalBank=bankC+bankVat+ISSUE+(c.plateFee||900);
-      const txtColor=lightColors.includes(h)?'#333':'#fff';
-      const isUnavail=avail[h]===false;
-      return`<div class="car-color-row" style="${isUnavail?'opacity:0.4':''}">
-        <div class="car-color-name">
-          <div class="car-color-dot" style="background:${h}"></div>
-          <span style="font-size:12px;font-weight:600">${nm}${isUnavail?' — غير متاح':''}</span>
-          ${pr>0?`<span style="margin-right:auto;background:${h};color:${txtColor};padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">${Math.round(pr).toLocaleString('en-US')}</span>`:''}
-        </div>
-        ${pr>0?`<div class="car-price-grid">
-          <div class="car-price-item"><div class="car-price-label">سعر الكاش</div><div class="car-price-val" style="color:#1a6b2a">${Math.round(cashC).toLocaleString('en-US')}</div></div>
-          <div class="car-price-item"><div class="car-price-label">إجمالي الكاش</div><div class="car-price-val" style="color:#1a6b2a">${Math.round(totalCash).toLocaleString('en-US')}</div></div>
-          <div class="car-price-item"><div class="car-price-label">سعر البنك</div><div class="car-price-val" style="color:var(--blue)">${Math.round(bankC).toLocaleString('en-US')}</div></div>
-          <div class="car-price-item"><div class="car-price-label">إجمالي البنك</div><div class="car-price-val" style="color:var(--blue)">${Math.round(totalBank).toLocaleString('en-US')}</div></div>
-        </div>`:'<div style="font-size:11px;color:#aaa;text-align:center;padding:4px">لم يُحدد سعر</div>'}
-      </div>`;
-    }).join('');
-    return`<div class="car-card" id="mcard_${ci}">
-      <div class="car-card-header" onclick="toggleCard('mcard_${ci}')">
-        <div>
-          <div class="car-card-title">${c.model||''}</div>
-          <div class="car-card-sub">${brand.nameAr||brand.name}${brand.nameEn?' / '+brand.nameEn:''} — ${c.year||''}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="display:flex;gap:3px">${colors.slice(0,5).map(h=>`<div style="width:10px;height:10px;border-radius:50%;background:${h};border:1px solid #ddd"></div>`).join('')}</div>
-          <span class="car-card-arrow">▼</span>
-        </div>
-      </div>
-      <div class="car-card-body">
-        ${colorsHtml||'<div style="padding:12px;color:#aaa;text-align:center;font-size:12px">لا توجد ألوان</div>'}
-        ${adminBtns}
-      </div>
-    </div>`;
-  }).join('');
-}
-window.toggleCard=id=>{
-  const card=document.getElementById(id);
-  if(card)card.classList.toggle('open');
-};
-
-const DEFAULT_BANKS=[
-  {id:'rajhi',name:'بنك الراجحي',rate:0,insRate:0},
-  {id:'ahli',name:'البنك الأهلي',rate:0,insRate:0},
-  {id:'riyadh',name:'بنك الرياض',rate:0,insRate:0},
-  {id:'fransi',name:'البنك الفرنسي',rate:0,insRate:0},
-  {id:'arabi',name:'البنك العربي',rate:0,insRate:0},
-  {id:'inma',name:'بنك الإنماء',rate:0,insRate:0},
-  {id:'jazira',name:'بنك الجزيرة',rate:0,insRate:0},
-  {id:'bilad',name:'بنك البلاد',rate:0,insRate:0},
-  {id:'aljamil',name:'عبد اللطيف جميل',rate:0,insRate:0},
-  {id:'raya',name:'راية للتمويل',rate:0,insRate:0},
-  {id:'awwal',name:'تمويل الأولى',rate:0,insRate:0},
-];
-let bankRates=[];
-
-async function loadBankRates(){
-  try{
-    const snap=await getDocs(collection(db,'bankRates'));
-    if(snap.empty){
-      bankRates=[...DEFAULT_BANKS];
-    } else {
-      bankRates=snap.docs.map(d=>({id:d.id,...d.data()}));
-      DEFAULT_BANKS.forEach(b=>{if(!bankRates.find(x=>x.id===b.id))bankRates.push({...b});});
-    }
-  }catch(e){bankRates=[...DEFAULT_BANKS];}
-  renderBankSelect();
-  renderBanksList();
-}
-
-function renderBankSelect(){
-  const sel=document.getElementById('calc-bank');
-  if(!sel)return;
-  sel.innerHTML='<option value="">-- اختر جهة التمويل --</option>';
-  bankRates.forEach(b=>{
-    sel.innerHTML+=`<option value="${b.id}">${b.name}</option>`;
-  });
-}
-
-function renderBanksList(){
-  const el=document.getElementById('banks-list');
-  if(!el)return;
-  el.innerHTML=bankRates.map(b=>`
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;border-bottom:1px solid #f0f0f0;padding-bottom:8px">
-      <span style="font-size:13px;font-weight:600;min-width:160px">${b.name}</span>
-      <div style="display:flex;align-items:center;gap:6px">
-        <input type="number" id="rate_${b.id}" value="${b.rate||''}" placeholder="ربح%" step="0.01" min="0" max="30"
-          style="width:90px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px">
-        <span style="font-size:11px;color:var(--muted)">% ربح</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px">
-        <input type="number" id="ins_${b.id}" value="${b.insRate||''}" placeholder="تأمين%" step="0.01" min="0" max="20"
-          style="width:90px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px">
-        <span style="font-size:11px;color:var(--muted)">% تأمين</span>
-      </div>
-    </div>`).join('');
-}
-
-window.saveBankRates=async()=>{
-  for(const b of bankRates){
-    const inp=document.getElementById('rate_'+b.id);
-    const insInp=document.getElementById('ins_'+b.id);
-    if(!inp)continue;
-    const rate=parseFloat(inp.value)||0;
-    const insRate=parseFloat(insInp?.value)||0;
-    b.rate=rate;b.insRate=insRate;
-    await setDoc(doc(db,'bankRates',b.id),{name:b.name,rate,insRate});
-  }
-  renderBankSelect();
-  alert('✅ تم حفظ النسب بنجاح');
-};
-
-window.onBankChange=()=>{
-  const profitEl=document.getElementById('calc-profit-rate');
-  const insEl=document.getElementById('calc-ins-rate');
-  const bankId=document.getElementById('calc-bank')?.value;
-  const bank=bankRates.find(b=>b.id===bankId);
-  if(profitEl)profitEl.value=bank?.rate||'';
-  if(insEl)insEl.value=bank?.insRate||'';
-  calcFinance();
-};
-window.calcFinance=(autoFill)=>{
-  const price=parseFloat(document.getElementById('calc-price')?.value)||0;
-  const downPct=Math.min(50,Math.max(0,parseFloat(document.getElementById('calc-down-pct')?.value)||0));
-  const lastPct=Math.min(50,Math.max(0,parseFloat(document.getElementById('calc-last-pct')?.value)||0));
-  const months=parseInt(document.getElementById('calc-months')?.value)||48;
-  const bankId=document.getElementById('calc-bank')?.value;
-  const bank=bankRates.find(b=>b.id===bankId);
-  if(bank){
-    const profitEl=document.getElementById('calc-profit-rate');
-    const insEl=document.getElementById('calc-ins-rate');
-    if(profitEl&&!profitEl.value)profitEl.value=bank.rate||'';
-    if(insEl&&!insEl.value)insEl.value=bank.insRate||'';
-  }
-  const profitRate=parseFloat(document.getElementById('calc-profit-rate')?.value)||0;
-  const insRate=parseFloat(document.getElementById('calc-ins-rate')?.value)||0;
-  const adminRate=Math.min(5,parseFloat(document.getElementById('calc-admin-rate')?.value)||0);
-  const res=document.getElementById('calc-result');
-  const empty=document.getElementById('calc-empty');
-
-  if(!price||!bank){
-    if(res)res.style.display='none';
-    if(empty){empty.style.display='flex';empty.textContent='أدخل البيانات واختر جهة التمويل';}
-    return;
-  }
-
-  const downAmt=Math.round(price*downPct/100);
-  const lastAmt=Math.round(price*lastPct/100);
-  const amount=price-downAmt-lastAmt;
-
-  if(amount<=0){
-    if(res)res.style.display='none';
-    if(empty){empty.style.display='flex';empty.textContent='مجموع الدفعات يساوي أو يتجاوز سعر السيارة';}
-    return;
-  }
-
-  const years=months/12;
-  const totalProfit=amount*(profitRate/100)*years;
-  const totalIns=amount*(insRate/100)*years;
-  const adminAmt=Math.round(price*(adminRate/100));
-
-  const monthlyNoIns=Math.round((amount+totalProfit)/months);
-  const monthlyIns=Math.round(totalIns/months);
-  const monthly=monthlyNoIns+monthlyIns;
-  const total=downAmt+lastAmt+monthly*months+adminAmt;
-
-  const fmt2=n=>Math.round(n).toLocaleString('en-US');
-  document.getElementById('r-bank').textContent=bank.name;
-  document.getElementById('r-price').textContent=fmt2(price);
-  document.getElementById('r-down').textContent=fmt2(downAmt);
-  document.getElementById('r-last').textContent=fmt2(lastAmt);
-  document.getElementById('r-amount').textContent=fmt2(amount);
-  document.getElementById('r-months').textContent=months+' شهر';
-  document.getElementById('r-admin').textContent=adminAmt>0?fmt2(adminAmt):'—';
-  document.getElementById('r-monthly-no-ins').textContent=fmt2(monthlyNoIns);
-  document.getElementById('r-ins-monthly').textContent=monthlyIns>0?fmt2(monthlyIns):'—';
-  document.getElementById('r-monthly').textContent=fmt2(monthly);
-  document.getElementById('r-total').textContent=fmt2(total);
-  document.getElementById('r-profit').textContent=fmt2(totalProfit);
-  document.getElementById('r-rate').textContent=profitRate+'%';
-  if(res)res.style.display='block';
-  if(empty)empty.style.display='none';
-};
-
-const CLIENT_STATUSES={
-  new:{label:'جديد',emoji:'🔵',color:'#1B6FC8'},
-  interested:{label:'مهتم',emoji:'🟡',color:'#D4B000'},
-  offer:{label:'عرض سعر',emoji:'🟠',color:'#D45A00'},
-  followup:{label:'متابعة',emoji:'🟣',color:'#6A1B9A'},
-  sold:{label:'تم البيع',emoji:'🟢',color:'#27500a'},
-  lost:{label:'لم يشتر',emoji:'🔴',color:'#a32d2d'},
-};
-let clientsList=[];
-
-async function loadClients(){
-  const q=collection(db,'clients');
-  onSnapshot(q,snap=>{
-    const all=snap.docs.map(d=>({id:d.id,...d.data()}));
-    clientsList=currentRole==='admin'?all:all.filter(c=>c.agentId===currentUser.uid);
-    renderClients();
-  });
-}
-
-window.renderClients=()=>{
-  const search=(document.getElementById('client-search')?.value||'').toLowerCase();
-  const statusFilter=document.getElementById('client-filter-status')?.value||'';
-  let list=clientsList;
-  if(search)list=list.filter(c=>(c.name||'').toLowerCase().includes(search)||(c.phone||'').includes(search));
-  if(statusFilter)list=list.filter(c=>c.status===statusFilter);
-
-  const statsEl=document.getElementById('client-stats');
-  if(statsEl){
-    const counts={};
-    Object.keys(CLIENT_STATUSES).forEach(k=>{counts[k]=clientsList.filter(c=>c.status===k).length;});
-    statsEl.innerHTML=Object.entries(CLIENT_STATUSES).map(([k,v])=>
-      `<div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;display:flex;align-items:center;gap:6px">
-        <span>${v.emoji}</span><span style="color:var(--muted)">${v.label}</span>
-        <span style="font-weight:700;color:${v.color}">${counts[k]||0}</span>
-      </div>`).join('');
-  }
-
-  const el=document.getElementById('clients-list');
-  if(!el)return;
-  if(!list.length){el.innerHTML='<div class="empty">لا يوجد عملاء — اضغط إضافة عميل</div>';return;}
-
-  el.innerHTML=list.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).map(c=>{
-    const st=CLIENT_STATUSES[c.status]||CLIENT_STATUSES.new;
-    const date=c.createdAt?.toDate?.();
-    const dateStr=date?date.getDate()+'/'+(date.getMonth()+1)+'/'+date.getFullYear():'—';
-    return`<div style="background:#fff;border-radius:10px;border:1px solid var(--border);padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow)">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <div>
-          <div style="font-size:14px;font-weight:700">${c.name||'—'}</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px">📱 ${c.phone||'—'} &nbsp;|&nbsp; 📅 ${dateStr}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;background:${st.color}22;color:${st.color}">${st.emoji} ${st.label}</span>
-          <button class="icon-btn edit-btn-tbl" onclick="openEditClient('${c.id}')">✏️</button>
-          <button class="icon-btn del-btn" onclick="deleteClient('${c.id}')">🗑️</button>
-        </div>
-      </div>
-      ${c.carModel||c.color?`<div style="font-size:12px;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px solid #f0f0f0">
-        🚗 ${c.brandName||''} ${c.carModel||''} ${c.year?'('+c.year+')':''} ${c.color?'— '+c.color:''}
-      </div>`:''}
-      ${c.notes?`<div style="font-size:12px;color:#555;margin-top:6px;padding:6px 8px;background:#f8f9fb;border-radius:6px">📝 ${c.notes}</div>`:''}
-    </div>`;
-  }).join('');
-};
-
-window.openAddClient=()=>{
-  const bOpts=brands.map(b=>`<option value="${b.id}" data-name="${b.nameAr||b.name}">${b.nameAr||b.name}</option>`).join('');
-  document.getElementById('user-modal-inner').innerHTML=`
-    <h3>➕ إضافة عميل جديد</h3>
-    <div class="form-grid">
-      <div class="form-group"><label>اسم العميل</label><input id="cl-name" placeholder="الاسم الكامل"></div>
-      <div class="form-group"><label>رقم الجوال</label><input id="cl-phone" type="tel" placeholder="05xxxxxxxx"></div>
-      <div class="form-group"><label>الماركة</label>
-        <select id="cl-brand" onchange="onClientBrandChange()"><option value="">-- اختر --</option>${bOpts}</select>
-      </div>
-      <div class="form-group"><label>السيارة</label>
-        <select id="cl-car" onchange="onClientCarChange()"><option value="">-- اختر الماركة أولاً --</option></select>
-      </div>
-      <div class="form-group"><label>الموديل (السنة)</label>
-        <select id="cl-year"><option value="">--</option></select>
-      </div>
-      <div class="form-group"><label>اللون</label>
-        <select id="cl-color"><option value="">-- اختر السيارة أولاً --</option></select>
-      </div>
-      <div class="form-group"><label>الحالة</label>
-        <select id="cl-status">
-          ${Object.entries(CLIENT_STATUSES).map(([k,v])=>`<option value="${k}">${v.emoji} ${v.label}</option>`).join('')}
-        </select>
-      </div>
-      <div class="form-group full"><label>ملاحظات</label>
-        <input id="cl-notes" placeholder="اكتب ملاحظاتك هنا...">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-save" onclick="saveClient()">حفظ</button>
-      <button class="btn-cancel" onclick="document.getElementById('user-modal').classList.remove('open')">إلغاء</button>
-    </div>`;
-  document.getElementById('user-modal').classList.add('open');
-  window._editClientId=null;
-};
-
-window.onClientBrandChange=()=>{
-  const brandId=document.getElementById('cl-brand').value;
-  const brandCars=cars.filter(c=>c.brand===brandId);
-  const carSel=document.getElementById('cl-car');
-  carSel.innerHTML='<option value="">-- اختر --</option>'+
-    [...new Set(brandCars.map(c=>c.model))].map(m=>`<option value="${m}">${m}</option>`).join('');
-  document.getElementById('cl-year').innerHTML='<option value="">--</option>';
-  document.getElementById('cl-color').innerHTML='<option value="">--</option>';
-};
-
-window.onClientCarChange=()=>{
-  const brandId=document.getElementById('cl-brand').value;
-  const model=document.getElementById('cl-car').value;
-  const matchCars=cars.filter(c=>c.brand===brandId&&c.model===model);
-  const yearSel=document.getElementById('cl-year');
-  yearSel.innerHTML='<option value="">--</option>'+matchCars.map(c=>`<option value="${c.id}_${c.year}">${c.year}</option>`).join('');
-  yearSel.onchange=()=>{
-    const val=yearSel.value;
-    const carId=val.split('_')[0];
-    const car=cars.find(c=>c.id===carId);
-    const colors=car?.colors||[];
-    const avail=car?.colorAvail||{};
-    const colorSel=document.getElementById('cl-color');
-    colorSel.innerHTML='<option value="">-- اختر --</option>'+
-      colors.filter(h=>avail[h]!==false).map(h=>{
-        const nm=COLORS.find(x=>x.hex===h)?.name||h;
-        return`<option value="${nm}">${nm}</option>`;
-      }).join('');
-  };
-};
-
-window.saveClient=async()=>{
-  const name=document.getElementById('cl-name').value.trim();
-  const phone=document.getElementById('cl-phone').value.trim();
-  const brandId=document.getElementById('cl-brand').value;
-  const brand=brands.find(b=>b.id===brandId);
-  const carModel=document.getElementById('cl-car').value;
-  const yearVal=document.getElementById('cl-year').value;
-  const year=yearVal?yearVal.split('_')[1]:'';
-  const color=document.getElementById('cl-color').value;
-  const status=document.getElementById('cl-status').value;
-  const notes=document.getElementById('cl-notes').value.trim();
-  if(!name||!phone){alert('يرجى إدخال الاسم والجوال');return;}
-  const data={
-    name,phone,brandId,brandName:brand?.nameAr||brand?.name||'',
-    carModel,year,color,status,notes,
-    agentId:currentUser.uid,
-    agentEmail:currentUser.email,
-    updatedAt:serverTimestamp()
-  };
-  if(window._editClientId){
-    await updateDoc(doc(db,'clients',window._editClientId),data);
-  } else {
-    await setDoc(doc(db,'clients','cl_'+Date.now()),{...data,createdAt:serverTimestamp()});
-  }
-  document.getElementById('user-modal').classList.remove('open');
-};
-
-window.openEditClient=async(id)=>{
-  const c=clientsList.find(x=>x.id===id);
-  if(!c)return;
-  window._editClientId=id;
-  const bOpts=brands.map(b=>`<option value="${b.id}" ${b.id===c.brandId?'selected':''}>${b.nameAr||b.name}</option>`).join('');
-  const brandCars=cars.filter(x=>x.brand===c.brandId);
-  const carOpts=[...new Set(brandCars.map(x=>x.model))].map(m=>`<option value="${m}" ${m===c.carModel?'selected':''}>${m}</option>`).join('');
-  const matchCars=brandCars.filter(x=>x.model===c.carModel);
-  const yearOpts=matchCars.map(x=>`<option value="${x.id}_${x.year}" ${x.year===c.year?'selected':''}>${x.year}</option>`).join('');
-  const car=matchCars.find(x=>x.year===c.year)||matchCars[0];
-  const colorOpts=(car?.colors||[]).filter(h=>(car?.colorAvail||{})[h]!==false).map(h=>{
-    const nm=COLORS.find(x=>x.hex===h)?.name||h;
-    return`<option value="${nm}" ${nm===c.color?'selected':''}>${nm}</option>`;
-  }).join('');
-  document.getElementById('user-modal-inner').innerHTML=`
-    <h3>✏️ تعديل بيانات العميل</h3>
-    <div class="form-grid">
-      <div class="form-group"><label>اسم العميل</label><input id="cl-name" value="${c.name||''}"></div>
-      <div class="form-group"><label>رقم الجوال</label><input id="cl-phone" value="${c.phone||''}"></div>
-      <div class="form-group"><label>الماركة</label><select id="cl-brand" onchange="onClientBrandChange()"><option value="">--</option>${bOpts}</select></div>
-      <div class="form-group"><label>السيارة</label><select id="cl-car" onchange="onClientCarChange()"><option value="">--</option>${carOpts}</select></div>
-      <div class="form-group"><label>الموديل (السنة)</label><select id="cl-year"><option value="">--</option>${yearOpts}</select></div>
-      <div class="form-group"><label>اللون</label><select id="cl-color"><option value="">--</option>${colorOpts}</select></div>
-      <div class="form-group"><label>الحالة</label><select id="cl-status">
-        ${Object.entries(CLIENT_STATUSES).map(([k,v])=>`<option value="${k}" ${k===c.status?'selected':''}>${v.emoji} ${v.label}</option>`).join('')}
-      </select></div>
-      <div class="form-group full"><label>ملاحظات</label><input id="cl-notes" value="${c.notes||''}"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-del" onclick="deleteClient('${id}');document.getElementById('user-modal').classList.remove('open')">🗑️ حذف</button>
-      <button class="btn-save" onclick="saveClient()">حفظ</button>
-      <button class="btn-cancel" onclick="document.getElementById('user-modal').classList.remove('open')">إلغاء</button>
-    </div>`;
-  document.getElementById('user-modal').classList.add('open');
-};
-
-window.deleteClient=async(id)=>{
-  if(!confirm('هل تريد حذف هذا العميل؟'))return;
-  await deleteDoc(doc(db,'clients',id));
-};
-
-function checkPriceNotif(){
-  const lastSeenKey='last_seen_'+currentUser.uid;
-  onSnapshot(doc(db,'settings','lastPriceUpdate'),snap=>{
-    try{
-      if(!snap.exists())return;
-      const data=snap.data();
-      const updates=data.updates||[];
-      if(!updates.length)return;
-      const lastSeen=parseInt(localStorage.getItem(lastSeenKey)||'0');
-      const newUpdates=updates.filter(u=>(u.time||0)>lastSeen);
-      if(!newUpdates.length)return;
-      const carNames=newUpdates.map(u=>u.carModel).filter(Boolean);
-      let msg='';
-      if(carNames.length===0){msg='🔔 تم تحديث قائمة الأسعار';}
-      else if(carNames.length===1){msg='🔔 تم تحديث سعر: '+carNames[0];}
-      else{msg='🔔 تم تحديث أسعار '+carNames.length+' سيارات: '+carNames.join(' — ');}
-      document.getElementById('notif-msg').textContent=msg;
-      document.getElementById('notif-bar').style.display='flex';
-      window._notifLastSeen=lastSeenKey;
-    }catch(e){}
-  });
-}
-window.dismissNotif=()=>{
-  document.getElementById('notif-bar').style.display='none';
-  if(window._notifLastSeen)localStorage.setItem(window._notifLastSeen,Date.now().toString());
-};
-async function recordPriceUpdate(carModel=''){
-  try{
-    const snap=await getDoc(doc(db,'settings','lastPriceUpdate'));
-    const existing=snap.exists()?(snap.data().updates||[]):[];
-    const now=Date.now();
-    const filtered=existing.filter(x=>x.carModel!==carModel);
-    filtered.push({carModel,time:now});
-    await setDoc(doc(db,'settings','lastPriceUpdate'),{updates:filtered,lastTime:now});
-  }catch(e){console.error('recordPriceUpdate error',e);}
-}
-
-let dragCarId=null;
-function enableDragDrop(){
-  if(currentRole!=='admin')return;
-  const tbody=document.getElementById('car-table');
-  tbody.addEventListener('dragstart',e=>{
-    const tr=e.target.closest('tr[data-car-id]');
-    if(!tr)return;
-    dragCarId=tr.dataset.carId;
-    tr.style.opacity='0.5';
-  });
-  tbody.addEventListener('dragend',e=>{
-    const tr=e.target.closest('tr[data-car-id]');
-    if(tr)tr.style.opacity='';
-    tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over'));
-  });
-  tbody.addEventListener('dragover',e=>{
-    e.preventDefault();
-    const tr=e.target.closest('tr[data-car-id]');
-    tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over'));
-    if(tr&&tr.dataset.carId!==dragCarId)tr.classList.add('drag-over');
-  });
-  tbody.addEventListener('drop',async e=>{
-    e.preventDefault();
-    const tr=e.target.closest('tr[data-car-id]');
-    tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over'));
-    if(!tr||!dragCarId||tr.dataset.carId===dragCarId)return;
-    const targetId=tr.dataset.carId;
-    const fromIdx=cars.findIndex(c=>c.id===dragCarId);
-    const toIdx=cars.findIndex(c=>c.id===targetId);
-    if(fromIdx<0||toIdx<0)return;
-    const reordered=[...cars];
-    const [moved]=reordered.splice(fromIdx,1);
-    reordered.splice(toIdx,0,moved);
-    const batch=reordered.map((c,i)=>updateDoc(doc(db,'cars',c.id),{order:i}));
-    await Promise.all(batch);
-  });
-  const observer=new MutationObserver(()=>{
-    tbody.querySelectorAll('tr[data-car-id]').forEach(tr=>{tr.draggable=true;});
-  });
-  observer.observe(tbody,{childList:true,subtree:true});
-  tbody.querySelectorAll('tr[data-car-id]').forEach(tr=>{tr.draggable=true;});
-}
 </script>
 </body>
 </html>
