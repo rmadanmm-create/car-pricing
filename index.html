@@ -463,18 +463,23 @@ window.openEditCar=id=>{const c=cars.find(x=>x.id===id);if(!c)return;editCarId=i
 window.closeCarModal=()=>document.getElementById('car-modal').classList.remove('open');
 
 window.saveCar=async()=>{
-  const model=document.getElementById('f-model').value.trim();
-  const brand=document.getElementById('f-brand').value;
-  const year=document.getElementById('f-year').value;
-  const buy=parseInt(document.getElementById('f-buy').value)||0;
-  const plate=parseInt(document.getElementById('f-plate').value)||900;
-  const date=document.getElementById('f-date').value;
-  const notes=document.getElementById('f-notes').value.trim();
-  if(!model){alert('يرجى إدخال نوع السيارة');return;}
-  const d2={brand,model,year,buy,plateFee:plate,date,notes,colors:selColors,colorAvail:{...selColorAvail},colorPrices:{...selColorPrices},updatedAt:serverTimestamp()};
-  if(editCarId)await updateDoc(doc(db,'cars',editCarId),d2);
-  else await setDoc(doc(db,'cars','car_'+Date.now()),{...d2,createdAt:serverTimestamp()});
-  closeCarModal();
+  try{
+    const model=document.getElementById('f-model').value.trim();
+    const brand=document.getElementById('f-brand').value;
+    const year=document.getElementById('f-year').value;
+    const buy=parseInt(document.getElementById('f-buy').value)||0;
+    const plate=parseInt(document.getElementById('f-plate').value)||900;
+    const date=document.getElementById('f-date').value;
+    const notes=document.getElementById('f-notes').value.trim();
+    if(!model){alert('يرجى إدخال نوع السيارة');return;}
+    const d2={brand,model,year,buy,plateFee:plate,date,notes,colors:selColors,colorAvail:{...selColorAvail},colorPrices:{...selColorPrices},updatedAt:serverTimestamp()};
+    if(editCarId)await updateDoc(doc(db,'cars',editCarId),d2);
+    else await setDoc(doc(db,'cars','car_'+Date.now()),{...d2,createdAt:serverTimestamp()});
+    closeCarModal();
+    alert('تم الحفظ بنجاح');
+  }catch(err){
+    alert('خطأ في الحفظ: '+err.message);
+  }
 };
 
 window.deleteCar=async id=>{
