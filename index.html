@@ -825,7 +825,7 @@ window.renderCars=()=>{
     return colors.map((h,i)=>{
       const sepStyle=i===0?'border-top:3px solid #1B6FC8;':'';
       const pr=colorPrices[h]||0; // pr = سعر القائمة لهذا اللون
-      const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50'};
+      const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50','#EBEBEB':'#ALL','#E8E8E8':'#ALL'};
       const rh=COLOR_MIGRATE[h]||h;
       const nm=COLORS.find(x=>x.hex===rh||x.hex===h)?.name||h;
       const isUnavail=avail[h]===false;
@@ -843,9 +843,9 @@ window.renderCars=()=>{
         ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>`:''}
         ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
         <td style="padding:5px 6px">
-          <div style="background:${COLOR_MIGRATE[h]||h};padding:4px 8px;border-radius:6px;text-align:center;border:1px solid #bbb">
-            <span style="font-size:11px;font-weight:700;color:${txtColor};text-transform:uppercase;letter-spacing:0.5px">${nm}</span>
-            ${isUnavail?'<br><span style="font-size:9px;color:'+txtColor+';opacity:.7">غير متاح</span>':''}
+          <div style="${(COLOR_MIGRATE[h]||h)==='#ALL'?'background:linear-gradient(90deg,#FF0000,#FF7F00,#CFB53B,#4CAF50,#4A90D9,#1B3A6B,#8B00FF);':'background:'+(COLOR_MIGRATE[h]||h)+';'}padding:4px 8px;border-radius:6px;text-align:center;border:1px solid #bbb">
+            <span style="font-size:11px;font-weight:700;color:${(COLOR_MIGRATE[h]||h)==='#ALL'?'#fff':txtColor};text-transform:uppercase;letter-spacing:0.5px">${(COLOR_MIGRATE[h]||h)==='#ALL'?'ALL COLORS':nm}</span>
+            ${isUnavail?'<br><span style="font-size:9px;color:#fff;opacity:.7">غير متاح</span>':''}
           </div>
         </td>
         <td style="font-size:14px;font-weight:600;color:#1a1a2e">${fmt(cashC)}</td>
@@ -1161,7 +1161,7 @@ window.printPDF=()=>{
         <td>${c.year||''}</td><td colspan="6" style="color:#aaa">لا توجد ألوان</td><td>${c.date||''}</td></tr>`;
     } else {
       colors.forEach((h,i)=>{
-        const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50'};
+        const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50','#EBEBEB':'#ALL','#E8E8E8':'#ALL'};
       const rh=COLOR_MIGRATE[h]||h;
       const nm=COLORS.find(x=>x.hex===rh||x.hex===h)?.name||h;
         const pr=colorPrices[h]||0;
@@ -1244,7 +1244,7 @@ function renderMobileCards(){
       <button class="icon-btn del-btn" onclick="deleteCar('${c.id}')">🗑️ حذف</button>
     </div>`:'';
     const colorsHtml=colors.map(h=>{
-      const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50'};
+      const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50','#EBEBEB':'#ALL','#E8E8E8':'#ALL'};
       const rh=COLOR_MIGRATE[h]||h;
       const nm=COLORS.find(x=>x.hex===rh||x.hex===h)?.name||h;
       const pr=colorPrices[h]||0;
@@ -1575,7 +1575,7 @@ window.onClientCarChange=()=>{
     const colorSel=document.getElementById('cl-color');
     colorSel.innerHTML='<option value="">-- اختر --</option>'+
       colors.filter(h=>avail[h]!==false).map(h=>{
-        const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50'};
+        const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50','#EBEBEB':'#ALL','#E8E8E8':'#ALL'};
       const rh=COLOR_MIGRATE[h]||h;
       const nm=COLORS.find(x=>x.hex===rh||x.hex===h)?.name||h;
         return`<option value="${nm}">${nm}</option>`;
@@ -1621,7 +1621,7 @@ window.openEditClient=async(id)=>{
   const yearOpts=matchCars.map(x=>`<option value="${x.id}_${x.year}" ${x.year===c.year?'selected':''}>${x.year}</option>`).join('');
   const car=matchCars.find(x=>x.year===c.year)||matchCars[0];
   const colorOpts=(car?.colors||[]).filter(h=>(car?.colorAvail||{})[h]!==false).map(h=>{
-    const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50'};
+    const COLOR_MIGRATE={'#CC2200':'#FF0000','#C5A028':'#CFB53B','#2E7D32':'#4CAF50','#EBEBEB':'#ALL','#E8E8E8':'#ALL'};
       const rh=COLOR_MIGRATE[h]||h;
       const nm=COLORS.find(x=>x.hex===rh||x.hex===h)?.name||h;
     return`<option value="${nm}" ${nm===c.color?'selected':''}>${nm}</option>`;
