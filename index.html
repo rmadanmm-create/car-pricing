@@ -405,7 +405,7 @@ const db=getFirestore(app);
 
 const COLORS=[
   {name:'ALL COLORS',hex:'#E8E8E8'},{name:'WHITE',hex:'#FFFFFF'},{name:'BLACK',hex:'#1a1a1a'},{name:'SILVER',hex:'#C0C0C0'},
-  {name:'GRAY',hex:'#808080'},{name:'RED',hex:'#CC2200'},{name:'DARK BLUE',hex:'#1B3A6B'},
+  {name:'GRAY',hex:'#808080'},{name:'RED',hex:'#FF0000'},{name:'DARK BLUE',hex:'#1B3A6B'},
   {name:'LIGHT BLUE',hex:'#4A90D9'},{name:'BEIGE',hex:'#D4B896'},{name:'BROWN',hex:'#7B4F2E'},
   {name:'LIGHT GREEN',hex:'#4CAF50'},{name:'GOLD',hex:'#CFB53B'},{name:'ORANGE',hex:'#D45A00'},
   {name:'TURQUOISE',hex:'#00CED1'},
@@ -807,7 +807,7 @@ window.renderCars=()=>{
     const avail=c.colorAvail||{};
     const colors=c.colors||[];
     const colorPrices=c.colorPrices||{};
-    const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#808080','#E8E8E8','#4CAF50','#4A90D9'];
+    const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
     const rowCount=Math.max(colors.length,1);
     const adminBtns=currentRole==='admin'?`<button class="icon-btn edit-btn-tbl" onclick="openEditCar('${c.id}')">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')">🗑️</button>`:'';
     
@@ -1135,7 +1135,7 @@ window.printPDF=()=>{
   const now=new Date();
   const dateStr=now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear();
   const list=getFiltered();
-  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#808080','#E8E8E8','#4CAF50','#4A90D9'];
+  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
 
   let rows='';
   list.forEach(c=>{
@@ -1219,7 +1219,7 @@ function renderMobileCards(){
   const list=getFiltered();
   const el=document.getElementById('mobile-cards');
   if(!el)return;
-  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#808080','#E8E8E8','#4CAF50','#4A90D9'];
+  const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
   if(!list.length){el.innerHTML='<div class="empty">لا توجد سيارات</div>';return;}
   el.innerHTML=list.map((c,ci)=>{
     const brand=brands.find(b=>b.id===c.brand)||{nameAr:c.brand||'',nameEn:''};
