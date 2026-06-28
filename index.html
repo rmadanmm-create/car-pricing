@@ -405,7 +405,7 @@ const db=getFirestore(app);
 
 const COLORS=[
   {name:'ALL COLORS',hex:'#E8E8E8'},{name:'WHITE',hex:'#FFFFFF'},{name:'BLACK',hex:'#1a1a1a'},{name:'SILVER',hex:'#C0C0C0'},
-  {name:'GRAY',hex:'#808080'},{name:'RED',hex:'#FF0000'},{name:'DARK BLUE',hex:'#1B3A6B'},{name:'BLUE',hex:'#004B93'},
+  {name:'GRAY',hex:'#808080'},{name:'RED',hex:'#FF0000'},{name:'DARK BLUE',hex:'#1B3A6B'},
   {name:'LIGHT BLUE',hex:'#4A90D9'},{name:'BEIGE',hex:'#D4B896'},{name:'BROWN',hex:'#7B4F2E'},
   {name:'LIGHT GREEN',hex:'#4CAF50'},{name:'GOLD',hex:'#CFB53B'},{name:'ORANGE',hex:'#D45A00'},
   {name:'TURQUOISE',hex:'#00CED1'},
@@ -841,9 +841,9 @@ window.renderCars=()=>{
         ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle"><strong>${c.modelAr||c.model||''}</strong>${c.modelEn?'<br><span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}<br><span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>`:''}
         ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
         <td style="padding:5px 6px">
-          <div style="${h==='#E8E8E8'?'background:linear-gradient(135deg,#1B3A6B,#4A90D9,#C0C0C0);border:none;':'background:'+h+';border:1px solid #bbb;'}padding:4px 8px;border-radius:6px;text-align:center">
-            <span style="font-size:11px;font-weight:700;color:${h==='#E8E8E8'?'#fff':txtColor};text-transform:uppercase;letter-spacing:0.5px">${nm}</span>
-            ${isUnavail?'<br><span style="font-size:9px;color:'+(h==='#E8E8E8'?'#fff':txtColor)+';opacity:.7">غير متاح</span>':''}
+          <div style="background:${h};padding:4px 8px;border-radius:6px;text-align:center;border:1px solid #bbb">
+            <span style="font-size:11px;font-weight:700;color:${txtColor};text-transform:uppercase;letter-spacing:0.5px">${nm}</span>
+            ${isUnavail?'<br><span style="font-size:9px;color:'+txtColor+';opacity:.7">غير متاح</span>':''}
           </div>
         </td>
         <td style="font-size:14px;font-weight:600;color:#1a1a2e">${fmt(cashC)}</td>
@@ -866,10 +866,7 @@ function buildColorSec(ec,ea,ep){
   const rawPrices=ep||{};
   selColorPrices={};
   Object.keys(rawPrices).forEach(k=>{if(rawPrices[k]>=10000)selColorPrices[k]=rawPrices[k];});
-  return`<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;margin-bottom:6px">
-    <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase">الألوان والمخزون والسعر الإضافي</div>
-    <button type="button" onclick="cleanOldColors()" style="padding:4px 12px;border:1.5px solid #e53e3e;border-radius:20px;background:#fff;color:#e53e3e;font-size:11px;font-weight:700;cursor:pointer">🗑 حذف الألوان القديمة</button>
-  </div>
+  return`<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:6px;text-transform:uppercase;margin-top:8px">الألوان والمخزون والسعر الإضافي</div>
   <div class="color-grid">${COLORS.map(c=>{
     const s=selColors.includes(c.hex),av=selColorAvail[c.hex]!==false;
     return`<div class="cpick${s?' sel':''}${s&&!av?' unavail-pick':''}" style="background:${c.hex}" title="${c.name}" id="cp_${c.hex.replace('#','')}" onclick="toggleC('${c.hex}')"></div>`;
@@ -888,21 +885,6 @@ function buildAvailToggles(){
     </div>`;
   }).join('');
 }
-window.cleanOldColors=()=>{
-  const OLD_HEX=['#C5A028','#2E7D32','#CC2200','#EBEBEB'];
-  OLD_HEX.forEach(h=>{
-    if(selColors.includes(h)){
-      selColors=selColors.filter(x=>x!==h);
-      delete selColorAvail[h];
-      delete selColorPrices[h];
-      const el=document.getElementById('cp_'+h.replace('#',''));
-      if(el){el.classList.remove('sel','unavail-pick');}
-    }
-  });
-  const ar=document.getElementById('avail-row');
-  if(ar)ar.innerHTML=buildAvailToggles();
-  alert('تم حذف الألوان القديمة ✓ — اضغط حفظ لتأكيد التعديل');
-};
 window.toggleC=hex=>{
   if(selColors.includes(hex)){selColors=selColors.filter(x=>x!==hex);delete selColorAvail[hex];delete selColorPrices[hex];}
   else{selColors.push(hex);selColorAvail[hex]=true;selColorPrices[hex]=0;}
@@ -968,30 +950,21 @@ window.openEditCar=id=>{const c=cars.find(x=>x.id===id);if(!c)return;editCarId=i
 window.closeCarModal=()=>document.getElementById('car-modal').classList.remove('open');
 
 window.saveCar=async()=>{
-  try{
-    const modelAr=document.getElementById('f-model-ar').value.trim();
-    const modelEn=document.getElementById('f-model-en').value.trim();
-    const model=modelAr||(modelEn||'');
-    const brand=document.getElementById('f-brand').value;
-    const year=document.getElementById('f-year').value;
-    const buy=0;
-    const plate=parseInt(document.getElementById('f-plate').value)||900;
-    const date=document.getElementById('f-date').value;
-    const notes=document.getElementById('f-notes').value.trim();
-    if(!model){alert('يرجى إدخال نوع السيارة');return;}
-    const d2={brand,model,modelAr,modelEn,year,buy,plateFee:plate,date,notes,colors:selColors,colorAvail:{...selColorAvail},colorPrices:{...selColorPrices},updatedAt:serverTimestamp()};
-    if(editCarId){
-      await updateDoc(doc(db,'cars',editCarId),d2);
-    } else {
-      await setDoc(doc(db,'cars','car_'+Date.now()),{...d2,order:cars.length,createdAt:serverTimestamp()});
-    }
-    try{await recordPriceUpdate(model);}catch(e){console.warn('recordPriceUpdate:',e);}
-    closeCarModal();
-    alert('تم الحفظ ✓');
-  }catch(err){
-    console.error('saveCar error:',err);
-    alert('خطأ في الحفظ: '+err.message);
-  }
+  const modelAr=document.getElementById('f-model-ar').value.trim();
+  const modelEn=document.getElementById('f-model-en').value.trim();
+  const model=modelAr||(modelEn||'');
+  const brand=document.getElementById('f-brand').value;
+  const year=document.getElementById('f-year').value;
+  const buy=0;
+  const plate=parseInt(document.getElementById('f-plate').value)||900;
+  const date=document.getElementById('f-date').value;
+  const notes=document.getElementById('f-notes').value.trim();
+  if(!model){alert('يرجى إدخال نوع السيارة');return;}
+  const d2={brand,model,modelAr,modelEn,year,buy,plateFee:plate,date,notes,colors:selColors,colorAvail:{...selColorAvail},colorPrices:{...selColorPrices},updatedAt:serverTimestamp()};
+  if(editCarId)await updateDoc(doc(db,'cars',editCarId),d2);
+  else await setDoc(doc(db,'cars','car_'+Date.now()),{...d2,order:cars.length,createdAt:serverTimestamp()});
+  await recordPriceUpdate(model);
+  closeCarModal();
 };
 
 window.deleteCar=async id=>{
