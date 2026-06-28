@@ -968,21 +968,30 @@ window.openEditCar=id=>{const c=cars.find(x=>x.id===id);if(!c)return;editCarId=i
 window.closeCarModal=()=>document.getElementById('car-modal').classList.remove('open');
 
 window.saveCar=async()=>{
-  const modelAr=document.getElementById('f-model-ar').value.trim();
-  const modelEn=document.getElementById('f-model-en').value.trim();
-  const model=modelAr||(modelEn||'');
-  const brand=document.getElementById('f-brand').value;
-  const year=document.getElementById('f-year').value;
-  const buy=0;
-  const plate=parseInt(document.getElementById('f-plate').value)||900;
-  const date=document.getElementById('f-date').value;
-  const notes=document.getElementById('f-notes').value.trim();
-  if(!model){alert('يرجى إدخال نوع السيارة');return;}
-  const d2={brand,model,modelAr,modelEn,year,buy,plateFee:plate,date,notes,colors:selColors,colorAvail:{...selColorAvail},colorPrices:{...selColorPrices},updatedAt:serverTimestamp()};
-  if(editCarId)await updateDoc(doc(db,'cars',editCarId),d2);
-  else await setDoc(doc(db,'cars','car_'+Date.now()),{...d2,order:cars.length,createdAt:serverTimestamp()});
-  await recordPriceUpdate(model);
-  closeCarModal();
+  try{
+    const modelAr=document.getElementById('f-model-ar').value.trim();
+    const modelEn=document.getElementById('f-model-en').value.trim();
+    const model=modelAr||(modelEn||'');
+    const brand=document.getElementById('f-brand').value;
+    const year=document.getElementById('f-year').value;
+    const buy=0;
+    const plate=parseInt(document.getElementById('f-plate').value)||900;
+    const date=document.getElementById('f-date').value;
+    const notes=document.getElementById('f-notes').value.trim();
+    if(!model){alert('يرجى إدخال نوع السيارة');return;}
+    const d2={brand,model,modelAr,modelEn,year,buy,plateFee:plate,date,notes,colors:selColors,colorAvail:{...selColorAvail},colorPrices:{...selColorPrices},updatedAt:serverTimestamp()};
+    if(editCarId){
+      await updateDoc(doc(db,'cars',editCarId),d2);
+    } else {
+      await setDoc(doc(db,'cars','car_'+Date.now()),{...d2,order:cars.length,createdAt:serverTimestamp()});
+    }
+    try{await recordPriceUpdate(model);}catch(e){console.warn('recordPriceUpdate:',e);}
+    closeCarModal();
+    alert('تم الحفظ ✓');
+  }catch(err){
+    console.error('saveCar error:',err);
+    alert('خطأ في الحفظ: '+err.message);
+  }
 };
 
 window.deleteCar=async id=>{
