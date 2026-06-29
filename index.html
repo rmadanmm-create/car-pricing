@@ -395,7 +395,6 @@ const SUPA_URL='https://opxbmaemxtfogefvgjec.supabase.co';
 const SUPA_KEY='sb_publishable_FR7oNIpW3th9nawK29MzUQ_E0-iYM03';
 const sb=createClient(SUPA_URL,SUPA_KEY);
 
-// مستخدمو النظام (بدون Firebase Auth)
 const USERS={
   'admin@alhussaini.com':{pass:'admin123',role:'admin',name:'المدير'},
   'staff@alhussaini.com':{pass:'staff123',role:'viewer',name:'موظف'},
@@ -738,9 +737,7 @@ async function loadData(){
   const {data:bData}=await sb.from('brands').select('*');
   brands=bData||[];
   if(brands.length===0){
-    for(const b of DEFAULT_BRANDS){
-      await sb.from('brands').insert({id:b.id,name:b.name,nameAr:b.nameAr,nameEn:b.nameEn});
-    }
+    for(const b of DEFAULT_BRANDS)await sb.from('brands').insert({id:b.id,name:b.name,nameAr:b.nameAr,nameEn:b.nameEn});
     brands=[...DEFAULT_BRANDS];
   }
   renderBrandsBar();
@@ -986,13 +983,11 @@ window.saveCar=async()=>{
     alert('خطأ في الحفظ: '+err.message);
   }
 };
-
 window.deleteCar=async id=>{
   if(!confirm('هل أنت متأكد من حذف هذه السيارة؟'))return;
   await sb.from('cars').delete().eq('id',id);
   const {data:cData}=await sb.from('cars').select('*').order('order');
-  cars=cData||[];
-  renderCars();
+  cars=cData||[];renderCars();
 };
 
 window.openAddBrand=()=>{
@@ -1060,7 +1055,7 @@ async function renderUsers(){
   if(!users.length){el.innerHTML='<div class="empty">لا يوجد مستخدمون</div>';return;}
   el.innerHTML=users.map(u=>{
     const initials=(u.name||u.email||'U').substring(0,2).toUpperCase();
-    const isMe=u.uid===currentUser?.email;
+    const isMe=u.uid===currentUser?.uid;
     return`<div class="user-row">
       <div class="user-info">
         <div class="user-avatar">${initials}</div>
@@ -1104,7 +1099,6 @@ window.saveUser=async()=>{
   const id='user_'+Date.now();
   const {error}=await sb.from('users').insert({id,name,email,role,pass,createdAt:new Date().toISOString()});
   if(error){err.textContent='حدث خطأ: '+error.message;return;}
-  // تحديث USERS object للجلسة الحالية
   USERS[email]={pass,role,name};
   document.getElementById('user-modal').classList.remove('open');
   renderUsers();
@@ -1303,12 +1297,8 @@ let bankRates=[];
 async function loadBankRates(){
   try{
     const {data}=await sb.from('bankRates').select('*');
-    if(!data||data.length===0){
-      bankRates=[...DEFAULT_BANKS];
-    } else {
-      bankRates=data;
-      DEFAULT_BANKS.forEach(b=>{if(!bankRates.find(x=>x.id===b.id))bankRates.push({...b});});
-    }
+    if(!data||data.length===0){bankRates=[...DEFAULT_BANKS];}
+    else{bankRates=data;DEFAULT_BANKS.forEach(b=>{if(!bankRates.find(x=>x.id===b.id))bankRates.push({...b});});}
   }catch(e){bankRates=[...DEFAULT_BANKS];}
   renderBankSelect();
   renderBanksList();
@@ -1645,7 +1635,6 @@ window.dismissNotif=()=>{
   if(window._notifLastSeen)localStorage.setItem(window._notifLastSeen,Date.now().toString());
 };
 async function recordPriceUpdate(){}
-
 // === السحب والإفلات ===
 let dragCarId=null;
 function enableDragDrop(){
