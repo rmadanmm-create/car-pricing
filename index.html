@@ -683,7 +683,7 @@ const DEFAULT_BRANDS=[
   {id:'suzuki',name:'سوزوكي',nameAr:'سوزوكي',nameEn:'Suzuki'}
 ];
 
-let currentUser=null,currentRole=null,activeBrand='all',editCarId=null,selColors=[],selColorAvail={};
+let activeBrand='all',editCarId=null,selColors=[],selColorAvail={};
 let brands=[],cars=[];
 
 function fmt(n){return Math.round(n).toLocaleString('en-US')}
@@ -1060,7 +1060,7 @@ async function renderUsers(){
   if(!users.length){el.innerHTML='<div class="empty">لا يوجد مستخدمون</div>';return;}
   el.innerHTML=users.map(u=>{
     const initials=(u.name||u.email||'U').substring(0,2).toUpperCase();
-    const isMe=u.uid===currentUser?.uid;
+    const isMe=u.uid===currentUser?.email;
     return`<div class="user-row">
       <div class="user-info">
         <div class="user-avatar">${initials}</div>
@@ -1581,7 +1581,7 @@ window.saveClient=async()=>{
   const data={
     name,phone,brandId,brandName:brand?.nameAr||brand?.name||'',
     carModel,year,color,status,notes,
-    agentId:currentUser.uid,
+    agentId:currentUser.email,
     agentEmail:currentUser.email,
     updatedAt:new Date().toISOString()
   };
