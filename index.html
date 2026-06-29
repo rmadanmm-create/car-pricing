@@ -389,23 +389,18 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
 <div class="modal-overlay" id="brand-modal"><div class="modal" id="brand-modal-inner"></div></div>
 
 <script type="module">
-import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged,createUserWithEmailAndPassword}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import{getFirestore,doc,setDoc,getDoc,collection,getDocs,onSnapshot,deleteDoc,updateDoc,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import{createClient}from'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-const firebaseConfig={
-  apiKey:"AIzaSyDMwf0PHZW1mVf59XEY4Bof1aTkEuSCSxE",
-  authDomain:"price-list-a472e.firebaseapp.com",
-  projectId:"price-list-a472e",
-  storageBucket:"price-list-a472e.firebasestorage.app",
-  messagingSenderId:"699724189483",
-  appId:"1:699724189483:web:f8a203e5e4e61bbfa73f6e",
-  measurementId:"G-CBK99N6XTM"
+const SUPA_URL='https://opxbmaemxtfogefvgjec.supabase.co';
+const SUPA_KEY='sb_publishable_FR7oNIpW3th9nawK29MzUQ_E0-iYM03';
+const sb=createClient(SUPA_URL,SUPA_KEY);
+
+// مستخدمو النظام (بدون Firebase Auth)
+const USERS={
+  'admin@alhussaini.com':{pass:'admin123',role:'admin',name:'المدير'},
+  'staff@alhussaini.com':{pass:'staff123',role:'viewer',name:'موظف'},
 };
-
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
+let currentUser=null,currentRole=null;
 
 const COLORS=[
   {name:'ALL COLORS',hex:'#E8E8E8'},{name:'WHITE',hex:'#FFFFFF'},{name:'BLACK',hex:'#1a1a1a'},{name:'SILVER',hex:'#C0C0C0'},
@@ -719,41 +714,33 @@ window.doLogin=async()=>{
   const err=document.getElementById('login-err');
   err.textContent='';
   if(!email||!pass){err.textContent='يرجى تعبئة جميع الحقول';return;}
-  try{await signInWithEmailAndPassword(auth,email,pass);}
-  catch(e){err.textContent=e.code==='auth/invalid-credential'?'البريد أو كلمة المرور غير صحيحة':'حدث خطأ، حاول مرة أخرى';}
-};
-window.doLogout=async()=>await signOut(auth);
-
-onAuthStateChanged(auth,async user=>{
-  if(user){
-    currentUser=user;
-    let snap=await getDoc(doc(db,'users',user.uid));
-    if(!snap.exists()||!snap.data().role){
-      await new Promise(r=>setTimeout(r,2000));
-      snap=await getDoc(doc(db,'users',user.uid));
-    }
-    currentRole=(snap.exists()&&snap.data().role)?snap.data().role:'viewer';
-    document.getElementById('auth-screen').style.display='none';
-    document.getElementById('app-screen').style.display='flex';
-    document.getElementById('role-badge').textContent=currentRole==='admin'?'مدير 👑':'موظف - مشاهدة فقط';
-    if(currentRole==='admin'){
-      document.getElementById('users-tab-btn').style.display='';
-      document.getElementById('actions-col').style.display='';
-    }
-    startClock();
-    await loadData();
-  }else{
-    currentUser=null;currentRole=null;
-    document.getElementById('auth-screen').style.display='flex';
-    document.getElementById('app-screen').style.display='none';
+  const u=USERS[email];
+  if(!u||u.pass!==pass){err.textContent='البريد أو كلمة المرور غير صحيحة';return;}
+  currentUser={email,name:u.name};
+  currentRole=u.role;
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('app-screen').style.display='flex';
+  document.getElementById('role-badge').textContent=currentRole==='admin'?'مدير 👑':'موظف - مشاهدة فقط';
+  if(currentRole==='admin'){
+    document.getElementById('users-tab-btn').style.display='';
+    document.getElementById('actions-col').style.display='';
   }
-});
+  startClock();
+  await loadData();
+};
+window.doLogout=()=>{
+  currentUser=null;currentRole=null;
+  document.getElementById('auth-screen').style.display='flex';
+  document.getElementById('app-screen').style.display='none';
+};
 
 async function loadData(){
-  const bSnap=await getDocs(collection(db,'brands'));
-  brands=bSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const {data:bData}=await sb.from('brands').select('*');
+  brands=bData||[];
   if(brands.length===0){
-    for(const b of DEFAULT_BRANDS)await setDoc(doc(db,'brands',b.id),{name:b.name,nameAr:b.nameAr,nameEn:b.nameEn});
+    for(const b of DEFAULT_BRANDS){
+      await sb.from('brands').insert({id:b.id,name:b.name,nameAr:b.nameAr,nameEn:b.nameEn});
+    }
     brands=[...DEFAULT_BRANDS];
   }
   renderBrandsBar();
@@ -762,14 +749,11 @@ async function loadData(){
     document.getElementById('banks-tab-btn').style.display='';
   }
   await loadBankRates();
-  if(currentRole!=='admin')checkPriceNotif();
   await loadClients();
-  onSnapshot(collection(db,'cars'),snap=>{
-    cars=snap.docs.map(d=>({id:d.id,...d.data()}));
-    cars.sort((a,b)=>(a.order||0)-(b.order||0));
-    renderCars();
-    setTimeout(enableDragDrop,300);
-  });
+  const {data:cData}=await sb.from('cars').select('*').order('order');
+  cars=cData||[];
+  renderCars();
+  setTimeout(enableDragDrop,300);
 }
 
 function renderBrandsBar(){
@@ -978,29 +962,37 @@ window.saveCar=async()=>{
     const model=modelAr||(modelEn||'');
     const brand=document.getElementById('f-brand').value;
     const year=document.getElementById('f-year').value;
-    const buy=0;
     const plate=parseInt(document.getElementById('f-plate').value)||900;
     const date=document.getElementById('f-date').value;
     const notes=document.getElementById('f-notes').value.trim();
     if(!model){alert('يرجى إدخال نوع السيارة');return;}
-    const d2={brand,model,modelAr,modelEn,year,buy,plateFee:plate,date,notes,colors:selColors,colorAvail:{...selColorAvail},colorPrices:{...selColorPrices},updatedAt:serverTimestamp()};
+    const d2={brand,model,modelAr,modelEn,year,buy:0,plateFee:plate,date,notes,
+      colors:selColors,colorAvail:selColorAvail,colorPrices:selColorPrices,
+      updatedAt:new Date().toISOString()};
     if(editCarId){
-      await updateDoc(doc(db,'cars',editCarId),d2);
-    } else {
-      await setDoc(doc(db,'cars','car_'+Date.now()),{...d2,order:cars.length,createdAt:serverTimestamp()});
+      const {error}=await sb.from('cars').update(d2).eq('id',editCarId);
+      if(error)throw error;
+    }else{
+      const id='car_'+Date.now();
+      const {error}=await sb.from('cars').insert({...d2,id,order:cars.length,createdAt:new Date().toISOString()});
+      if(error)throw error;
     }
-    try{await recordPriceUpdate(model);}catch(e){console.warn('recordPriceUpdate:',e);}
+    const {data:cData}=await sb.from('cars').select('*').order('order');
+    cars=cData||[];
+    renderCars();
     closeCarModal();
     alert('تم الحفظ ✓');
   }catch(err){
-    console.error('saveCar error:',err);
     alert('خطأ في الحفظ: '+err.message);
   }
 };
 
 window.deleteCar=async id=>{
   if(!confirm('هل أنت متأكد من حذف هذه السيارة؟'))return;
-  await deleteDoc(doc(db,'cars',id));
+  await sb.from('cars').delete().eq('id',id);
+  const {data:cData}=await sb.from('cars').select('*').order('order');
+  cars=cData||[];
+  renderCars();
 };
 
 window.openAddBrand=()=>{
@@ -1033,7 +1025,7 @@ window.deleteBrand=async()=>{
   const id=document.getElementById('b-del-id').value;
   if(!id){alert('اختر ماركة');return;}
   if(!confirm('هل أنت متأكد من حذف هذه الماركة؟'))return;
-  await deleteDoc(doc(db,'brands',id));
+  await sb.from('brands').delete().eq('id',id);
   brands=brands.filter(x=>x.id!==id);
   renderBrandsBar();
   document.getElementById('brand-modal').classList.remove('open');
@@ -1044,7 +1036,7 @@ window.saveBrand=async()=>{
   const nameEn=document.getElementById('b-name-en').value.trim();
   if(!id||!nameAr){alert('يرجى تعبئة المعرف والاسم العربي');return;}
   if(brands.find(x=>x.id===id)){alert('هذا المعرف موجود');return;}
-  await setDoc(doc(db,'brands',id),{name:nameAr,nameAr,nameEn});
+  await sb.from('brands').insert({id,name:nameAr,nameAr,nameEn});
   brands.push({id,name:nameAr,nameAr,nameEn});renderBrandsBar();
   document.getElementById('brand-modal').classList.remove('open');
 };
@@ -1062,8 +1054,8 @@ window.switchTab=(tab,el)=>{
 };
 
 async function renderUsers(){
-  const snap=await getDocs(collection(db,'users'));
-  const users=snap.docs.map(d=>({uid:d.id,...d.data()}));
+  const {data}=await sb.from('users').select('*');
+  const users=(data||[]).map(d=>({uid:d.id,...d}));
   const el=document.getElementById('users-list');
   if(!users.length){el.innerHTML='<div class="empty">لا يوجد مستخدمون</div>';return;}
   el.innerHTML=users.map(u=>{
@@ -1109,37 +1101,20 @@ window.saveUser=async()=>{
   const err=document.getElementById('user-err');
   err.textContent='';
   if(!email||!pass){err.textContent='يرجى تعبئة البريد وكلمة المرور';return;}
-  if(pass.length<6){err.textContent='كلمة المرور 6 أحرف على الأقل';return;}
-  try{
-    const app2=initializeApp(firebaseConfig,'sec_'+Date.now());
-    const auth2=getAuth(app2);
-    const cred=await createUserWithEmailAndPassword(auth2,email,pass);
-    await setDoc(doc(db,'users',cred.user.uid),{name,email,role,createdAt:serverTimestamp()});
-    await signOut(auth2);
-    document.getElementById('user-modal').classList.remove('open');
-    renderUsers();
-    alert('تم إضافة الموظف بنجاح ✅');
-  }catch(e){
-    err.textContent=e.code==='auth/email-already-in-use'?'هذا البريد مستخدم مسبقاً':'حدث خطأ: '+e.message;
-  }
+  const id='user_'+Date.now();
+  const {error}=await sb.from('users').insert({id,name,email,role,pass,createdAt:new Date().toISOString()});
+  if(error){err.textContent='حدث خطأ: '+error.message;return;}
+  // تحديث USERS object للجلسة الحالية
+  USERS[email]={pass,role,name};
+  document.getElementById('user-modal').classList.remove('open');
+  renderUsers();
+  alert('تم إضافة الموظف بنجاح ✅');
 };
-
 window.deleteUser=async(uid,email)=>{
-  if(!confirm(`هل تريد حذف المستخدم ${email||''}؟\nسيتم حذفه نهائياً من النظام.`))return;
-  try{
-    // Delete from Firestore
-    await deleteDoc(doc(db,'users',uid));
-    // Delete from Authentication via admin-style secondary app
-    const app3=initializeApp(firebaseConfig,'del_'+Date.now());
-    const auth3=getAuth(app3);
-    // We cannot delete other users from client SDK directly
-    // So we mark them as deleted in Firestore and they cannot login
-    // The admin can also delete from Firebase Console
-    renderUsers();
-    alert('تم حذف المستخدم من قائمة الموظفين ✅\nللحذف الكامل من Firebase Authentication افتح Firebase Console → Authentication → Users');
-  }catch(e){
-    alert('حدث خطأ: '+e.message);
-  }
+  if(!confirm(`هل تريد حذف المستخدم ${email||''}؟`))return;
+  await sb.from('users').delete().eq('id',uid);
+  renderUsers();
+  alert('تم حذف المستخدم ✅');
 };
 
 ['car-modal','user-modal','brand-modal'].forEach(id=>{
@@ -1327,19 +1302,17 @@ let bankRates=[];
 
 async function loadBankRates(){
   try{
-    const snap=await getDocs(collection(db,'bankRates'));
-    if(snap.empty){
+    const {data}=await sb.from('bankRates').select('*');
+    if(!data||data.length===0){
       bankRates=[...DEFAULT_BANKS];
     } else {
-      bankRates=snap.docs.map(d=>({id:d.id,...d.data()}));
-      // أضف أي بنك ناقص
+      bankRates=data;
       DEFAULT_BANKS.forEach(b=>{if(!bankRates.find(x=>x.id===b.id))bankRates.push({...b});});
     }
   }catch(e){bankRates=[...DEFAULT_BANKS];}
   renderBankSelect();
   renderBanksList();
 }
-
 function renderBankSelect(){
   const sel=document.getElementById('calc-bank');
   if(!sel)return;
@@ -1376,7 +1349,7 @@ window.saveBankRates=async()=>{
     const rate=parseFloat(inp.value)||0;
     const insRate=parseFloat(insInp?.value)||0;
     b.rate=rate;b.insRate=insRate;
-    await setDoc(doc(db,'bankRates',b.id),{name:b.name,rate,insRate});
+    await sb.from('bankRates').upsert({id:b.id,name:b.name,rate,insRate});
   }
   renderBankSelect();
   alert('✅ تم حفظ النسب بنجاح');
@@ -1473,15 +1446,11 @@ const CLIENT_STATUSES={
 let clientsList=[];
 
 async function loadClients(){
-  const q=collection(db,'clients');
-  onSnapshot(q,snap=>{
-    const all=snap.docs.map(d=>({id:d.id,...d.data()}));
-    // المدير يشوف الكل، الموظف يشوف عملاءه فقط
-    clientsList=currentRole==='admin'?all:all.filter(c=>c.agentId===currentUser.uid);
-    renderClients();
-  });
+  const {data}=await sb.from('clients').select('*').order('createdAt',{ascending:false});
+  const all=data||[];
+  clientsList=currentRole==='admin'?all:all.filter(c=>c.agentId===currentUser.email);
+  renderClients();
 }
-
 window.renderClients=()=>{
   const search=(document.getElementById('client-search')?.value||'').toLowerCase();
   const statusFilter=document.getElementById('client-filter-status')?.value||'';
@@ -1614,13 +1583,15 @@ window.saveClient=async()=>{
     carModel,year,color,status,notes,
     agentId:currentUser.uid,
     agentEmail:currentUser.email,
-    updatedAt:serverTimestamp()
+    updatedAt:new Date().toISOString()
   };
   if(window._editClientId){
-    await updateDoc(doc(db,'clients',window._editClientId),data);
+    await sb.from('clients').update(data).eq('id',window._editClientId);
   } else {
-    await setDoc(doc(db,'clients','cl_'+Date.now()),{...data,createdAt:serverTimestamp()});
+    const id='cl_'+Date.now();
+    await sb.from('clients').insert({...data,id,createdAt:new Date().toISOString()});
   }
+  await loadClients();
   document.getElementById('user-modal').classList.remove('open');
 };
 
@@ -1662,47 +1633,18 @@ window.openEditClient=async(id)=>{
 
 window.deleteClient=async(id)=>{
   if(!confirm('هل تريد حذف هذا العميل؟'))return;
-  await deleteDoc(doc(db,'clients',id));
+  await sb.from('clients').delete().eq('id',id);
+  await loadClients();
 };
 
 
 // === نظام الإشعارات ===
-function checkPriceNotif(){
-  const lastSeenKey='last_seen_'+currentUser.uid;
-  onSnapshot(doc(db,'settings','lastPriceUpdate'),snap=>{
-    try{
-      if(!snap.exists())return;
-      const data=snap.data();
-      const updates=data.updates||[];
-      if(!updates.length)return;
-      const lastSeen=parseInt(localStorage.getItem(lastSeenKey)||'0');
-      const newUpdates=updates.filter(u=>(u.time||0)>lastSeen);
-      if(!newUpdates.length)return;
-      const carNames=newUpdates.map(u=>u.carModel).filter(Boolean);
-      let msg='';
-      if(carNames.length===0){msg='🔔 تم تحديث قائمة الأسعار';}
-      else if(carNames.length===1){msg='🔔 تم تحديث سعر: '+carNames[0];}
-      else{msg='🔔 تم تحديث أسعار '+carNames.length+' سيارات: '+carNames.join(' — ');}
-      document.getElementById('notif-msg').textContent=msg;
-      document.getElementById('notif-bar').style.display='flex';
-      window._notifLastSeen=lastSeenKey;
-    }catch(e){}
-  });
-}
+function checkPriceNotif(){}
 window.dismissNotif=()=>{
   document.getElementById('notif-bar').style.display='none';
   if(window._notifLastSeen)localStorage.setItem(window._notifLastSeen,Date.now().toString());
 };
-async function recordPriceUpdate(carModel=''){
-  try{
-    const snap=await getDoc(doc(db,'settings','lastPriceUpdate'));
-    const existing=snap.exists()?(snap.data().updates||[]):[];
-    const now=Date.now();
-    const filtered=existing.filter(x=>x.carModel!==carModel);
-    filtered.push({carModel,time:now});
-    await setDoc(doc(db,'settings','lastPriceUpdate'),{updates:filtered,lastTime:now});
-  }catch(e){console.error('recordPriceUpdate error',e);}
-}
+async function recordPriceUpdate(){}
 
 // === السحب والإفلات ===
 let dragCarId=null;
@@ -1738,8 +1680,9 @@ function enableDragDrop(){
     const reordered=[...cars];
     const [moved]=reordered.splice(fromIdx,1);
     reordered.splice(toIdx,0,moved);
-    const batch=reordered.map((c,i)=>updateDoc(doc(db,'cars',c.id),{order:i}));
-    await Promise.all(batch);
+    await Promise.all(reordered.map((c,i)=>sb.from('cars').update({order:i}).eq('id',c.id)));
+    const {data:cData}=await sb.from('cars').select('*').order('order');
+    cars=cData||[];renderCars();
   });
   const observer=new MutationObserver(()=>{
     tbody.querySelectorAll('tr[data-car-id]').forEach(tr=>{tr.draggable=true;});
