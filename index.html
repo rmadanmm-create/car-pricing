@@ -713,10 +713,18 @@ window.doLogin=async()=>{
   const err=document.getElementById('login-err');
   err.textContent='';
   if(!email||!pass){err.textContent='يرجى تعبئة جميع الحقول';return;}
+  // أولاً: تحقق من القائمة الثابتة (المدير)
   const u=USERS[email];
-  if(!u||u.pass!==pass){err.textContent='البريد أو كلمة المرور غير صحيحة';return;}
-  currentUser={email,name:u.name};
-  currentRole=u.role;
+  if(u&&u.pass===pass){
+    currentUser={email,name:u.name};
+    currentRole=u.role;
+  } else {
+    // ثانياً: تحقق من Supabase (الموظفون)
+    const {data,error}=await sb.from('users').select('*').eq('email',email).eq('pass',pass).single();
+    if(error||!data){err.textContent='البريد أو كلمة المرور غير صحيحة';return;}
+    currentUser={email,name:data.name};
+    currentRole=data.role||'viewer';
+  }
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('app-screen').style.display='flex';
   document.getElementById('role-badge').textContent=currentRole==='admin'?'مدير 👑':'موظف - مشاهدة فقط';
