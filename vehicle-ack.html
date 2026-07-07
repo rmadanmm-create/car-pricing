@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إقرار استلام مركبة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Cairo:wght@600;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --ink: #1B2E35;
+    --navy: #1F3A4D;
+    --navy-deep: #14262F;
+    --paper: #F6F3EC;
+    --paper-card: #FFFFFF;
+    --line: #D9D2C2;
+    --gold: #B8925A;
+    --gold-deep: #8F6E3D;
+    --ok: #2F6B4F;
+    --danger: #A33A2E;
+    --radius: 4px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    font-family: 'Tajawal', sans-serif;
+    color: var(--ink);
+    padding: 32px 16px 80px;
+    min-height: 100vh;
+  }
+
+  .sheet {
+    max-width: 720px;
+    margin: 0 auto;
+    background: var(--paper-card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 2px rgba(20,38,47,0.04), 0 12px 32px -16px rgba(20,38,47,0.18);
+    overflow: hidden;
+  }
+
+  .sheet-head {
+    background: var(--navy);
+    color: #EFE9DA;
+    padding: 28px 32px 24px;
+    position: relative;
+  }
+
+  .sheet-head::after {
+    content: "";
+    position: absolute;
+    bottom: 0; right: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold) 0%, var(--gold) 40%, transparent 40%, transparent 60%, var(--gold) 60%, var(--gold) 100%);
+    opacity: 0.9;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--gold);
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+
+  .sheet-head h1 {
+    font-family: 'Cairo', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0;
+  }
+
+  .sheet-head p {
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: #C6D1D6;
+  }
+
+  .body {
+    padding: 28px 32px 32px;
+  }
+
+  .section {
+    margin-bottom: 28px;
+  }
+
+  .section-title {
+    font-family: 'Cairo', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--navy);
+    margin: 0 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::before {
+    content: "";
+    width: 4px;
+    height: 16px;
+    background: var(--gold);
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  @media (max-width: 560px) {
+    .grid { grid-template-columns: 1fr; }
+    .body { padding: 22px 18px 26px; }
+    .sheet-head { padding: 22px 18px 20px; }
+  }
+
+  label {
+    display: block;
+    font-size: 12.5px;
+    color: #5C6B70;
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+
+  input[type="text"], input[type="date"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14.5px;
+    background: #FCFAF5;
+    color: var(--ink);
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+
+  input:focus {
+    outline: none;
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(31,58,77,0.12);
+  }
+
+  .field-full { grid-column: 1 / -1; }
+
+  .clauses {
+    background: #FBF9F3;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 6px 18px;
+  }
+
+  .clause {
+    display: flex;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+    align-items: flex-start;
+  }
+
+  .clause:last-child { border-bottom: none; }
+
+  .clause input[type="checkbox"] {
+    margin-top: 3px;
+    width: 17px;
+    height: 17px;
+    accent-color: var(--navy);
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .clause p {
+    margin: 0;
+    font-size: 13.8px;
+    line-height: 1.7;
+    color: #33474F;
+  }
+
+  .clause b { color: var(--navy); }
+
+  .sig-wrap {
+    border: 1.5px dashed var(--line);
+    border-radius: var(--radius);
+    background: #FCFAF5;
+    padding: 14px;
+  }
+
+  .sig-wrap canvas {
+    width: 100%;
+    height: 160px;
+    display: block;
+    background: #FFFFFF;
+    border-radius: 3px;
+    border: 1px solid var(--line);
+    touch-action: none;
+    cursor: crosshair;
+  }
+
+  .sig-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+  }
+
+  .sig-hint {
+    font-size: 12px;
+    color: #7A8A8F;
+  }
+
+  .btn-ghost {
+    background: none;
+    border: none;
+    color: var(--navy);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 6px 8px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .submit-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 8px;
+  }
+
+  .status {
+    font-size: 12.5px;
+    color: var(--danger);
+    font-weight: 500;
+  }
+
+  .status.ready { color: var(--ok); }
+
+  .btn-primary {
+    background: var(--navy);
+    color: #F3EFE3;
+    border: none;
+    padding: 13px 28px;
+    border-radius: var(--radius);
+    font-family: 'Cairo', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s ease, transform .1s ease;
+    white-space: nowrap;
+  }
+
+  .btn-primary:hover:not(:disabled) { background: var(--navy-deep); }
+  .btn-primary:active:not(:disabled) { transform: scale(0.98); }
+  .btn-primary:disabled {
+    background: #C9C2B0;
+    cursor: not-allowed;
+  }
+
+  .foot-note {
+    font-size: 11.5px;
+    color: #8A9297;
+    text-align: center;
+    margin-top: 18px;
+    line-height: 1.6;
+  }
+
+  /* Confirmation state */
+  .confirm {
+    display: none;
+    padding: 56px 32px 60px;
+    text-align: center;
+  }
+
+  .confirm.show { display: block; }
+  .body.hide { display: none; }
+
+  .confirm-badge {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--ok);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 18px;
+    font-size: 28px;
+  }
+
+  .confirm h2 {
+    font-family: 'Cairo', sans-serif;
+    font-size: 20px;
+    margin: 0 0 8px;
+    color: var(--navy);
+  }
+
+  .confirm p {
+    color: #5C6B70;
+    font-size: 14px;
+    margin: 0 0 4px;
+  }
+
+  .confirm .ref {
+    display: inline-block;
+    margin-top: 16px;
+    background: #FBF9F3;
+    border: 1px solid var(--line);
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-size: 12.5px;
+    color: var(--navy);
+    letter-spacing: 0.03em;
+  }
+
+  .confirm-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 26px;
+    flex-wrap: wrap;
+  }
+
+  .btn-ghost-solid {
+    background: #FFFFFF;
+    border: 1.5px solid var(--navy);
+    color: var(--navy);
+    padding: 12px 22px;
+    border-radius: var(--radius);
+    font-family: 'Cairo', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s ease;
+  }
+
+  .btn-ghost-solid:hover { background: #F0EEE6; }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <div class="sheet-head">
+    <p class="eyebrow">وثيقة رسمية · توقيع إلكتروني ملزم قانوناً</p>
+    <h1>إقرار استلام مركبة</h1>
+    <p>يُرجى تعبئة البيانات ومراجعة البنود قبل التوقيع</p>
+  </div>
+
+  <div class="body" id="formBody">
+
+    <div class="section">
+      <h3 class="section-title">بيانات المركبة</h3>
+      <div class="grid">
+        <div>
+          <label>النوع / الموديل</label>
+          <input type="text" id="vModel" placeholder="مثال: تويوتا كامري 2026">
+        </div>
+        <div>
+          <label>رقم الهيكل (VIN)</label>
+          <input type="text" id="vVin" placeholder="17 رقم/حرف">
+        </div>
+        <div>
+          <label>رقم اللوحة</label>
+          <input type="text" id="vPlate" placeholder="أ ب ج 1234">
+        </div>
+        <div>
+          <label>تاريخ الاستلام</label>
+          <input type="date" id="vDate">
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3 class="section-title">بيانات المشتري</h3>
+      <div class="grid">
+        <div>
+          <label>الاسم الكامل</label>
+          <input type="text" id="cName" placeholder="اسم العميل">
+        </div>
+        <div>
+          <label>رقم الهوية / الإقامة</label>
+          <input type="text" id="cId" placeholder="10 أرقام">
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3 class="section-title">الإقرار والموافقة</h3>
+      <div class="clauses" id="clauses">
+        <div class="clause">
+          <input type="checkbox" class="ack" data-n="1">
+          <p><b>المعاينة:</b> عاينت المركبة قبل الاستلام، وهي مطابقة للمواصفات والحالة المتفق عليها وقت البيع.</p>
+        </div>
+        <div class="clause">
+          <input type="checkbox" class="ack" data-n="2">
+          <p><b>المرفقات:</b> استلمت جميع مرفقات المركبة (الاستمارة، المفاتيح، وأي ملحقات متفق عليها).</p>
+        </div>
+        <div class="clause">
+          <input type="checkbox" class="ack" data-n="3">
+          <p><b>السداد:</b> تم سداد كامل قيمة المركبة المتفق عليها، ولا توجد أي مطالبات مالية معلّقة تجاه المنشأة بخصوص هذه العملية.</p>
+        </div>
+        <div class="clause">
+          <input type="checkbox" class="ack" data-n="4">
+          <p><b>الضمان:</b> علمت أن الضمان (إن وجد) يخضع لشروط منفصلة موضحة في عقد البيع، وأن هذا الإقرار لا يُسقط حقوقي بموجب أي ضمان ساري.</p>
+        </div>
+        <div class="clause">
+          <input type="checkbox" class="ack" data-n="5">
+          <p><b>نقل الملكية:</b> عِلمت بأن نقل الملكية الرسمي تم أو سيتم عبر أبشر أو خدمة "تم" وفق الأنظمة المعمول بها.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3 class="section-title">توقيع العميل</h3>
+      <div class="sig-wrap">
+        <canvas id="sigPad"></canvas>
+        <div class="sig-row">
+          <span class="sig-hint">وقّع بإصبعك أو الفأرة داخل الإطار أعلاه</span>
+          <button class="btn-ghost" id="clearSig">مسح التوقيع</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-bar">
+      <span class="status" id="statusMsg">أكمل الحقول والبنود والتوقيع للمتابعة</span>
+      <button class="btn-primary" id="submitBtn" disabled>تأكيد الإقرار وحفظه</button>
+    </div>
+
+    <p class="foot-note">هذا الإقرار موقّع إلكترونياً وله ذات الحجية القانونية للتوقيع الخطي وفق نظام التعاملات الإلكترونية السعودي.</p>
+  </div>
+
+  <div class="confirm" id="confirmView">
+    <div class="confirm-badge">✓</div>
+    <h2>تم حفظ الإقرار بنجاح</h2>
+    <p id="confirmName"></p>
+    <p id="confirmVehicle"></p>
+    <div class="ref" id="confirmRef"></div>
+    <div class="confirm-actions">
+      <button class="btn-primary" id="downloadBtn">تنزيل نسخة PDF</button>
+      <button class="btn-ghost-solid" id="shareBtn">مشاركة عبر واتساب</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('sigPad');
+  const ctx = canvas.getContext('2d');
+  let drawing = false;
+  let hasSignature = false;
+
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    const ratio = window.devicePixelRatio || 1;
+    const imgData = hasSignature ? canvas.toDataURL() : null;
+    canvas.width = rect.width * ratio;
+    canvas.height = rect.height * ratio;
+    ctx.scale(ratio, ratio);
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#1F3A4D';
+    if (imgData) {
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
+      img.src = imgData;
+    }
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+  setTimeout(resizeCanvas, 50);
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+
+  function start(e) {
+    e.preventDefault();
+    drawing = true;
+    hasSignature = true;
+    const p = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    updateStatus();
+  }
+
+  function move(e) {
+    if (!drawing) return;
+    e.preventDefault();
+    const p = getPos(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  }
+
+  function end() { drawing = false; }
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove', move, { passive: false });
+  canvas.addEventListener('touchend', end);
+
+  document.getElementById('clearSig').addEventListener('click', () => {
+    const rect = canvas.getBoundingClientRect();
+    ctx.clearRect(0, 0, rect.width, rect.height);
+    hasSignature = false;
+    updateStatus();
+  });
+
+  const fields = ['vModel', 'vVin', 'vPlate', 'vDate', 'cName', 'cId'];
+  const checks = document.querySelectorAll('.ack');
+  const statusMsg = document.getElementById('statusMsg');
+  const submitBtn = document.getElementById('submitBtn');
+
+  function allFieldsFilled() {
+    return fields.every(id => document.getElementById(id).value.trim().length > 0);
+  }
+
+  function allChecked() {
+    return Array.from(checks).every(c => c.checked);
+  }
+
+  function updateStatus() {
+    const fieldsOk = allFieldsFilled();
+    const checksOk = allChecked();
+    const ready = fieldsOk && checksOk && hasSignature;
+
+    if (ready) {
+      statusMsg.textContent = 'جاهز للتأكيد';
+      statusMsg.classList.add('ready');
+    } else {
+      let missing = [];
+      if (!fieldsOk) missing.push('البيانات');
+      if (!checksOk) missing.push('البنود');
+      if (!hasSignature) missing.push('التوقيع');
+      statusMsg.textContent = 'أكمل: ' + missing.join('، ');
+      statusMsg.classList.remove('ready');
+    }
+    submitBtn.disabled = !ready;
+  }
+
+  fields.forEach(id => document.getElementById(id).addEventListener('input', updateStatus));
+  checks.forEach(c => c.addEventListener('change', updateStatus));
+
+  submitBtn.addEventListener('click', async () => {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'جارٍ الحفظ...';
+
+    const record = {
+      vehicle: {
+        model: document.getElementById('vModel').value,
+        vin: document.getElementById('vVin').value,
+        plate: document.getElementById('vPlate').value,
+        date: document.getElementById('vDate').value,
+      },
+      customer: {
+        name: document.getElementById('cName').value,
+        id: document.getElementById('cId').value,
+      },
+      signature: canvas.toDataURL(),
+      submittedAt: new Date().toISOString(),
+    };
+
+    const ref = 'ACK-' + Date.now().toString().slice(-8);
+
+    try {
+      if (window.storage) {
+        await window.storage.set('ack:' + ref, JSON.stringify(record));
+      }
+    } catch (err) {
+      console.error('Storage error:', err);
+    }
+
+    document.getElementById('formBody').classList.add('hide');
+    document.getElementById('confirmView').classList.add('show');
+    document.getElementById('confirmName').textContent = 'العميل: ' + record.customer.name;
+    document.getElementById('confirmVehicle').textContent = record.vehicle.model + ' — ' + record.vehicle.plate;
+    document.getElementById('confirmRef').textContent = 'رقم المرجع: ' + ref;
+
+    window.__ackRecord = record;
+    window.__ackRef = ref;
+  });
+
+  document.getElementById('downloadBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('downloadBtn');
+    btn.disabled = true;
+    btn.textContent = 'جارٍ التجهيز...';
+
+    try {
+      const r = window.__ackRecord;
+      const ref = window.__ackRef;
+
+      const printArea = document.createElement('div');
+      printArea.style.cssText = 'width:640px;padding:32px;background:#fff;font-family:Tajawal,sans-serif;direction:rtl;color:#1B2E35;';
+      printArea.innerHTML = `
+        <h2 style="font-family:Cairo,sans-serif;color:#1F3A4D;margin:0 0 4px;">إقرار استلام مركبة</h2>
+        <p style="color:#8A9297;font-size:12px;margin:0 0 20px;">رقم المرجع: ${ref}</p>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px;">
+          <tr><td style="padding:6px 0;color:#5C6B70;">النوع/الموديل</td><td style="padding:6px 0;font-weight:700;">${r.vehicle.model}</td></tr>
+          <tr><td style="padding:6px 0;color:#5C6B70;">رقم الهيكل</td><td style="padding:6px 0;font-weight:700;">${r.vehicle.vin}</td></tr>
+          <tr><td style="padding:6px 0;color:#5C6B70;">رقم اللوحة</td><td style="padding:6px 0;font-weight:700;">${r.vehicle.plate}</td></tr>
+          <tr><td style="padding:6px 0;color:#5C6B70;">تاريخ الاستلام</td><td style="padding:6px 0;font-weight:700;">${r.vehicle.date}</td></tr>
+          <tr><td style="padding:6px 0;color:#5C6B70;">اسم العميل</td><td style="padding:6px 0;font-weight:700;">${r.customer.name}</td></tr>
+          <tr><td style="padding:6px 0;color:#5C6B70;">رقم الهوية</td><td style="padding:6px 0;font-weight:700;">${r.customer.id}</td></tr>
+        </table>
+        <p style="font-size:13px;line-height:1.8;color:#33474F;">أقر العميل أعلاه باستلام المركبة بعد المعاينة والتأكد من مطابقتها للمواصفات المتفق عليها، وسداد كامل قيمتها، وعلمه بشروط الضمان وإجراءات نقل الملكية الرسمية.</p>
+        <p style="font-size:12px;color:#8A9297;margin-top:24px;">توقيع العميل:</p>
+        <img src="${r.signature}" style="max-width:280px;border:1px solid #D9D2C2;border-radius:4px;margin-top:6px;">
+        <p style="font-size:11px;color:#8A9297;margin-top:24px;">وُقّع إلكترونياً بتاريخ ${new Date(r.submittedAt).toLocaleString('ar-SA')}</p>
+      `;
+      document.body.appendChild(printArea);
+
+      const canvas = await html2canvas(printArea, { scale: 2, backgroundColor: '#ffffff' });
+      document.body.removeChild(printArea);
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ unit: 'px', format: [canvas.width / 2, canvas.height / 2] });
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
+      pdf.save('إقرار-استلام-' + ref + '.pdf');
+    } catch (err) {
+      console.error('PDF export error:', err);
+      alert('حدث خطأ أثناء تجهيز الملف، حاول مرة أخرى.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'تنزيل نسخة PDF';
+    }
+  });
+
+  document.getElementById('shareBtn').addEventListener('click', () => {
+    const r = window.__ackRecord;
+    const ref = window.__ackRef;
+    const text = `إقرار استلام مركبة\nالمرجع: ${ref}\nالعميل: ${r.customer.name}\nالمركبة: ${r.vehicle.model} - ${r.vehicle.plate}\nتم التوقيع بنجاح.`;
+    const waUrl = 'https://wa.me/?text=' + encodeURIComponent(text);
+    window.open(waUrl, '_blank');
+  });
+})();
+</script>
+
+</body>
+</html>
