@@ -1214,10 +1214,11 @@ window.printPDF=()=>{
     </table>
   </div>`;
 
-  const printArea=document.getElementById('print-area');
   printArea.innerHTML=html;
+setTimeout(()=>{
   window.print();
-  setTimeout(()=>{printArea.innerHTML='';},1000);
+  window.onafterprint=()=>{printArea.innerHTML='';window.onafterprint=null;};
+},250);
 };
 
 
