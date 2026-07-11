@@ -776,7 +776,8 @@ function renderAdminActions(){
     <button class="add-btn" onclick="openAddCar()">+ إضافة سيارة</button>
     <button class="add-btn green" onclick="openAddBrand()">+ إضافة ماركة</button>
     <button class="add-btn" style="background:#a32d2d" onclick="openDeleteBrand()">🗑️ حذف ماركة</button>
-    <button class="add-btn" style="background:#6A1B9A" onclick="printPDF()">🖨️ طباعة / PDF</button>`;
+    <button class="add-btn" style="background:#6A1B9A" onclick="printPDF()">🖨️ طباعة (حسب الفلتر الحالي)</button>
+    <button class="add-btn" style="background:#0f4a8a" onclick="printAllBrandsPDF()">📄 PDF لكل الماركات</button>`;
 }
 
 function getFiltered(){
@@ -1138,13 +1139,10 @@ document.addEventListener('keydown',e=>{
 
 
 // === طباعة PDF ===
-window.printPDF=()=>{
-  if(currentRole!=='admin'){alert('⛔ الطباعة متاحة للمدير فقط');return;}
+function buildCatalogHTML(list,title){
   const now=new Date();
   const dateStr=now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear();
-  const list=getFiltered();
   const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
-
   let rows='';
   list.forEach(c=>{
     const brand=brands.find(b=>b.id===c.brand)||{nameAr:c.brand||'',nameEn:''};
@@ -1182,43 +1180,66 @@ window.printPDF=()=>{
     }
   });
 
-  const html=`<div style="font-family:'Segoe UI',Tahoma,Arial,sans-serif;direction:rtl;padding:20px">
-    <div style="text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #1B6FC8">
-      <h2 style="color:#1B6FC8;margin:0 0 4px;font-size:18px">🚗 كتالوج أسعار السيارات — Al Hussaini Motors</h2>
-      <p style="color:#888;margin:0;font-size:11px">تاريخ الطباعة: ${dateStr}</p>
-    </div>
-    <table style="width:100%;border-collapse:collapse;font-size:11px">
-      <thead>
-        <tr style="background:#1B6FC8;color:#fff">
-          <th style="padding:7px 6px;text-align:right">نوع السيارة</th>
-          <th style="padding:7px 6px">الموديل</th>
-          <th style="padding:7px 6px">اللون</th>
-          <th style="padding:7px 6px">سعر القائمة</th>
-          <th style="padding:7px 6px">سعر الكاش</th>
-          <th style="padding:7px 6px">إجمالي الكاش</th>
-          <th style="padding:7px 6px">سعر البنك</th>
-          <th style="padding:7px 6px">إجمالي البنك</th>
-          <th style="padding:7px 6px">التاريخ</th>
-        </tr>
-        <tr style="background:#e8edf5;font-size:9px;color:#666">
-          <th colspan="3"></th>
-          <th></th>
-          <th style="padding:3px">بدون ضريبة</th>
-          <th style="padding:3px">شامل الضريبة</th>
-          <th style="padding:3px">بدون ضريبة</th>
-          <th style="padding:3px">شامل الضريبة</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  </div>`;
+  return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>${title}</title>
+<style>
+  @page{size:A4 landscape;margin:10mm}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Arial,sans-serif}
+  body{padding:20px;direction:rtl}
+  table{width:100%;border-collapse:collapse;font-size:11px}
+  th,td{border:1px solid #ddd;padding:6px}
+  thead th{background:#1B6FC8;color:#fff}
+  .print-btn{position:fixed;top:10px;left:10px;padding:10px 18px;background:#1B6FC8;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;z-index:99}
+  @media print{.print-btn{display:none}}
+</style>
+</head>
+<body>
+  <button class="print-btn" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
+  <div style="text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #1B6FC8">
+    <h2 style="color:#1B6FC8;margin:0 0 4px;font-size:18px">🚗 ${title} — Al Hussaini Motors</h2>
+    <p style="color:#888;margin:0;font-size:11px">تاريخ الطباعة: ${dateStr} — عدد الصفوف: ${list.length}</p>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th style="text-align:right">نوع السيارة</th>
+        <th>الموديل</th>
+        <th>اللون</th>
+        <th>سعر القائمة</th>
+        <th>سعر الكاش</th>
+        <th>إجمالي الكاش</th>
+        <th>سعر البنك</th>
+        <th>إجمالي البنك</th>
+        <th>التاريخ</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+</body>
+</html>`;
+}
 
-  printArea.innerHTML=html;
-setTimeout(()=>{
-  window.print();
-  window.onafterprint=()=>{printArea.innerHTML='';window.onafterprint=null;};
-},250);
+window.printPDF=()=>{
+  if(currentRole!=='admin'){alert('⛔ الطباعة متاحة للمدير فقط');return;}
+  const list=getFiltered();
+  const w=window.open('','_blank');
+  if(!w){alert('يرجى السماح بالنوافذ المنبثقة (Popups) لهذا الموقع من إعدادات المتصفح');return;}
+  w.document.write(buildCatalogHTML(list,'كتالوج أسعار السيارات'));
+  w.document.close();
+  setTimeout(()=>{w.focus();w.print();},600);
+};
+
+window.printAllBrandsPDF=()=>{
+  if(currentRole!=='admin'){alert('⛔ الطباعة متاحة للمدير فقط');return;}
+  const list=cars.slice();
+  const w=window.open('','_blank');
+  if(!w){alert('يرجى السماح بالنوافذ المنبثقة (Popups) لهذا الموقع من إعدادات المتصفح');return;}
+  w.document.write(buildCatalogHTML(list,'كتالوج أسعار السيارات - كل الماركات'));
+  w.document.close();
+  setTimeout(()=>{w.focus();w.print();},600);
 };
 
 
