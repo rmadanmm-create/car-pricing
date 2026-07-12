@@ -1288,7 +1288,7 @@ function renderMobileCards(){
     return`<div class="car-card" id="mcard_${ci}">
       <div class="car-card-header" onclick="toggleCard('mcard_${ci}')">
         <div>
-          <div class="car-card-title">${c.modelAr||c.model||''}${c.modelEn?'<span style="font-size:inherit;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}</div>
+          <div class="car-card-title">${c.modelEn?'<span style="display:block;color:#1B6FC8;font-weight:700;text-transform:uppercase">'+c.modelEn+'</span>':''}${c.modelAr||c.model?'<span style="display:block;color:var(--text);font-weight:600">'+(c.modelAr||c.model)+'</span>':''}</div>
           <div class="car-card-sub">${getBrandEn(brand)} — ${c.year||''}</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
