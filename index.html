@@ -776,6 +776,7 @@ function renderAdminActions(){
     <button class="add-btn" onclick="openAddCar()">+ إضافة سيارة</button>
     <button class="add-btn green" onclick="openAddBrand()">+ إضافة ماركة</button>
     <button class="add-btn" style="background:#a32d2d" onclick="openDeleteBrand()">🗑️ حذف ماركة</button>
+    <button class="add-btn" style="background:#0f766e" onclick="openAddSeparator()">➕ إضافة فاصل</button>
     <button class="add-btn" style="background:#6A1B9A" onclick="printPDF()">🖨️ طباعة (حسب الفلتر الحالي)</button>
     <button class="add-btn" style="background:#0f4a8a" onclick="printAllBrandsPDF()">📄 PDF لكل الماركات</button>`;
 }
@@ -784,6 +785,11 @@ function getFiltered(){
   const q=(document.getElementById('search')||{}).value?.toLowerCase()||'';
   const yr=(document.getElementById('filter-year')||{}).value||'';
   return cars.filter(c=>{
+    if(c.isSeparator){
+      if(activeBrand!=='all'&&c.brand!==activeBrand)return false;
+      if(q)return false;
+      return true;
+    }
     if(activeBrand!=='all'&&c.brand!==activeBrand)return false;
     if(q&&!(c.modelAr||c.model||'').toLowerCase().includes(q)&&!(c.modelEn||'').toLowerCase().includes(q))return false;
     if(yr&&c.year!==yr)return false;
@@ -791,27 +797,18 @@ function getFiltered(){
   });
 }
 
-const FAMILY_COLORS=['#FFF3C4','#D9F2E0','#D6E9FA','#FBE3D6','#E7DFF5','#FCE4EC'];
-function familyKey(c){
-  const name=(c.modelAr||c.model||'').trim();
-  const first=name.split(/\s+/)[0]||'';
-  return (c.brand||'')+'|'+first;
-}
+const SEP_COLORS=['#FFF3C4','#D9F2E0','#D6E9FA','#FBE3D6','#E7DFF5','#FCE4EC'];
 window.renderCars=()=>{
   const list=getFiltered();
   const tbody=document.getElementById('car-table');
   if(!list.length){tbody.innerHTML=`<tr><td colspan="9"><div class="empty">لا توجد سيارات — اضغط إضافة سيارة</div></td></tr>`;return;}
   const colspanCount=currentRole==='admin'?10:9;
-  let lastFamily=null,familyIdx=-1;
   const htmlParts=[];
   list.forEach(c=>{
-    const fam=familyKey(c);
-    if(fam!==lastFamily){
-      lastFamily=fam;familyIdx++;
-      const bandColor=FAMILY_COLORS[familyIdx%FAMILY_COLORS.length];
-      const arWord=(c.modelAr||c.model||'').trim().split(/\s+/)[0]||'';
-      const enWord=(getModelEn(c)||'').trim().split(/\s+/)[0]||'';
-      htmlParts.push(`<tr><td colspan="${colspanCount}" style="background:${bandColor};padding:9px 12px;font-weight:700;font-size:13.5px;color:#3a3a3a;text-align:center;border-top:2px solid #c9c9c9;border-bottom:2px solid #c9c9c9;letter-spacing:.3px">${arWord}${enWord?' — '+enWord:''}</td></tr>`);
+    if(c.isSeparator){
+      const adminBtns=currentRole==='admin'?`<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%)"><button class="icon-btn edit-btn-tbl" onclick="openEditSeparator('${c.id}')" title="تعديل الفاصل">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')" title="حذف الفاصل">🗑️</button></span>`:'';
+      htmlParts.push(`<tr data-car-id="${c.id}"><td colspan="${colspanCount}" style="background:${c.sepColor||SEP_COLORS[0]};padding:9px 12px;font-weight:700;font-size:13.5px;color:#3a3a3a;text-align:center;border-top:2px solid #c9c9c9;border-bottom:2px solid #c9c9c9;position:relative">${c.sepText||''}${adminBtns}</td></tr>`);
+      return;
     }
     const brand=brands.find(b=>b.id===c.brand)||{name:c.brand||'',nameAr:c.brand,nameEn:''};
     const p=calc(c);
@@ -869,6 +866,59 @@ window.renderCars=()=>{
   });
   tbody.innerHTML=htmlParts.join('');
   setTimeout(renderMobileCards,0);
+};
+
+window.openAddSeparator=()=>{
+  editSepId=null;
+  document.getElementById('brand-modal-inner').innerHTML=sepForm(null);
+  document.getElementById('brand-modal').classList.add('open');
+};
+window.openEditSeparator=id=>{
+  const c=cars.find(x=>x.id===id);if(!c)return;
+  editSepId=id;
+  document.getElementById('brand-modal-inner').innerHTML=sepForm(c);
+  document.getElementById('brand-modal').classList.add('open');
+};
+let editSepId=null;
+function sepForm(c){
+  const chosen=c?.sepColor||SEP_COLORS[0];
+  const colorOpts=SEP_COLORS.map(col=>`<div onclick="selectSepColor('${col}')" id="sepcol_${col.replace('#','')}" style="width:28px;height:28px;border-radius:50%;background:${col};display:inline-block;margin:3px;cursor:pointer;border:3px solid ${col===chosen?'#1a1a2e':'transparent'}"></div>`).join('');
+  return`<h3>${c?'✏️ تعديل الفاصل':'➕ إضافة فاصل جديد'}</h3>
+  <div class="form-grid">
+    <div class="form-group full"><label>نص الفاصل (يظهر على الشاشة والجوال وملف PDF)</label><input id="sep-text" value="${c?.sepText||''}" placeholder="مثال: كامري — CAMRY"></div>
+  </div>
+  <div style="margin:10px 0">
+    <label style="font-size:11px;color:var(--muted);font-weight:600">لون الفاصل</label>
+    <div id="sep-color-row">${colorOpts}</div>
+  </div>
+  <input type="hidden" id="sep-color-val" value="${chosen}">
+  <div class="modal-footer">
+    ${c?`<button class="btn-del" onclick="deleteCar('${c.id}');document.getElementById('brand-modal').classList.remove('open')">🗑️ حذف</button>`:''}
+    <button class="btn-save" onclick="saveSeparator()">حفظ</button>
+    <button class="btn-cancel" onclick="document.getElementById('brand-modal').classList.remove('open')">إلغاء</button>
+  </div>`;
+}
+window.selectSepColor=col=>{
+  document.getElementById('sep-color-val').value=col;
+  SEP_COLORS.forEach(c=>{
+    const el=document.getElementById('sepcol_'+c.replace('#',''));
+    if(el)el.style.border='3px solid '+(c===col?'#1a1a2e':'transparent');
+  });
+};
+window.saveSeparator=async()=>{
+  const text=document.getElementById('sep-text').value.trim();
+  const color=document.getElementById('sep-color-val').value;
+  if(!text){alert('يرجى كتابة نص الفاصل');return;}
+  if(editSepId){
+    await sb.from('cars').update({sepText:text,sepColor:color}).eq('id',editSepId);
+  }else{
+    const id='sep_'+Date.now();
+    await sb.from('cars').insert({id,isSeparator:true,sepText:text,sepColor:color,brand:activeBrand,order:cars.length,createdAt:new Date().toISOString()});
+  }
+  const {data:cData}=await sb.from('cars').select('*').order('order');
+  cars=cData||[];
+  renderCars();
+  document.getElementById('brand-modal').classList.remove('open');
 };
 
 let selColorPrices={};
@@ -1163,15 +1213,10 @@ function buildCatalogHTML(list,title){
   const dateStr=now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear();
   const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
   let rows='';
-  let lastFamily=null,familyIdx=-1;
   list.forEach(c=>{
-    const fam=familyKey(c);
-    if(fam!==lastFamily){
-      lastFamily=fam;familyIdx++;
-      const bandColor=FAMILY_COLORS[familyIdx%FAMILY_COLORS.length];
-      const arWord=(c.modelAr||c.model||'').trim().split(/\s+/)[0]||'';
-      const enWord=(getModelEn(c)||'').trim().split(/\s+/)[0]||'';
-      rows+=`<tr><td colspan="9" style="background:${bandColor};padding:8px 10px;font-weight:700;text-align:center;border-top:2px solid #c9c9c9;border-bottom:2px solid #c9c9c9">${arWord}${enWord?' — '+enWord:''}</td></tr>`;
+    if(c.isSeparator){
+      rows+=`<tr><td colspan="9" style="background:${c.sepColor||SEP_COLORS[0]};padding:8px 10px;font-weight:700;text-align:center;border-top:2px solid #c9c9c9;border-bottom:2px solid #c9c9c9">${c.sepText||''}</td></tr>`;
+      return;
     }
     const brand=brands.find(b=>b.id===c.brand)||{nameAr:c.brand||'',nameEn:''};
     const colors=c.colors||[];
@@ -1280,6 +1325,13 @@ function renderMobileCards(){
   const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
   if(!list.length){el.innerHTML='<div class="empty">لا توجد سيارات</div>';return;}
   el.innerHTML=list.map((c,ci)=>{
+    if(c.isSeparator){
+      const adminBtns=currentRole==='admin'?`<span style="display:flex;gap:4px"><button class="icon-btn edit-btn-tbl" onclick="openEditSeparator('${c.id}')">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')">🗑️</button></span>`:'';
+      return`<div style="background:${c.sepColor||SEP_COLORS[0]};border-radius:10px;padding:10px 14px;margin-bottom:10px;font-weight:700;font-size:13px;color:#3a3a3a;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;position:relative;border:1px solid #c9c9c9">
+        <span>${c.sepText||''}</span>
+        ${adminBtns?`<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%)">${adminBtns}</span>`:''}
+      </div>`;
+    }
     const brand=brands.find(b=>b.id===c.brand)||{nameAr:c.brand||'',nameEn:''};
     const colors=c.colors||[];
     const colorPrices=c.colorPrices||{};
@@ -1584,7 +1636,7 @@ window.openAddClient=()=>{
 
 window.onClientBrandChange=()=>{
   const brandId=document.getElementById('cl-brand').value;
-  const brandCars=cars.filter(c=>c.brand===brandId);
+  const brandCars=cars.filter(c=>c.brand===brandId&&!c.isSeparator);
   const carSel=document.getElementById('cl-car');
   carSel.innerHTML='<option value="">-- اختر --</option>'+
     [...new Set(brandCars.map(c=>c.model))].map(m=>`<option value="${m}">${m}</option>`).join('');
@@ -1595,7 +1647,7 @@ window.onClientBrandChange=()=>{
 window.onClientCarChange=()=>{
   const brandId=document.getElementById('cl-brand').value;
   const model=document.getElementById('cl-car').value;
-  const matchCars=cars.filter(c=>c.brand===brandId&&c.model===model);
+  const matchCars=cars.filter(c=>c.brand===brandId&&!c.isSeparator&&c.model===model);
   const yearSel=document.getElementById('cl-year');
   yearSel.innerHTML='<option value="">--</option>'+matchCars.map(c=>`<option value="${c.id}_${c.year}">${c.year}</option>`).join('');
   yearSel.onchange=()=>{
@@ -1648,7 +1700,7 @@ window.openEditClient=async(id)=>{
   if(!c)return;
   window._editClientId=id;
   const bOpts=brands.map(b=>`<option value="${b.id}" ${b.id===c.brandId?'selected':''}>${b.nameAr||b.name}</option>`).join('');
-  const brandCars=cars.filter(x=>x.brand===c.brandId);
+  const brandCars=cars.filter(x=>x.brand===c.brandId&&!x.isSeparator);
   const carOpts=[...new Set(brandCars.map(x=>x.model))].map(m=>`<option value="${m}" ${m===c.carModel?'selected':''}>${m}</option>`).join('');
   const matchCars=brandCars.filter(x=>x.model===c.carModel);
   const yearOpts=matchCars.map(x=>`<option value="${x.id}_${x.year}" ${x.year===c.year?'selected':''}>${x.year}</option>`).join('');
