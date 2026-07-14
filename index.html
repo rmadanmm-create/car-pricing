@@ -916,12 +916,15 @@ window.saveSeparator=async()=>{
       if(error)throw error;
     }else{
       const id='sep_'+Date.now();
+      const visible=getFiltered();
+      const orders=cars.map(c=>Number(c.order)||0);
+      const newOrder=visible.length?(Number(visible[0].order)||0)-0.5:(orders.length?Math.min(...orders)-1:0);
       const{error}=await sb.from('cars').insert({
         id,brand:activeBrand,
         model:text,modelAr:text,modelEn:'',year:'__SEP__',
         buy:0,plateFee:0,date:'',notes:color,
         colors:[],colorAvail:{},colorPrices:{},
-        order:cars.length,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
+        order:newOrder,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
       });
       if(error)throw error;
     }
