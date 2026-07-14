@@ -791,11 +791,28 @@ function getFiltered(){
   });
 }
 
+const FAMILY_COLORS=['#FFF3C4','#D9F2E0','#D6E9FA','#FBE3D6','#E7DFF5','#FCE4EC'];
+function familyKey(c){
+  const name=(c.modelAr||c.model||'').trim();
+  const first=name.split(/\s+/)[0]||'';
+  return (c.brand||'')+'|'+first;
+}
 window.renderCars=()=>{
   const list=getFiltered();
   const tbody=document.getElementById('car-table');
   if(!list.length){tbody.innerHTML=`<tr><td colspan="9"><div class="empty">لا توجد سيارات — اضغط إضافة سيارة</div></td></tr>`;return;}
-  tbody.innerHTML=list.map(c=>{
+  const colspanCount=currentRole==='admin'?10:9;
+  let lastFamily=null,familyIdx=-1;
+  const htmlParts=[];
+  list.forEach(c=>{
+    const fam=familyKey(c);
+    if(fam!==lastFamily){
+      lastFamily=fam;familyIdx++;
+      const bandColor=FAMILY_COLORS[familyIdx%FAMILY_COLORS.length];
+      const arWord=(c.modelAr||c.model||'').trim().split(/\s+/)[0]||'';
+      const enWord=(getModelEn(c)||'').trim().split(/\s+/)[0]||'';
+      htmlParts.push(`<tr><td colspan="${colspanCount}" style="background:${bandColor};padding:9px 12px;font-weight:700;font-size:13.5px;color:#3a3a3a;text-align:center;border-top:2px solid #c9c9c9;border-bottom:2px solid #c9c9c9;letter-spacing:.3px">${arWord}${enWord?' — '+enWord:''}</td></tr>`);
+    }
     const brand=brands.find(b=>b.id===c.brand)||{name:c.brand||'',nameAr:c.brand,nameEn:''};
     const p=calc(c);
     const avail=c.colorAvail||{};
@@ -804,19 +821,20 @@ window.renderCars=()=>{
     const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
     const rowCount=Math.max(colors.length,1);
     const adminBtns=currentRole==='admin'?`<button class="icon-btn edit-btn-tbl" onclick="openEditCar('${c.id}')">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')">🗑️</button>`:'';
-    
+
     if(!colors.length){
-      return`<tr>
+      htmlParts.push(`<tr>
         <td class="price-buy buy-col" style="font-size:14px;font-weight:700">${fmt(p.buy)}</td>
         <td style="text-align:right">${c.modelEn?'<strong style="color:#1B6FC8;text-transform:uppercase">'+c.modelEn+'</strong><br>':''}${c.modelAr||c.model?'<span style="color:#1a1a2e">'+( c.modelAr||c.model)+'</span><br>':''}<span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>
         <td style="font-weight:600">${c.year||'-'}</td>
         <td colspan="4" style="color:#aaa;font-size:11px">لا توجد ألوان</td>
         <td style="font-size:10px;color:#888">${c.date||'-'}</td>
         ${currentRole==='admin'?`<td>${adminBtns}</td>`:''}
-      </tr>`;
+      </tr>`);
+      return;
     }
-    
-    return colors.map((h,i)=>{
+
+    htmlParts.push(colors.map((h,i)=>{
       const sepStyle=i===0?'border-top:3px solid #1B6FC8;':'';
       const pr=colorPrices[h]||0; // pr = سعر القائمة لهذا اللون
       const nm=COLORS.find(x=>x.hex===h)?.name||h;
@@ -847,8 +865,9 @@ window.renderCars=()=>{
         ${isFirst?`<td rowspan="${rowCount}" style="font-size:10px;color:#888;vertical-align:middle;text-align:center">${c.date||'-'}</td>`:''}
         ${isFirst&&currentRole==='admin'?`<td rowspan="${rowCount}" style="vertical-align:middle;text-align:center">${adminBtns}</td>`:''}
       </tr>`;
-    }).join('');
-  }).join('');
+    }).join(''));
+  });
+  tbody.innerHTML=htmlParts.join('');
   setTimeout(renderMobileCards,0);
 };
 
@@ -1144,7 +1163,16 @@ function buildCatalogHTML(list,title){
   const dateStr=now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear();
   const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
   let rows='';
+  let lastFamily=null,familyIdx=-1;
   list.forEach(c=>{
+    const fam=familyKey(c);
+    if(fam!==lastFamily){
+      lastFamily=fam;familyIdx++;
+      const bandColor=FAMILY_COLORS[familyIdx%FAMILY_COLORS.length];
+      const arWord=(c.modelAr||c.model||'').trim().split(/\s+/)[0]||'';
+      const enWord=(getModelEn(c)||'').trim().split(/\s+/)[0]||'';
+      rows+=`<tr><td colspan="9" style="background:${bandColor};padding:8px 10px;font-weight:700;text-align:center;border-top:2px solid #c9c9c9;border-bottom:2px solid #c9c9c9">${arWord}${enWord?' — '+enWord:''}</td></tr>`;
+    }
     const brand=brands.find(b=>b.id===c.brand)||{nameAr:c.brand||'',nameEn:''};
     const colors=c.colors||[];
     const colorPrices=c.colorPrices||{};
