@@ -781,11 +781,12 @@ function renderAdminActions(){
     <button class="add-btn" style="background:#0f4a8a" onclick="printAllBrandsPDF()">📄 PDF لكل الماركات</button>`;
 }
 
+function isSep(c){return c&&c.year==='__SEP__';}
 function getFiltered(){
   const q=(document.getElementById('search')||{}).value?.toLowerCase()||'';
   const yr=(document.getElementById('filter-year')||{}).value||'';
   return cars.filter(c=>{
-    if(c.isSeparator){
+    if(isSep(c)){
       if(activeBrand!=='all'&&c.brand!==activeBrand)return false;
       if(q)return false;
       return true;
@@ -805,9 +806,9 @@ window.renderCars=()=>{
   const colspanCount=currentRole==='admin'?10:9;
   const htmlParts=[];
   list.forEach(c=>{
-    if(c.isSeparator){
+    if(isSep(c)){
       const adminBtns=currentRole==='admin'?`<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%)"><button class="icon-btn edit-btn-tbl" onclick="openEditSeparator('${c.id}')" title="تعديل الفاصل">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')" title="حذف الفاصل">🗑️</button></span>`:'';
-      htmlParts.push(`<tr data-car-id="${c.id}"><td colspan="${colspanCount}" style="background:${c.sepColor||SEP_COLORS[0]};padding:9px 12px;font-weight:700;font-size:13.5px;color:#3a3a3a;text-align:center;border-top:2px solid #c9c9c9;border-bottom:2px solid #c9c9c9;position:relative">${c.sepText||''}${adminBtns}</td></tr>`);
+      htmlParts.push(`<tr data-car-id="${c.id}"><td colspan="${colspanCount}" style="background:${c.notes||SEP_COLORS[0]};padding:9px 12px;font-weight:700;font-size:13.5px;color:#3a3a3a;text-align:center;border-top:2px solid #c9c9c9;border-bottom:2px solid #c9c9c9;position:relative">${c.modelAr||''}${adminBtns}</td></tr>`);
       return;
     }
     const brand=brands.find(b=>b.id===c.brand)||{name:c.brand||'',nameAr:c.brand,nameEn:''};
@@ -881,11 +882,11 @@ window.openEditSeparator=id=>{
 };
 let editSepId=null;
 function sepForm(c){
-  const chosen=c?.sepColor||SEP_COLORS[0];
+  const chosen=c?.notes||SEP_COLORS[0];
   const colorOpts=SEP_COLORS.map(col=>`<div onclick="selectSepColor('${col}')" id="sepcol_${col.replace('#','')}" style="width:28px;height:28px;border-radius:50%;background:${col};display:inline-block;margin:3px;cursor:pointer;border:3px solid ${col===chosen?'#1a1a2e':'transparent'}"></div>`).join('');
   return`<h3>${c?'✏️ تعديل الفاصل':'➕ إضافة فاصل جديد'}</h3>
   <div class="form-grid">
-    <div class="form-group full"><label>نص الفاصل (يظهر على الشاشة والجوال وملف PDF)</label><input id="sep-text" value="${c?.sepText||''}" placeholder="مثال: كامري — CAMRY"></div>
+    <div class="form-group full"><label>نص الفاصل (يظهر على الشاشة والجوال وملف PDF)</label><input id="sep-text" value="${c?.modelAr||''}" placeholder="مثال: كامري — CAMRY"></div>
   </div>
   <div style="margin:10px 0">
     <label style="font-size:11px;color:var(--muted);font-weight:600">لون الفاصل</label>
@@ -909,16 +910,28 @@ window.saveSeparator=async()=>{
   const text=document.getElementById('sep-text').value.trim();
   const color=document.getElementById('sep-color-val').value;
   if(!text){alert('يرجى كتابة نص الفاصل');return;}
-  if(editSepId){
-    await sb.from('cars').update({sepText:text,sepColor:color}).eq('id',editSepId);
-  }else{
-    const id='sep_'+Date.now();
-    await sb.from('cars').insert({id,isSeparator:true,sepText:text,sepColor:color,brand:activeBrand,order:cars.length,createdAt:new Date().toISOString()});
+  try{
+    if(editSepId){
+      const{error}=await sb.from('cars').update({modelAr:text,model:text,notes:color}).eq('id',editSepId);
+      if(error)throw error;
+    }else{
+      const id='sep_'+Date.now();
+      const{error}=await sb.from('cars').insert({
+        id,brand:activeBrand,
+        model:text,modelAr:text,modelEn:'',year:'__SEP__',
+        buy:0,plateFee:0,date:'',notes:color,
+        colors:[],colorAvail:{},colorPrices:{},
+        order:cars.length,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
+      });
+      if(error)throw error;
+    }
+    const {data:cData}=await sb.from('cars').select('*').order('order');
+    cars=cData||[];
+    renderCars();
+    document.getElementById('brand-modal').classList.remove('open');
+  }catch(err){
+    alert('تعذّر حفظ الفاصل: '+(err.message||err));
   }
-  const {data:cData}=await sb.from('cars').select('*').order('order');
-  cars=cData||[];
-  renderCars();
-  document.getElementById('brand-modal').classList.remove('open');
 };
 
 let selColorPrices={};
@@ -1214,8 +1227,8 @@ function buildCatalogHTML(list,title){
   const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
   let rows='';
   list.forEach(c=>{
-    if(c.isSeparator){
-      rows+=`<tr><td colspan="9" style="background:${c.sepColor||SEP_COLORS[0]};padding:8px 10px;font-weight:700;text-align:center;border-top:2px solid #c9c9c9;border-bottom:2px solid #c9c9c9">${c.sepText||''}</td></tr>`;
+    if(isSep(c)){
+      rows+=`<tr><td colspan="9" style="background:${c.notes||SEP_COLORS[0]};padding:8px 10px;font-weight:700;text-align:center;border-top:2px solid #c9c9c9;border-bottom:2px solid #c9c9c9">${c.modelAr||''}</td></tr>`;
       return;
     }
     const brand=brands.find(b=>b.id===c.brand)||{nameAr:c.brand||'',nameEn:''};
@@ -1325,10 +1338,10 @@ function renderMobileCards(){
   const lightColors=['#FFFFFF','#C0C0C0','#D4B896','#CFB53B','#D4B000','#E8E8E8','#4CAF50','#4A90D9'];
   if(!list.length){el.innerHTML='<div class="empty">لا توجد سيارات</div>';return;}
   el.innerHTML=list.map((c,ci)=>{
-    if(c.isSeparator){
+    if(isSep(c)){
       const adminBtns=currentRole==='admin'?`<span style="display:flex;gap:4px"><button class="icon-btn edit-btn-tbl" onclick="openEditSeparator('${c.id}')">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')">🗑️</button></span>`:'';
-      return`<div style="background:${c.sepColor||SEP_COLORS[0]};border-radius:10px;padding:10px 14px;margin-bottom:10px;font-weight:700;font-size:13px;color:#3a3a3a;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;position:relative;border:1px solid #c9c9c9">
-        <span>${c.sepText||''}</span>
+      return`<div style="background:${c.notes||SEP_COLORS[0]};border-radius:10px;padding:10px 14px;margin-bottom:10px;font-weight:700;font-size:13px;color:#3a3a3a;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;position:relative;border:1px solid #c9c9c9">
+        <span>${c.modelAr||''}</span>
         ${adminBtns?`<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%)">${adminBtns}</span>`:''}
       </div>`;
     }
@@ -1636,7 +1649,7 @@ window.openAddClient=()=>{
 
 window.onClientBrandChange=()=>{
   const brandId=document.getElementById('cl-brand').value;
-  const brandCars=cars.filter(c=>c.brand===brandId&&!c.isSeparator);
+  const brandCars=cars.filter(c=>c.brand===brandId&&!isSep(c));
   const carSel=document.getElementById('cl-car');
   carSel.innerHTML='<option value="">-- اختر --</option>'+
     [...new Set(brandCars.map(c=>c.model))].map(m=>`<option value="${m}">${m}</option>`).join('');
@@ -1647,7 +1660,7 @@ window.onClientBrandChange=()=>{
 window.onClientCarChange=()=>{
   const brandId=document.getElementById('cl-brand').value;
   const model=document.getElementById('cl-car').value;
-  const matchCars=cars.filter(c=>c.brand===brandId&&!c.isSeparator&&c.model===model);
+  const matchCars=cars.filter(c=>c.brand===brandId&&!isSep(c)&&c.model===model);
   const yearSel=document.getElementById('cl-year');
   yearSel.innerHTML='<option value="">--</option>'+matchCars.map(c=>`<option value="${c.id}_${c.year}">${c.year}</option>`).join('');
   yearSel.onchange=()=>{
@@ -1700,7 +1713,7 @@ window.openEditClient=async(id)=>{
   if(!c)return;
   window._editClientId=id;
   const bOpts=brands.map(b=>`<option value="${b.id}" ${b.id===c.brandId?'selected':''}>${b.nameAr||b.name}</option>`).join('');
-  const brandCars=cars.filter(x=>x.brand===c.brandId&&!x.isSeparator);
+  const brandCars=cars.filter(x=>x.brand===c.brandId&&!isSep(x));
   const carOpts=[...new Set(brandCars.map(x=>x.model))].map(m=>`<option value="${m}" ${m===c.carModel?'selected':''}>${m}</option>`).join('');
   const matchCars=brandCars.filter(x=>x.model===c.carModel);
   const yearOpts=matchCars.map(x=>`<option value="${x.id}_${x.year}" ${x.year===c.year?'selected':''}>${x.year}</option>`).join('');
