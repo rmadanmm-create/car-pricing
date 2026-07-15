@@ -798,7 +798,7 @@ function getFiltered(){
   });
 }
 
-const SEP_COLORS=['#FFF3C4','#D9F2E0','#D6E9FA','#FBE3D6','#E7DFF5','#FCE4EC'];
+const SEP_COLORS=['#90CAF9','#FFD54F','#A5D6A7','#FFAB91','#CE93D8','#80DEEA'];
 window.renderCars=()=>{
   const list=getFiltered();
   const tbody=document.getElementById('car-table');
@@ -808,7 +808,7 @@ window.renderCars=()=>{
   list.forEach(c=>{
     if(isSep(c)){
       const adminBtns=currentRole==='admin'?`<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%)"><button class="icon-btn edit-btn-tbl" onclick="openEditSeparator('${c.id}')" title="تعديل الفاصل">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')" title="حذف الفاصل">🗑️</button></span>`:'';
-      htmlParts.push(`<tr data-car-id="${c.id}"><td colspan="${colspanCount}" style="background:${c.notes||SEP_COLORS[0]};padding:9px 12px;font-weight:700;font-size:13.5px;color:#3a3a3a;text-align:center;border-top:2px solid #c9c9c9;border-bottom:2px solid #c9c9c9;position:relative">${c.modelAr||''}${adminBtns}</td></tr>`);
+      htmlParts.push(`<tr data-car-id="${c.id}"><td colspan="${colspanCount}" style="background:${c.notes||SEP_COLORS[0]};padding:12px 12px;font-weight:800;font-size:17px;color:#1a1a2e;text-align:center;border-top:2px solid #c9c9c9;border-bottom:2px solid #c9c9c9;position:relative;letter-spacing:.3px">${c.modelAr||''}${adminBtns}</td></tr>`);
       return;
     }
     const brand=brands.find(b=>b.id===c.brand)||{name:c.brand||'',nameAr:c.brand,nameEn:''};
@@ -918,7 +918,7 @@ window.saveSeparator=async()=>{
       const id='sep_'+Date.now();
       const visible=getFiltered();
       const orders=cars.map(c=>Number(c.order)||0);
-      const newOrder=visible.length?(Number(visible[0].order)||0)-0.5:(orders.length?Math.min(...orders)-1:0);
+      const newOrder=visible.length?(Number(visible[visible.length-1].order)||0)+0.5:(orders.length?Math.max(...orders)+1:0);
       const{error}=await sb.from('cars').insert({
         id,brand:activeBrand,
         model:text,modelAr:text,modelEn:'',year:'__SEP__',
@@ -1231,7 +1231,7 @@ function buildCatalogHTML(list,title){
   let rows='';
   list.forEach(c=>{
     if(isSep(c)){
-      rows+=`<tr><td colspan="9" style="background:${c.notes||SEP_COLORS[0]};padding:8px 10px;font-weight:700;text-align:center;border-top:2px solid #c9c9c9;border-bottom:2px solid #c9c9c9">${c.modelAr||''}</td></tr>`;
+      rows+=`<tr><td colspan="9" style="background:${c.notes||SEP_COLORS[0]};padding:11px 10px;font-weight:800;font-size:15px;color:#1a1a2e;text-align:center;border-top:2px solid #c9c9c9;border-bottom:2px solid #c9c9c9">${c.modelAr||''}</td></tr>`;
       return;
     }
     const brand=brands.find(b=>b.id===c.brand)||{nameAr:c.brand||'',nameEn:''};
@@ -1343,7 +1343,7 @@ function renderMobileCards(){
   el.innerHTML=list.map((c,ci)=>{
     if(isSep(c)){
       const adminBtns=currentRole==='admin'?`<span style="display:flex;gap:4px"><button class="icon-btn edit-btn-tbl" onclick="openEditSeparator('${c.id}')">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')">🗑️</button></span>`:'';
-      return`<div style="background:${c.notes||SEP_COLORS[0]};border-radius:10px;padding:10px 14px;margin-bottom:10px;font-weight:700;font-size:13px;color:#3a3a3a;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;position:relative;border:1px solid #c9c9c9">
+      return`<div style="background:${c.notes||SEP_COLORS[0]};border-radius:10px;padding:13px 14px;margin-bottom:10px;font-weight:800;font-size:16px;color:#1a1a2e;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;position:relative;border:1px solid #c9c9c9;letter-spacing:.3px">
         <span>${c.modelAr||''}</span>
         ${adminBtns?`<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%)">${adminBtns}</span>`:''}
       </div>`;
