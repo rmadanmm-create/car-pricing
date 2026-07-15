@@ -798,7 +798,7 @@ function getFiltered(){
   });
 }
 
-const SEP_COLORS=['#90CAF9','#FFD54F','#A5D6A7','#FFAB91','#CE93D8','#80DEEA'];
+const SEP_COLOR='#1B6FC8';
 window.renderCars=()=>{
   const list=getFiltered();
   const tbody=document.getElementById('car-table');
@@ -807,8 +807,13 @@ window.renderCars=()=>{
   const htmlParts=[];
   list.forEach(c=>{
     if(isSep(c)){
-      const adminBtns=currentRole==='admin'?`<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%)"><button class="icon-btn edit-btn-tbl" onclick="openEditSeparator('${c.id}')" title="تعديل الفاصل">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')" title="حذف الفاصل">🗑️</button></span>`:'';
-      htmlParts.push(`<tr data-car-id="${c.id}"><td colspan="${colspanCount}" style="background:${c.notes||SEP_COLORS[0]};padding:12px 12px;font-weight:800;font-size:17px;color:#1a1a2e;text-align:center;border-top:2px solid #c9c9c9;border-bottom:2px solid #c9c9c9;position:relative;letter-spacing:.3px">${c.modelAr||''}${adminBtns}</td></tr>`);
+      const adminBtns=currentRole==='admin'?`<button class="icon-btn edit-btn-tbl" onclick="openEditSeparator('${c.id}')" title="تعديل الفاصل" style="color:#fff">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')" title="حذف الفاصل" style="color:#fff">🗑️</button>`:'';
+      htmlParts.push(`<tr data-car-id="${c.id}"><td colspan="${colspanCount}" style="background:${SEP_COLOR};padding:0;border-top:2px solid #12578f;border-bottom:2px solid #12578f">
+        <div style="position:sticky;left:0;right:0;margin:0 auto;width:fit-content;max-width:92vw;padding:12px 20px;display:flex;align-items:center;justify-content:center;gap:10px;white-space:nowrap">
+          <span style="font-weight:800;font-size:17px;color:#fff;letter-spacing:.3px">${c.modelAr||''}</span>
+          ${adminBtns}
+        </div>
+      </td></tr>`);
       return;
     }
     const brand=brands.find(b=>b.id===c.brand)||{name:c.brand||'',nameAr:c.brand,nameEn:''};
@@ -882,37 +887,22 @@ window.openEditSeparator=id=>{
 };
 let editSepId=null;
 function sepForm(c){
-  const chosen=c?.notes||SEP_COLORS[0];
-  const colorOpts=SEP_COLORS.map(col=>`<div onclick="selectSepColor('${col}')" id="sepcol_${col.replace('#','')}" style="width:28px;height:28px;border-radius:50%;background:${col};display:inline-block;margin:3px;cursor:pointer;border:3px solid ${col===chosen?'#1a1a2e':'transparent'}"></div>`).join('');
   return`<h3>${c?'✏️ تعديل الفاصل':'➕ إضافة فاصل جديد'}</h3>
   <div class="form-grid">
     <div class="form-group full"><label>نص الفاصل (يظهر على الشاشة والجوال وملف PDF)</label><input id="sep-text" value="${c?.modelAr||''}" placeholder="مثال: كامري — CAMRY"></div>
   </div>
-  <div style="margin:10px 0">
-    <label style="font-size:11px;color:var(--muted);font-weight:600">لون الفاصل</label>
-    <div id="sep-color-row">${colorOpts}</div>
-  </div>
-  <input type="hidden" id="sep-color-val" value="${chosen}">
   <div class="modal-footer">
     ${c?`<button class="btn-del" onclick="deleteCar('${c.id}');document.getElementById('brand-modal').classList.remove('open')">🗑️ حذف</button>`:''}
     <button class="btn-save" onclick="saveSeparator()">حفظ</button>
     <button class="btn-cancel" onclick="document.getElementById('brand-modal').classList.remove('open')">إلغاء</button>
   </div>`;
 }
-window.selectSepColor=col=>{
-  document.getElementById('sep-color-val').value=col;
-  SEP_COLORS.forEach(c=>{
-    const el=document.getElementById('sepcol_'+c.replace('#',''));
-    if(el)el.style.border='3px solid '+(c===col?'#1a1a2e':'transparent');
-  });
-};
 window.saveSeparator=async()=>{
   const text=document.getElementById('sep-text').value.trim();
-  const color=document.getElementById('sep-color-val').value;
   if(!text){alert('يرجى كتابة نص الفاصل');return;}
   try{
     if(editSepId){
-      const{error}=await sb.from('cars').update({modelAr:text,model:text,notes:color}).eq('id',editSepId);
+      const{error}=await sb.from('cars').update({modelAr:text,model:text}).eq('id',editSepId);
       if(error)throw error;
     }else{
       const id='sep_'+Date.now();
@@ -922,7 +912,7 @@ window.saveSeparator=async()=>{
       const{error}=await sb.from('cars').insert({
         id,brand:activeBrand,
         model:text,modelAr:text,modelEn:'',year:'__SEP__',
-        buy:0,plateFee:0,date:'',notes:color,
+        buy:0,plateFee:0,date:'',notes:'',
         colors:[],colorAvail:{},colorPrices:{},
         order:newOrder,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
       });
@@ -1231,7 +1221,7 @@ function buildCatalogHTML(list,title){
   let rows='';
   list.forEach(c=>{
     if(isSep(c)){
-      rows+=`<tr><td colspan="9" style="background:${c.notes||SEP_COLORS[0]};padding:11px 10px;font-weight:800;font-size:15px;color:#1a1a2e;text-align:center;border-top:2px solid #c9c9c9;border-bottom:2px solid #c9c9c9">${c.modelAr||''}</td></tr>`;
+      rows+=`<tr><td colspan="9" style="background:${SEP_COLOR};padding:11px 10px;font-weight:800;font-size:15px;color:#fff;text-align:center;border-top:2px solid #12578f;border-bottom:2px solid #12578f">${c.modelAr||''}</td></tr>`;
       return;
     }
     const brand=brands.find(b=>b.id===c.brand)||{nameAr:c.brand||'',nameEn:''};
@@ -1342,8 +1332,8 @@ function renderMobileCards(){
   if(!list.length){el.innerHTML='<div class="empty">لا توجد سيارات</div>';return;}
   el.innerHTML=list.map((c,ci)=>{
     if(isSep(c)){
-      const adminBtns=currentRole==='admin'?`<span style="display:flex;gap:4px"><button class="icon-btn edit-btn-tbl" onclick="openEditSeparator('${c.id}')">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')">🗑️</button></span>`:'';
-      return`<div style="background:${c.notes||SEP_COLORS[0]};border-radius:10px;padding:13px 14px;margin-bottom:10px;font-weight:800;font-size:16px;color:#1a1a2e;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;position:relative;border:1px solid #c9c9c9;letter-spacing:.3px">
+      const adminBtns=currentRole==='admin'?`<span style="display:flex;gap:4px"><button class="icon-btn edit-btn-tbl" onclick="openEditSeparator('${c.id}')" style="color:#fff">✏️</button><button class="icon-btn del-btn" onclick="deleteCar('${c.id}')" style="color:#fff">🗑️</button></span>`:'';
+      return`<div style="background:${SEP_COLOR};border-radius:10px;padding:13px 14px;margin-bottom:10px;font-weight:800;font-size:16px;color:#fff;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;position:relative;letter-spacing:.3px">
         <span>${c.modelAr||''}</span>
         ${adminBtns?`<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%)">${adminBtns}</span>`:''}
       </div>`;
