@@ -151,6 +151,25 @@ tr:hover td{background:#f9fafb}
 tr.drag-over td{border-top:3px solid var(--blue)!important;background:#e8f0fb!important}
 tr[data-car-id]{cursor:grab}
 tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
+
+/* ===== إضافات: الترحيب / اسم الموظف / الشعار / رسالة اليوم / إشعارات الأسعار ===== */
+.clock-bar{gap:.75rem}
+.clock-side{display:flex;flex-direction:column}
+.greeting-line{font-size:12px;font-weight:600;color:var(--blue);margin-top:2px}
+.employee-line{font-size:11px;color:var(--muted);margin-top:1px}
+.topbar-logo{height:26px;max-width:80px;object-fit:contain;border-radius:4px;background:#fff;padding:2px}
+.auth-logo-img{height:56px;max-width:180px;object-fit:contain;margin:0 auto .5rem;display:block}
+.daily-box{flex:1;min-width:140px;max-width:340px;border-radius:12px;padding:8px 14px;text-align:center;font-size:13px;font-weight:700;position:relative;cursor:default;transition:filter .15s}
+.daily-box .db-edit{position:absolute;top:2px;left:4px;background:rgba(255,255,255,.3);border:none;border-radius:6px;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:20px;color:inherit}
+.daily-box .db-edit:hover{background:rgba(255,255,255,.5)}
+.logo-upload-btn{background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 10px;border-radius:8px;cursor:pointer;font-size:11px}
+.logo-upload-btn:hover{background:rgba(255,255,255,.25)}
+.color65-grid{display:grid;grid-template-columns:repeat(11,1fr);gap:5px;margin:.5rem 0}
+.color65-grid div{width:100%;aspect-ratio:1;border-radius:6px;cursor:pointer;border:2px solid transparent}
+.color65-grid div.sel{border-color:var(--blue);box-shadow:0 0 0 2px #fff inset}
+.txtcolor-row{display:flex;gap:14px;align-items:center;margin:.5rem 0;font-size:13px}
+.notif-bar{cursor:default}
+.notif-bar .notif-sub{display:block;font-size:11px;font-weight:400;opacity:.9;margin-top:2px}
 </style>
 </head>
 <body>
@@ -162,7 +181,8 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
 </div>
 <div id="auth-screen">
   <div class="auth-card">
-    <div class="auth-logo">🚗</div>
+    <img id="auth-logo-img" class="auth-logo-img" style="display:none">
+    <div class="auth-logo" id="auth-logo-emoji">🚗</div>
     <div class="auth-title">كتالوج أسعار السيارات</div>
     <div class="auth-sub">سجّل دخولك للمتابعة</div>
     <div class="field"><label>البريد الإلكتروني</label><input id="login-email" type="email" placeholder="example@email.com" autocomplete="email"></div>
@@ -174,15 +194,27 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
 
 <div id="app-screen">
   <div class="topbar">
-    <div class="topbar-title">🚗 كتالوج أسعار السيارات</div>
+    <div class="topbar-title" id="topbar-title" style="display:flex;align-items:center;gap:8px">
+      <img id="company-logo" class="topbar-logo" style="display:none">
+      <span id="topbar-title-text">🚗 كتالوج أسعار السيارات</span>
+    </div>
     <div class="topbar-right">
+      <button class="logo-upload-btn" id="logo-upload-btn" style="display:none" onclick="openLogoUploader()">🖼️ شعار الشركة</button>
       <span class="role-badge" id="role-badge"></span>
       <button class="logout-btn" onclick="doLogout()">خروج</button>
     </div>
   </div>
   <div class="clock-bar">
-    <div><div class="clock-time" id="clock">00:00:00</div></div>
-    <div style="text-align:left"><div class="clock-date" id="clock-date"></div></div>
+    <div class="clock-side"><div class="clock-time" id="clock">00:00:00</div></div>
+    <div class="daily-box" id="daily-box" style="display:none">
+      <button class="db-edit" id="daily-box-edit" style="display:none" onclick="openDailyMsgEditor()">✏️</button>
+      <span id="daily-box-text"></span>
+    </div>
+    <div class="clock-side" style="text-align:left">
+      <div class="clock-date" id="clock-date"></div>
+      <div class="greeting-line" id="greeting-line"></div>
+      <div class="employee-line" id="employee-line"></div>
+    </div>
   </div>
   <div class="main">
     <div class="tabs">
@@ -387,6 +419,8 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
 <div class="modal-overlay" id="car-modal"><div class="modal" id="car-modal-inner"></div></div>
 <div class="modal-overlay" id="user-modal"><div class="modal" id="user-modal-inner"></div></div>
 <div class="modal-overlay" id="brand-modal"><div class="modal" id="brand-modal-inner"></div></div>
+<div class="modal-overlay" id="dailymsg-modal"><div class="modal" id="dailymsg-modal-inner"></div></div>
+<div class="modal-overlay" id="logo-modal"><div class="modal" id="logo-modal-inner"></div></div>
 
 <script type="module">
 import{createClient}from'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
@@ -410,6 +444,32 @@ const COLORS=[
   {name:'Purple',hex:'#6A1B9A'},{name:'Yellow',hex:'#D4B000'}
 ];
 const VAT=0.15,CASH_M=-1500,BANK_M=2500,ISSUE=0;
+
+// ===== لوحة 65 لون (فاتح وغامق) لصندوق رسالة اليوم =====
+function hslHex(h,s,l){
+  s/=100;l/=100;
+  const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l);
+  const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+  const toHex=x=>Math.round(255*x).toString(16).padStart(2,'0');
+  return`#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+}
+const PALETTE65=(()=>{
+  const arr=[];
+  for(let i=0;i<33;i++)arr.push(hslHex(Math.round(i*(360/33)),65,82)); // فاتح
+  for(let i=0;i<32;i++)arr.push(hslHex(Math.round(i*(360/32)),55,30)); // غامق
+  return arr;
+})();
+
+// ===== إعدادات عامة (شعار الشركة / رسالة اليوم) عبر جدول settings =====
+async function getSetting(key){
+  const{data,error}=await sb.from('settings').select('value').eq('key',key).maybeSingle();
+  if(error||!data)return null;
+  return data.value;
+}
+async function setSetting(key,value){
+  const{error}=await sb.from('settings').upsert({key,value,updated_at:new Date().toISOString()});
+  return!error;
+}
 
 // قاموس ترجمة أسماء الماركات
 const BRAND_TRANSLATE={
@@ -697,14 +757,27 @@ function calc(c){
 function startClock(){
   const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  setInterval(()=>{
+  const tick=()=>{
     const n=new Date();
     const el=document.getElementById('clock');
     const hr=n.getHours();const h12=hr%12||12;const ampm=hr<12?'AM':'PM';
     if(el)el.textContent=String(h12).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0')+' '+ampm;
     const de=document.getElementById('clock-date');
     if(de)de.textContent=days[n.getDay()]+', '+n.getDate()+' '+months[n.getMonth()]+' '+n.getFullYear();
-  },1000);
+    const ge=document.getElementById('greeting-line');
+    if(ge){
+      let g;
+      if(hr>=5&&hr<12)g='☀️ صباح الخير';
+      else if(hr>=12&&hr<17)g='🌤️ مساء الخير';
+      else if(hr>=17&&hr<21)g='🌇 مساء الخير';
+      else g='🌙 مساء الخير';
+      ge.textContent=g;
+    }
+    const ee=document.getElementById('employee-line');
+    if(ee)ee.textContent=currentUser?.name?('👤 '+currentUser.name):'';
+  };
+  tick();
+  setInterval(tick,1000);
 }
 
 window.doLogin=async()=>{
@@ -731,9 +804,15 @@ window.doLogin=async()=>{
   if(currentRole==='admin'){
     document.getElementById('users-tab-btn').style.display='';
     document.getElementById('actions-col').style.display='';
+    document.getElementById('logo-upload-btn').style.display='';
+    document.getElementById('daily-box-edit').style.display='';
   }
   startClock();
   await loadData();
+  await applyCompanyLogo();
+  await applyDailyMessage();
+  await checkPriceNotif();
+  subscribePriceNotifs();
 };
 window.doLogout=()=>{
   currentUser=null;currentRole=null;
@@ -1069,8 +1148,18 @@ window.saveCar=async()=>{
       colors:selColors,colorAvail:selColorAvail,colorPrices:selColorPrices,
       updatedAt:new Date().toISOString()};
     if(editCarId){
+      const oldCar=cars.find(x=>x.id===editCarId);
+      const oldPrices=oldCar?.colorPrices||{};
+      const priceChanges=[];
+      Object.keys(selColorPrices).forEach(hex=>{
+        const oldP=oldPrices[hex]||0,newP=selColorPrices[hex]||0;
+        if(oldP&&newP&&oldP!==newP){
+          priceChanges.push({color_name:COLORS.find(c=>c.hex===hex)?.name||hex,old_price:oldP,new_price:newP});
+        }
+      });
       const {error}=await sb.from('cars').update(d2).eq('id',editCarId);
       if(error)throw error;
+      if(priceChanges.length)await recordPriceUpdate(modelAr||model,priceChanges);
     }else{
       const id='car_'+Date.now();
       const {error}=await sb.from('cars').insert({...d2,id,order:cars.length,createdAt:new Date().toISOString()});
@@ -1763,13 +1852,169 @@ window.deleteClient=async(id)=>{
 };
 
 
-// === نظام الإشعارات ===
-function checkPriceNotif(){}
+// === نظام إشعارات تحديث الأسعار ===
+let notifQueue=[];
+function fmtNotifTime(iso){
+  const d=new Date(iso);
+  const hr=d.getHours();const h12=hr%12||12;const ampm=hr<12?'ص':'م';
+  return String(h12).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+' '+ampm;
+}
+function showNextNotif(){
+  if(!notifQueue.length)return;
+  const n=notifQueue[0];
+  const dir=n.new_price>n.old_price?'⬆️':'⬇️';
+  document.getElementById('notif-msg').innerHTML=
+    `🔔 تحديث سعر: ${n.car_name}${n.color_name?' ('+n.color_name+')':''}<span class="notif-sub">${dir} ${fmt(n.old_price)} ← ${fmt(n.new_price)} ر.س &nbsp;|&nbsp; ${fmtNotifTime(n.changed_at)} &nbsp;|&nbsp; بواسطة ${n.changed_by||'-'}</span>`;
+  document.getElementById('notif-bar').style.display='flex';
+}
 window.dismissNotif=()=>{
-  document.getElementById('notif-bar').style.display='none';
-  if(window._notifLastSeen)localStorage.setItem(window._notifLastSeen,Date.now().toString());
+  notifQueue.shift();
+  if(notifQueue.length){showNextNotif();}
+  else{document.getElementById('notif-bar').style.display='none';}
+  localStorage.setItem('priceNotifLastSeen_'+(currentUser?.email||''),Date.now().toString());
 };
-async function recordPriceUpdate(){}
+async function checkPriceNotif(){
+  const lastSeenKey='priceNotifLastSeen_'+(currentUser?.email||'');
+  const lastSeen=localStorage.getItem(lastSeenKey);
+  let q=sb.from('price_log').select('*').order('changed_at',{ascending:true}).limit(20);
+  if(lastSeen)q=q.gt('changed_at',new Date(parseInt(lastSeen)).toISOString());
+  const{data,error}=await q;
+  if(error||!data||!data.length)return;
+  // لا نزعج الموظف بتغييراته هو نفسه
+  const relevant=data.filter(r=>r.changed_by!==currentUser?.name);
+  if(!relevant.length){
+    localStorage.setItem(lastSeenKey,Date.now().toString());
+    return;
+  }
+  notifQueue=notifQueue.concat(relevant);
+  showNextNotif();
+}
+async function recordPriceUpdate(carLabel,changes){
+  // changes: [{color_name,old_price,new_price}]
+  if(!changes||!changes.length)return;
+  const rows=changes.map(c=>({
+    car_name:carLabel,
+    color_name:c.color_name||'',
+    old_price:c.old_price,
+    new_price:c.new_price,
+    changed_by:currentUser?.name||currentUser?.email||'',
+    changed_at:new Date().toISOString()
+  }));
+  await sb.from('price_log').insert(rows);
+}
+function subscribePriceNotifs(){
+  sb.channel('price_log_realtime')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'price_log'},payload=>{
+      const r=payload.new;
+      if(r.changed_by===currentUser?.name)return; // لا إشعار لمن قام بالتغيير نفسه
+      notifQueue.push(r);
+      showNextNotif();
+      localStorage.setItem('priceNotifLastSeen_'+(currentUser?.email||''),Date.now().toString());
+    })
+    .subscribe();
+}
+// === شعار الشركة ===
+async function applyCompanyLogo(){
+  const logo=await getSetting('logo');
+  const img=document.getElementById('company-logo');
+  if(logo){
+    img.src=logo;img.style.display='';
+    document.getElementById('topbar-title-text').style.display='none';
+  }
+}
+async function applyAuthLogo(){
+  const logo=await getSetting('logo');
+  if(logo){
+    document.getElementById('auth-logo-img').src=logo;
+    document.getElementById('auth-logo-img').style.display='block';
+    document.getElementById('auth-logo-emoji').style.display='none';
+  }
+}
+window.openLogoUploader=()=>{
+  document.getElementById('logo-modal-inner').innerHTML=`<h3>🖼️ شعار الشركة</h3>
+  <div class="form-grid">
+    <div class="form-group full"><label>اختر صورة الشعار (PNG/JPG، يفضل خلفية شفافة)</label>
+    <input type="file" id="logo-file" accept="image/*"></div>
+  </div>
+  <div class="err" id="logo-err"></div>
+  <div class="modal-footer">
+    <button class="btn-save" onclick="saveLogo()">حفظ الشعار</button>
+    <button class="btn-cancel" onclick="document.getElementById('logo-modal').classList.remove('open')">إلغاء</button>
+  </div>`;
+  document.getElementById('logo-modal').classList.add('open');
+};
+window.saveLogo=async()=>{
+  const f=document.getElementById('logo-file').files[0];
+  const err=document.getElementById('logo-err');
+  if(!f){err.textContent='يرجى اختيار صورة';return;}
+  if(f.size>500*1024){err.textContent='حجم الصورة كبير، يرجى اختيار صورة أصغر من 500KB';return;}
+  const reader=new FileReader();
+  reader.onload=async()=>{
+    const ok=await setSetting('logo',reader.result);
+    if(!ok){err.textContent='حدث خطأ أثناء الحفظ';return;}
+    document.getElementById('logo-modal').classList.remove('open');
+    await applyCompanyLogo();
+    alert('تم حفظ الشعار ✓');
+  };
+  reader.readAsDataURL(f);
+};
+
+// === رسالة اليوم (عروض / حكمة / احتفال) ===
+async function applyDailyMessage(){
+  const msg=await getSetting('daily_message');
+  const box=document.getElementById('daily-box');
+  if(msg&&msg.text){
+    box.style.display='flex';box.style.alignItems='center';box.style.justifyContent='center';
+    box.style.background=msg.bg||'#DCEEFB';
+    box.style.color=msg.textColor==='white'?'#fff':'#1a1a2e';
+    document.getElementById('daily-box-text').textContent=msg.text;
+  }else{
+    box.style.display=currentRole==='admin'?'flex':'none';
+    if(currentRole==='admin'){
+      box.style.background='#f0f0f0';box.style.color='#888';
+      document.getElementById('daily-box-text').textContent='اضغط ✏️ لإضافة رسالة اليوم';
+    }
+  }
+}
+window.openDailyMsgEditor=async()=>{
+  const current=await getSetting('daily_message')||{text:'',bg:PALETTE65[0],textColor:'black'};
+  document.getElementById('dailymsg-modal-inner').innerHTML=`<h3>📝 رسالة اليوم (عروض / حكمة / احتفال)</h3>
+  <div class="form-grid">
+    <div class="form-group full"><label>النص</label><input id="dm-text" value="${(current.text||'').replace(/"/g,'&quot;')}" placeholder="مثال: 🎉 عرض اليوم على تويوتا كامري"></div>
+  </div>
+  <label style="font-size:12px;font-weight:600;color:#888">لون الخلفية</label>
+  <div class="color65-grid" id="dm-color-grid"></div>
+  <div class="txtcolor-row">
+    <label style="font-size:12px;font-weight:600;color:#888">لون الكتابة:</label>
+    <label><input type="radio" name="dm-txtcolor" value="black" ${current.textColor!=='white'?'checked':''}> أسود</label>
+    <label><input type="radio" name="dm-txtcolor" value="white" ${current.textColor==='white'?'checked':''}> أبيض</label>
+  </div>
+  <div class="err" id="dm-err"></div>
+  <div class="modal-footer">
+    <button class="btn-save" onclick="saveDailyMsg()">حفظ</button>
+    <button class="btn-cancel" onclick="document.getElementById('dailymsg-modal').classList.remove('open')">إلغاء</button>
+  </div>`;
+  const grid=document.getElementById('dm-color-grid');
+  window._dmSelColor=current.bg||PALETTE65[0];
+  grid.innerHTML=PALETTE65.map(hex=>`<div style="background:${hex}" class="${hex===window._dmSelColor?'sel':''}" data-hex="${hex}" onclick="pickDmColor('${hex}')"></div>`).join('');
+  document.getElementById('dailymsg-modal').classList.add('open');
+};
+window.pickDmColor=hex=>{
+  window._dmSelColor=hex;
+  document.querySelectorAll('#dm-color-grid div').forEach(d=>d.classList.toggle('sel',d.dataset.hex===hex));
+};
+window.saveDailyMsg=async()=>{
+  const text=document.getElementById('dm-text').value.trim();
+  const textColor=document.querySelector('input[name="dm-txtcolor"]:checked')?.value||'black';
+  const err=document.getElementById('dm-err');
+  if(!text){err.textContent='يرجى كتابة نص الرسالة';return;}
+  const ok=await setSetting('daily_message',{text,bg:window._dmSelColor||PALETTE65[0],textColor,updatedAt:new Date().toISOString()});
+  if(!ok){err.textContent='حدث خطأ أثناء الحفظ';return;}
+  document.getElementById('dailymsg-modal').classList.remove('open');
+  await applyDailyMessage();
+  alert('تم حفظ رسالة اليوم ✓');
+};
+
 // === السحب والإفلات ===
 let dragCarId=null;
 function enableDragDrop(){
@@ -1815,6 +2060,9 @@ function enableDragDrop(){
   tbody.querySelectorAll('tr[data-car-id]').forEach(tr=>{tr.draggable=true;});
 }
 // enableDragDrop يُستدعى بعد renderCars
+
+// تطبيق شعار الشركة على شاشة الدخول عند تحميل الصفحة
+applyAuthLogo();
 </script>
 </body>
 </html>
