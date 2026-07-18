@@ -160,6 +160,7 @@ tr[data-car-id]:active{cursor:grabbing;opacity:0.7}
 .topbar-logo{height:26px;max-width:80px;object-fit:contain;border-radius:4px;background:#fff;padding:2px}
 .auth-logo-img{height:56px;max-width:180px;object-fit:contain;margin:0 auto .5rem;display:block}
 .daily-box{flex:1;min-width:140px;max-width:340px;border-radius:12px;padding:8px 14px;text-align:center;font-size:13px;font-weight:700;position:relative;cursor:default;transition:filter .15s}
+@media (min-width:1024px){.daily-box{max-width:560px;min-width:320px;font-size:14px;padding:10px 20px}}
 .daily-box .db-edit{position:absolute;top:2px;left:4px;background:rgba(255,255,255,.3);border:none;border-radius:6px;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:20px;color:inherit}
 .daily-box .db-edit:hover{background:rgba(255,255,255,.5)}
 .logo-upload-btn{background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 10px;border-radius:8px;cursor:pointer;font-size:11px}
@@ -780,6 +781,49 @@ function startClock(){
   setInterval(tick,1000);
 }
 
+async function enterApp(){
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('app-screen').style.display='flex';
+  document.getElementById('role-badge').textContent=currentRole==='admin'?'مدير 👑':'موظف - مشاهدة فقط';
+  if(currentRole==='admin'){
+    document.getElementById('users-tab-btn').style.display='';
+    document.getElementById('actions-col').style.display='';
+    document.getElementById('logo-upload-btn').style.display='';
+    document.getElementById('daily-box-edit').style.display='';
+  }
+  startClock();
+  await loadData();
+  await applyCompanyLogo();
+  await applyDailyMessage();
+  await checkPriceNotif();
+  subscribePriceNotifs();
+}
+const SESSION_KEY='carapp_session_v1';
+function saveSession(email,pass){
+  try{localStorage.setItem(SESSION_KEY,JSON.stringify({email,pass}));}catch(e){}
+}
+function clearSession(){
+  try{localStorage.removeItem(SESSION_KEY);}catch(e){}
+}
+async function tryAutoLogin(){
+  let raw;
+  try{raw=localStorage.getItem(SESSION_KEY);}catch(e){return false;}
+  if(!raw)return false;
+  let s;
+  try{s=JSON.parse(raw);}catch(e){clearSession();return false;}
+  if(!s?.email||!s?.pass)return false;
+  const u=USERS[s.email];
+  if(u&&u.pass===s.pass){
+    currentUser={email:s.email,name:u.name};
+    currentRole=u.role;
+    return true;
+  }
+  const {data,error}=await sb.from('users').select('*').eq('email',s.email).eq('pass',s.pass).single();
+  if(error||!data){clearSession();return false;} // تم حذف المستخدم أو تغيّرت كلمة المرور
+  currentUser={email:s.email,name:data.name};
+  currentRole=data.role||'viewer';
+  return true;
+}
 window.doLogin=async()=>{
   const email=document.getElementById('login-email').value.trim();
   const pass=document.getElementById('login-pass').value;
@@ -798,24 +842,12 @@ window.doLogin=async()=>{
     currentUser={email,name:data.name};
     currentRole=data.role||'viewer';
   }
-  document.getElementById('auth-screen').style.display='none';
-  document.getElementById('app-screen').style.display='flex';
-  document.getElementById('role-badge').textContent=currentRole==='admin'?'مدير 👑':'موظف - مشاهدة فقط';
-  if(currentRole==='admin'){
-    document.getElementById('users-tab-btn').style.display='';
-    document.getElementById('actions-col').style.display='';
-    document.getElementById('logo-upload-btn').style.display='';
-    document.getElementById('daily-box-edit').style.display='';
-  }
-  startClock();
-  await loadData();
-  await applyCompanyLogo();
-  await applyDailyMessage();
-  await checkPriceNotif();
-  subscribePriceNotifs();
+  saveSession(email,pass);
+  await enterApp();
 };
 window.doLogout=()=>{
   currentUser=null;currentRole=null;
+  clearSession();
   document.getElementById('auth-screen').style.display='flex';
   document.getElementById('app-screen').style.display='none';
 };
@@ -866,7 +898,7 @@ function getFiltered(){
   const yr=(document.getElementById('filter-year')||{}).value||'';
   return cars.filter(c=>{
     if(isSep(c)){
-      if(activeBrand!=='all'&&c.brand!==activeBrand)return false;
+      if(activeBrand!=='all'&&c.brand!=='all'&&c.brand!==activeBrand)return false;
       if(q)return false;
       return true;
     }
@@ -2061,8 +2093,12 @@ function enableDragDrop(){
 }
 // enableDragDrop يُستدعى بعد renderCars
 
-// تطبيق شعار الشركة على شاشة الدخول عند تحميل الصفحة
-applyAuthLogo();
+// عند تحميل الصفحة: نحاول الدخول التلقائي إن وُجدت جلسة سابقة صالحة، وإلا نعرض شعار الشركة على شاشة الدخول
+(async()=>{
+  const ok=await tryAutoLogin();
+  if(ok){await enterApp();}
+  else{applyAuthLogo();}
+})();
 </script>
 </body>
 </html>
