@@ -893,12 +893,25 @@ function renderAdminActions(){
 }
 
 function isSep(c){return c&&c.year==='__SEP__';}
+function inferSepBrand(sepCar,allSortedCars,idx){
+  for(let i=idx+1;i<allSortedCars.length;i++){
+    if(!isSep(allSortedCars[i]))return allSortedCars[i].brand;
+  }
+  for(let i=idx-1;i>=0;i--){
+    if(!isSep(allSortedCars[i]))return allSortedCars[i].brand;
+  }
+  return sepCar.brand;
+}
 function getFiltered(){
   const q=(document.getElementById('search')||{}).value?.toLowerCase()||'';
   const yr=(document.getElementById('filter-year')||{}).value||'';
+  const allSorted=[...cars].sort((a,b)=>(Number(a.order)||0)-(Number(b.order)||0));
+  const sepBrandMap={};
+  allSorted.forEach((c,idx)=>{if(isSep(c))sepBrandMap[c.id]=inferSepBrand(c,allSorted,idx);});
   return cars.filter(c=>{
     if(isSep(c)){
-      if(activeBrand!=='all'&&c.brand!=='all'&&c.brand!==activeBrand)return false;
+      const inferredBrand=sepBrandMap[c.id]||c.brand;
+      if(activeBrand!=='all'&&inferredBrand!==activeBrand)return false;
       if(q)return false;
       return true;
     }
