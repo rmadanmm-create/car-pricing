@@ -52,7 +52,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
 .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:12px;min-width:700px}
 th{background:#f8f9fb;color:var(--muted);font-weight:600;padding:10px 8px;text-align:center;border-bottom:2px solid #b0b5bf;border-right:1.5px solid #dde0e7;font-size:11px;line-height:1.4}
-td{padding:9px 8px;border-bottom:1.5px solid #dde0e7;border-right:1.5px solid #dde0e7;text-align:center;vertical-align:middle}
+td{padding:6px 8px;border-bottom:1.5px solid #dde0e7;border-right:1.5px solid #dde0e7;text-align:center;vertical-align:middle}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#f9fafb}
 .th-ar{display:block;font-size:11px}.th-en{display:block;font-size:9px;color:#aaa;letter-spacing:.3px}
@@ -954,7 +954,7 @@ window.renderCars=()=>{
     if(!colors.length){
       htmlParts.push(`<tr>
         <td class="price-buy buy-col" style="font-size:14px;font-weight:700">${fmt(p.buy)}</td>
-        <td style="text-align:right">${c.modelEn?'<strong style="color:#1B6FC8;text-transform:uppercase">'+c.modelEn+'</strong><br>':''}${c.modelAr||c.model?'<span style="color:#1a1a2e">'+( c.modelAr||c.model)+'</span><br>':''}<span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>
+        <td style="text-align:right">${c.modelEn?'<strong style="color:#1B6FC8;text-transform:uppercase;font-size:13px">'+c.modelEn+'</strong>':''}${(c.modelEn&&(c.modelAr||c.model))?'<br>':''}${c.modelAr||c.model?'<span style="color:#555;font-size:11.5px">'+( c.modelAr||c.model)+'</span>':''}</td>
         <td style="font-weight:600">${c.year||'-'}</td>
         <td colspan="4" style="color:#aaa;font-size:11px">لا توجد ألوان</td>
         <td style="font-size:10px;color:#888">${c.date||'-'}</td>
@@ -979,7 +979,7 @@ window.renderCars=()=>{
       const isFirst=i===0;
       return`<tr ${i===0?'data-car-id="'+c.id+'"':''} style="${sepStyle}${rowStyle}${isUnavail?'background:#fafafa;':''}">
         <td class="price-buy buy-col" style="font-size:14px;font-weight:700;background:${h};color:${txtColor};border-radius:6px;padding:6px 8px">${pr>0?fmt(pr):'—'}</td>
-        ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle">${c.modelEn?'<strong style="color:#1B6FC8;text-transform:uppercase">'+c.modelEn+'</strong><br>':''}${c.modelAr||c.model?'<span style="color:#1a1a2e">'+( c.modelAr||c.model)+'</span><br>':''}<span style="font-size:10px;color:#888">${getBrandEn(brand)}</span></td>`:''}
+        ${isFirst?`<td rowspan="${rowCount}" style="text-align:right;vertical-align:middle">${c.modelEn?'<strong style="color:#1B6FC8;text-transform:uppercase;font-size:13px">'+c.modelEn+'</strong>':''}${(c.modelEn&&(c.modelAr||c.model))?'<br>':''}${c.modelAr||c.model?'<span style="color:#555;font-size:11.5px">'+( c.modelAr||c.model)+'</span>':''}</td>`:''}
         ${isFirst?`<td rowspan="${rowCount}" style="font-weight:600;vertical-align:middle;text-align:center">${c.year||'-'}</td>`:''}
         <td style="padding:5px 6px">
           <div style="${h==='#E8E8E8'?'background:linear-gradient(135deg,#1B3A6B,#4A90D9,#C0C0C0);border:none;':'background:'+h+';border:1px solid #bbb;'}padding:4px 8px;border-radius:6px;text-align:center">
